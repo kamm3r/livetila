@@ -1,15 +1,15 @@
 "use client";
-import { Card, CardContent, CardHeader } from "../../../@/components/ui/card";
+import { Card, CardContent, CardHeader } from "../@/components/ui/card";
 import { useQuery as tfue } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { Competition } from "../../../types/comp";
+import { Competition } from "../types/comp";
 import Image from "next/image";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../@/components/ui/tabs";
+} from "../@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../../@/components/ui/table";
+} from "../@/components/ui/table";
 
 function butterParse(a: string): number {
   if (Number.isNaN(a)) {

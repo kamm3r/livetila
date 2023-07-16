@@ -1,13 +1,12 @@
-import Link from 'next/link';
-import './globals.css';
-import { Providers, RQProviders } from './providers';
-import { ThemeSwitcher } from '../components/themeSwitch';
-import { Bus } from '../components/CompetitionList';
-import { Search } from '../components/search';
+import Link from "next/link";
+import "./globals.css";
+import { Providers, RQProviders } from "./providers";
+import { ThemeSwitcher } from "../components/themeSwitch";
+// import { Search } from '../components/search';
 
 export const metadata = {
-  title: 'Livetila',
-  description: 'Live track and field sport results',
+  title: "Livetila",
+  description: "Live track and field sport results",
 };
 
 export default function RootLayout({
@@ -26,18 +25,17 @@ export default function RootLayout({
                   href="/"
                   className="relative whitespace-nowrap text-2xl font-bold"
                 >
-                  Livetila{' '}
+                  Livetila{" "}
                   <sup className="absolute left-[calc(100%+.25rem)] top-0 text-xs font-extrabold text-gray-400">
                     [BETA]
                   </sup>
                 </Link>
-                <div className="w-full max-w-md">
+                {/* <div className="w-full max-w-md">
                   <Search />
-                </div>
+                </div> */}
                 <ThemeSwitcher />
               </header>
-              <main className="grid min-h-0 flex-1 grid-rows-3 gap-4 p-4 sm:grid-cols-4 sm:grid-rows-1 sm:gap-8 sm:p-8">
-                <Bus />
+              <main className="flex flex-col flex-grow p-4 sm:p-8">
                 {children}
               </main>
             </div>
