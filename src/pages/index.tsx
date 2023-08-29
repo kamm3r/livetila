@@ -47,9 +47,7 @@ export default function Home() {
     const router = useRouter();
     const form = useForm<z.infer<typeof inputSchema>>({
         resolver: zodResolver(inputSchema),
-        defaultValues: {
-            compId: "23941-312323",
-        },
+
         mode: "onChange"
     });
     function busta(data: z.infer<typeof inputSchema>) {
@@ -119,7 +117,7 @@ export default function Home() {
                                 </CardHeader>
                                 <Form {...form}>
                                     <form
-                                        onSubmit={void form.handleSubmit(busta)}
+                                    //   onSubmit={void form.handleSubmit(busta)}
                                     >
                                         <CardContent className="flex flex-col gap-1">
                                             <FormField

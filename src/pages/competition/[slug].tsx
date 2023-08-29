@@ -11,13 +11,37 @@ import {
 } from "~/@/components/ui/table";
 import { api } from "~/utils/api";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~/@/components/ui/dropdown-menu';
-import { InfoIcon, MoonIcon, SunIcon } from 'lucide-react';
+import { ClipboardCheckIcon, ClipboardCopyIcon, InfoIcon, MoonIcon, SunIcon } from 'lucide-react';
 import { Button } from '~/@/components/ui/button';
 import { useTheme } from 'next-themes';
-import { Input } from '~/@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '~/@/components/ui/popover';
-import { Label } from '~/@/components/ui/label';
+import { useState } from 'react';
 
+function Embed() {
+    const router = useRouter()
+    const [copy, setCopy] = useState<boolean>(false);
+    const copyUrlToClipboard = (path: string) => {
+        setCopy(true);
+        void navigator.clipboard.writeText(`${window.location.origin}${path}`);
+        setTimeout(() => setCopy(false), 1000);
+    };
+    return (
+        <Button
+            className="flex gap-2 -m-2 !p-2"
+            onClick={() => copyUrlToClipboard(`/obs/${router.query.slug}`)}
+            variant="ghost"
+        >
+            {
+                copy ? (
+                    <ClipboardCheckIcon className="text-neutral-100" />
+                ) : (
+                    <ClipboardCopyIcon />
+                )
+            }
+            <span className="sr-only text-sm sm:not-sr-only">Embed url</span>
+        </Button>
+    );
+}
 function butterParse(a: string): number {
     if (Number.isNaN(a)) {
         return 0;
@@ -84,50 +108,17 @@ export default function Comp() {
                             <InfoIcon />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80">
+                    <PopoverContent className="w-96">
 
-                        <div className="grid gap-4">
+                        <div className="flex flex-col gap-4">
                             <div className="space-y-2">
-                                <h4 className="font-medium leading-none">Dimensions</h4>
+                                <h4 className="font-medium leading-none">OBS Overlay</h4>
                                 <p className="text-sm text-muted-foreground">
-                                    Set the dimensions for the layer.
+                                    Get your live stream overlay for track and field
                                 </p>
                             </div>
-                            <div className="grid gap-2">
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="width">Width</Label>
-                                    <Input
-                                        id="width"
-                                        defaultValue="100%"
-                                        className="col-span-2 h-8"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="maxWidth">Max. width</Label>
-                                    <Input
-                                        id="maxWidth"
-                                        defaultValue="300px"
-
-                                        className="col-span-2 h-8"
-
-                                    />
-                                </div>
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="height">Height</Label>
-                                    <Input
-                                        id="height"
-                                        defaultValue="25px"
-                                        className="col-span-2 h-8"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="maxHeight">Max. height</Label>
-                                    <Input
-                                        id="maxHeight"
-                                        defaultValue="none"
-                                        className="col-span-2 h-8"
-                                    />
-                                </div>
+                            <div className="flex gap-4">
+                                <Embed />
                             </div>
                         </div>
                     </PopoverContent>
