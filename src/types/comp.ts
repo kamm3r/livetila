@@ -187,7 +187,7 @@ export type TotalResult = {
   Result: string;
   CEPoints: number;
   SeuraCUPPoints: number;
-  Wind: any;
+  Wind: string;
   AthleteOrders: string[];
   Attempts: Attempt[];
   TeamName: string;
