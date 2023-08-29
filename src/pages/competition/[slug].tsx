@@ -19,6 +19,7 @@ import { useState } from 'react';
 
 function Embed() {
     const router = useRouter()
+    const { slug } = router.query as { slug: string }
     const [copy, setCopy] = useState<boolean>(false);
     const copyUrlToClipboard = (path: string) => {
         setCopy(true);
@@ -28,7 +29,7 @@ function Embed() {
     return (
         <Button
             className="flex gap-2 -m-2 !p-2"
-            onClick={() => copyUrlToClipboard(`/obs/${router.query.slug}`)}
+            onClick={() => copyUrlToClipboard(`/obs/${slug}`)}
             variant="ghost"
         >
             {

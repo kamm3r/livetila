@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { animated, useTransition } from '@react-spring/web'
+import { animated } from '@react-spring/web'
 import { cn } from "~/@/lib/utils";
 import { api } from "~/utils/api";
 
@@ -21,11 +21,7 @@ export default function Obs() {
         { refetchInterval: 1000 },
     );
 
-    const transitions = useTransition(data?.Rounds[0]?.Heats[0]?.Allocations.sort((a, b) => butterParse(b.Result) - butterParse(a.Result)), {
-        from: { opacity: 0 },
-        enter: { opacity: 1 },
-        leave: { opacity: 1 }
-    })
+
 
     if (!data || isLoading) {
         return "loading...";

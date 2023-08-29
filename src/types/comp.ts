@@ -39,9 +39,9 @@ export type Competition = {
   EventCategory: string;
   EventSubCategory: string;
   IsCombinedEvent: boolean;
-  RootName: any;
+  RootName: string;
   RootId: number;
-  FinalResults: any;
+  FinalResults: string;
   Diag: Diag;
   Id: number;
   EventType: EventType;
@@ -51,19 +51,19 @@ export type Competition = {
   Order: number;
   RoundCount: number;
   EnrCount: number;
-  Gender: any;
+  Gender: string;
   Rounds: Round[];
-  SubEvents: any;
+  SubEvents: string;
   GroupEvent: string;
   Index: number;
-  CombinedEventFactors: any;
+  CombinedEventFactors: string;
 };
 
 export type Enrollment = {
   Id: number;
   Confirmed: boolean;
   NotInCompetition: boolean;
-  Ranking: any;
+  Ranking: string;
   Number: string;
   PB: string;
   SB: string;
@@ -124,7 +124,7 @@ export type Round = {
   EventId: number;
   Heats: Heat[];
   Status: string;
-  GroupResultsSummary: any;
+  GroupResultsSummary: string;
   Index: number;
   TotalResults: TotalResult[];
 };
@@ -132,7 +132,7 @@ export type Round = {
 export type Heat = {
   Id: number;
   Index: number;
-  Wind: any;
+  Wind: string;
   Allocations: Allocation[];
 };
 
@@ -146,18 +146,18 @@ export type Allocation = {
   QResult: boolean;
   ResultRank?: number;
   HeatRank?: number;
-  ReverseOrderRank: any;
+  ReverseOrderRank: string[];
   Result: string;
   CEPoints: number;
   SeuraCUPPoints: number;
-  Wind: any;
-  AthleteOrders: any[];
+  Wind: string;
+  AthleteOrders: string[];
   Attempts: Attempt[];
   TeamName: string;
-  Marks: any[];
-  Results: any;
-  NoWAResult: any;
-  NoWAWind: any;
+  Marks: string[];
+  Results: string;
+  NoWAResult: string;
+  NoWAWind: string;
   PB: string;
   SB: string;
   TeamId: number;
@@ -170,7 +170,7 @@ export type Allocation = {
 
 export type Attempt = {
   Line1: string;
-  Line2: any;
+  Line2: string;
 };
 
 export type TotalResult = {
@@ -183,18 +183,18 @@ export type TotalResult = {
   QResult: boolean;
   ResultRank?: number;
   HeatRank?: number;
-  ReverseOrderRank: any;
+  ReverseOrderRank: string[];
   Result: string;
   CEPoints: number;
   SeuraCUPPoints: number;
   Wind: any;
-  AthleteOrders: any[];
+  AthleteOrders: string[];
   Attempts: Attempt[];
   TeamName: string;
-  Marks: any[];
-  Results: any;
-  NoWAResult: any;
-  NoWAWind: any;
+  Marks: string[];
+  Results: string;
+  NoWAResult: string;
+  NoWAWind: string;
   PB: string;
   SB: string;
   TeamId: number;
