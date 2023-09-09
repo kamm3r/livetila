@@ -137,28 +137,36 @@ export default function Comp() {
                         {data.Rounds.map((r) =>
                             r.Heats.map((h) =>
                                 h.Allocations.sort(
-                                    (a, b) => butterParse(b.Result) - butterParse(a.Result),
-                                ).map((a, i) => (
-                                    <TableRow className="w-full max-w-[400px]" key={i}>
-                                        <TableCell>{a.ResultRank}</TableCell>
-                                        <TableCell>{a.Name}</TableCell>
-                                        <TableCell>{a.Organization.Name}</TableCell>
-                                        <TableCell>
-                                            <ul className="flex gap-2">
-                                                {a.Attempts
-                                                    ? a.Attempts.map((at, id) => (
-                                                        <li
-                                                            key={id}
-                                                            className="-my-1 rounded bg-neutral-600/50 px-2 py-1 text-sm"
-                                                        >
-                                                            {at.Line1.toUpperCase()}
-                                                        </li>
-                                                    ))
-                                                    : "no bitch"}
-                                            </ul>
-                                        </TableCell>
-                                    </TableRow>
-                                )),
+                                    (a, b) => {
+                                        if (butterParse(a.Result) === 0) {
+                                            return 1;
+                                        }
+                                        if (butterParse(b.Result) === 0) {
+                                            return -1
+                                        }
+
+                                        return butterParse(a.Result) > butterParse(b.Result) ? -1 : 1
+                                    }).map((a, i) => (
+                                        <TableRow className="w-full max-w-[400px]" key={i}>
+                                            <TableCell>{a.ResultRank}</TableCell>
+                                            <TableCell>{a.Name}</TableCell>
+                                            <TableCell>{a.Organization.Name}</TableCell>
+                                            <TableCell>
+                                                <ul className="flex gap-2">
+                                                    {a.Attempts
+                                                        ? a.Attempts.map((at, id) => (
+                                                            <li
+                                                                key={id}
+                                                                className="-my-1 rounded bg-neutral-600/50 px-2 py-1 text-sm"
+                                                            >
+                                                                {at.Line1.toUpperCase()}
+                                                            </li>
+                                                        ))
+                                                        : "no bitch"}
+                                                </ul>
+                                            </TableCell>
+                                        </TableRow>
+                                    )),
                             ),
                         )}
                     </TableBody>
