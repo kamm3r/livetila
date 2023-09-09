@@ -5,7 +5,7 @@ import { cn } from "~/@/lib/utils";
 import { api } from "~/utils/api";
 
 function butterParse(a: string): number {
-    if (Number.isNaN(a)) {
+    if (a === 'NM' || Number.isNaN(a)) {
         return 0;
     } else {
         return parseFloat(a);
@@ -20,8 +20,6 @@ export default function Obs() {
         { compId },
         { refetchInterval: 1000 },
     );
-
-
 
     if (!data || isLoading) {
         return "loading...";
@@ -48,36 +46,44 @@ export default function Obs() {
                         {data.Rounds.map((r) =>
                             r.Heats.map((h) =>
                                 h.Allocations.sort(
-                                    (a, b) => butterParse(b.Result) - butterParse(a.Result),
-                                ).map((a) => (
-                                    <li
-                                        key={a.Id}
-                                        className=" flex flex-wrap justify-between border-t-2 border-black/50"
-                                    >
-                                        <div className="flex flex-[1_1_100%] justify-between px-4 py-1">
-                                            {a.Name}
-                                            <span>{butterParse(a.Result) >= 0 ? a.Result : "NM"}</span>
-                                        </div>
-                                        <ul
-                                            className={cn(
-                                                "ml-1  flex-[1_1_100%] bg-gray-300 text-black",
-                                                a.Id ? "flex" : "hidden",
-                                            )}
+                                    (a, b) => {
+                                        if (butterParse(a.Result) === 0) {
+                                            return 1;
+                                        }
+                                        if (butterParse(b.Result) === 0) {
+                                            return -1
+                                        }
+
+                                        return butterParse(a.Result) > butterParse(b.Result) ? -1 : 1
+                                    }).map((a) => (
+                                        <li
+                                            key={a.Id}
+                                            className=" flex flex-wrap justify-between border-t-2 border-black/50"
                                         >
-                                            {a.Attempts?.map((at, idx) => (
-                                                <li
-                                                    key={idx}
-                                                    className={cn(
-                                                        a.Result === at.Line1 && "!bg-cyan-300/50",
-                                                        "min-w-[16.7%] px-1 py-2 even:bg-gray-200",
-                                                    )}
-                                                >
-                                                    {at.Line1}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </li>
-                                )),
+                                            <div className="flex flex-[1_1_100%] justify-between px-4 py-1">
+                                                {a.Name}
+                                                <span>{butterParse(a.Result) >= 0 ? a.Result : ""}</span>
+                                            </div>
+                                            <ul
+                                                className={cn(
+                                                    "ml-1  flex-[1_1_100%] bg-gray-300 text-black",
+                                                    a.Id ? "flex" : "hidden",
+                                                )}
+                                            >
+                                                {a.Attempts?.map((at, idx) => (
+                                                    <li
+                                                        key={idx}
+                                                        className={cn(
+                                                            a.Result === at.Line1 && "!bg-cyan-300/50",
+                                                            "min-w-[16.7%] px-1 py-2 even:bg-gray-200",
+                                                        )}
+                                                    >
+                                                        {at.Line1}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </li>
+                                    )),
                             ),
                         )}
                     </animated.ul>
