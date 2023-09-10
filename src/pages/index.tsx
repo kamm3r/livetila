@@ -7,7 +7,7 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
+   // CardFooter,
     CardHeader,
     CardTitle,
 } from "../@/components/ui/card";
@@ -118,7 +118,7 @@ export default function Home() {
                                 </CardHeader>
                                 <Form {...form}>
                                     <form
-                                        onSubmit={form.handleSubmit(busta)}>
+                                        onSubmit={void form.handleSubmit(busta)}>
                                         <CardContent className="flex flex-col gap-1">
                                             <FormField
                                                 control={form.control}
