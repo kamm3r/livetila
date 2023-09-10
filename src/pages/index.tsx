@@ -50,8 +50,8 @@ export default function Home() {
 
         mode: "onChange"
     });
-    function busta(data: z.infer<typeof inputSchema>) {
-        //console.log(data);
+    function busta(data: z.infer<typeof inputSchema>): void {
+        console.log(data);
         void router.push(`/competition/${data.compId}`)
         toast({
             title: "You submitted the following values:",
@@ -63,6 +63,7 @@ export default function Home() {
             ),
         })
     }
+
     return (
         <>
             <Head>
@@ -117,8 +118,7 @@ export default function Home() {
                                 </CardHeader>
                                 <Form {...form}>
                                     <form
-                                    //   onSubmit={void form.handleSubmit(busta)}
-                                    >
+                                        onSubmit={form.handleSubmit(busta)}>
                                         <CardContent className="flex flex-col gap-1">
                                             <FormField
                                                 control={form.control}
@@ -136,19 +136,24 @@ export default function Home() {
                                                     </FormItem>
                                                 )}
                                             />
-                                        </CardContent>
-                                        <CardFooter>
                                             <Button
-                                                type="button"
-                                                disabled={form.formState.isValid || form.formState.isSubmitting ? false : true}
-                                                onClick={() => {
-                                                    form.setValue('compId', form.getValues().compId)
-                                                    busta(form.getValues())
-                                                    console.log(`deez ${form.getValues().compId}`)
-                                                }}>Go To</Button>
-                                        </CardFooter>
+                                                type="submit"
+                                                disabled={form.formState.isValid || form.formState.isSubmitting ? false : true}>
+                                                Go To
+                                            </Button>
+                                        </CardContent>
                                     </form>
                                 </Form>
+                                {/*  <CardFooter>
+                                     <Button
+                                     type="button"
+                                     disabled={form.formState.isValid || form.formState.isSubmitting ? false : true}
+                                     onClick={() => {
+                                     form.setValue('compId', form.getValues().compId)
+                                     busta(form.getValues())
+                                     console.log(`deez ${form.getValues().compId}`)
+                                     }}>Go To</Button>
+                                     </CardFooter>*/}
                             </Card>
                         </div>
                     </main>
