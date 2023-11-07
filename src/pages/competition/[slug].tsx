@@ -138,14 +138,15 @@ export default function Comp() {
                             r.Heats.map((h) =>
                                 h.Allocations.sort(
                                     (a, b) => {
-                                        if (butterParse(a.Result) === 0) {
+                                        if (butterParse(a.Result) === null || butterParse(b.Result) === null) {
+                                            return -1;
+                                        } else if (butterParse(a.Result) === 0) {
                                             return 1;
-                                        }
-                                        if (butterParse(b.Result) === 0) {
+                                        } else if (butterParse(b.Result) === 0) {
                                             return -1
+                                        } else {
+                                            return butterParse(a.Result) > butterParse(b.Result) ? -1 : 1
                                         }
-
-                                        return butterParse(a.Result) > butterParse(b.Result) ? -1 : 1
                                     }).map((a, i) => (
                                         <TableRow className="w-full max-w-[400px]" key={i}>
                                             <TableCell>{a.ResultRank}</TableCell>

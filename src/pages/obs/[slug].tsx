@@ -47,14 +47,15 @@ export default function Obs() {
                             r.Heats.map((h) =>
                                 h.Allocations.sort(
                                     (a, b) => {
-                                        if (butterParse(a.Result) === 0) {
+                                        if(butterParse(a.Result) === null || butterParse(b.Result) === null) {
+                                            return -1;
+                                        } else if (butterParse(a.Result) === 0) {
                                             return 1;
-                                        }
-                                        if (butterParse(b.Result) === 0) {
+                                        } else if (butterParse(b.Result) === 0) {
                                             return -1
+                                        } else {
+                                            return butterParse(a.Result) > butterParse(b.Result) ? -1 : 1;
                                         }
-
-                                        return butterParse(a.Result) > butterParse(b.Result) ? -1 : 1
                                     }).map((a) => (
                                         <li
                                             key={a.Id}
@@ -70,7 +71,7 @@ export default function Obs() {
                                                     a.Id ? "flex" : "hidden",
                                                 )}
                                             >
-                                                {a.Attempts?.map((at, idx) => (
+                                                {a.Attempts === null ? 'no  mans': a.Attempts?.map((at, idx) => (
                                                     <li
                                                         key={idx}
                                                         className={cn(
