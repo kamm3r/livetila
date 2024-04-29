@@ -1,4 +1,5 @@
-import React from "react";
+import * as React from "react";
+
 import { cn } from "~/@/lib/utils";
 
 const Card = React.forwardRef<
@@ -17,10 +18,10 @@ const Card = React.forwardRef<
 Card.displayName = "Card";
 
 const CardHeader = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement>
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <header
+  <div
     ref={ref}
     className={cn("flex flex-col space-y-1.5 p-6", className)}
     {...props}
@@ -56,20 +57,20 @@ const CardDescription = React.forwardRef<
 CardDescription.displayName = "CardDescription";
 
 const CardContent = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement>
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <main ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
 ));
 CardContent.displayName = "CardContent";
 
 const CardFooter = React.forwardRef<
-  HTMLElement,
-  React.HTMLAttributes<HTMLElement>
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <footer
+  <div
     ref={ref}
-    className={cn(" flex items-center p-6 pt-0", className)}
+    className={cn("flex items-center p-6 pt-0", className)}
     {...props}
   />
 ));

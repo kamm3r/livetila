@@ -10,9 +10,9 @@ export type CompetitionList = {
 export type Competition = {
   id: number;
   competitionName: string;
-  gender: 'Men' | 'Women' | 'Mixed';
-  competitionStatus: 'final' | 'semi-final' | 'qualification';
-  status: 'official' | 'unofficial'; // enum, pointless?
+  gender: "Men" | "Women" | "Mixed";
+  competitionStatus: "final" | "semi-final" | "qualification";
+  status: "official" | "unofficial"; // enum, pointless?
   event: string; // use enum in database
   participantCount: number;
   participants: Participant[];
@@ -27,14 +27,14 @@ export type Club = {
 };
 export type Attempt = {
   result?: string;
-  try?: 'x' | 'o' | '-';
+  try?: "x" | "o" | "-";
 };
 
 export type Athlete = {
   firstname: string;
   lastname: string;
   club: Club;
-  gender: 'Men' | 'Women';
+  gender: "Men" | "Women";
   nationality: string;
   licenseId?: string;
 };

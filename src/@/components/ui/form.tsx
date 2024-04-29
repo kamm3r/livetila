@@ -1,5 +1,7 @@
-import React from "react";
-import type LabelPrimitive from "@radix-ui/react-label";
+"use client";
+
+import * as React from "react";
+import type * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
 import {
   Controller,
@@ -159,7 +161,7 @@ const FormMessage = React.forwardRef<
       className={cn("text-sm font-medium text-destructive", className)}
       {...props}
     >
-      {body} slad;
+      {body}
     </p>
   );
 });

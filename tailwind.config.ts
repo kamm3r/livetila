@@ -1,8 +1,10 @@
 import { type Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme";
 
 export default {
   darkMode: ["class"],
-  content: ["./src/**/**/*.{js,ts,jsx,tsx}"],
+  content: ["./src/**/*.tsx"],
+  prefix: "",
   theme: {
     container: {
       center: true,
@@ -12,6 +14,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)", ...fontFamily.sans],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
