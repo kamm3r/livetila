@@ -5,8 +5,8 @@ import {
   CardTitle,
 } from "../@/components/ui/card";
 import { Toaster } from "~/@/components/ui/toaster";
-import { Navbar } from "./_components/navbar";
-import { SearchForm } from "./_components/search-form";
+import { Navbar } from "~/@/components/navbar";
+import { SearchForm } from "~/@/components/search-form";
 
 export default function Home() {
   return (

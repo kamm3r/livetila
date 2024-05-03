@@ -13,8 +13,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/@/components/ui/popover";
-import { Navbar } from "../_components/navbar";
-import { Embed } from "../_components/embed";
+import { Navbar } from "~/@/components/navbar";
+import { Embed } from "~/@/components/embed";
 import { api } from "~/utils/api";
 import { useRouter } from "next/router";
 

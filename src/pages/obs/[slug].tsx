@@ -1,7 +1,7 @@
-import { cn } from "~/@/lib/utils";
-import { AnimatedList } from "../_components/animated-list";
-import { api } from "~/utils/api";
 import { useRouter } from "next/router";
+import { cn } from "~/@/lib/utils";
+import { AnimatedList } from "~/@/components/animated-list";
+import { api } from "~/utils/api";
 
 function butterParse(a: string): number {
   if (a === "NM" || Number.isNaN(a)) {
