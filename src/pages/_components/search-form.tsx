@@ -1,5 +1,3 @@
-"use client";
-
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";

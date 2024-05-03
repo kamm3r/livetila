@@ -6,7 +6,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/@/components/ui/table";
-import { api } from "~/trpc/server";
 import { InfoIcon } from "lucide-react";
 import { Button } from "~/@/components/ui/button";
 import {
@@ -14,8 +13,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/@/components/ui/popover";
-import { Navbar } from "~/app/_components/navbar";
-import { Embed } from "~/app/_components/embed";
+import { Navbar } from "../_components/navbar";
+import { Embed } from "../_components/embed";
+import { api } from "~/utils/api";
+import { useRouter } from "next/router";
 
 function butterParse(a: string): number {
   if (Number.isNaN(a)) {
@@ -25,9 +26,17 @@ function butterParse(a: string): number {
   }
 }
 
-export default async function Comp({ params }: { params: { slug: string } }) {
+export default function Comp() {
+  const router = useRouter();
+  const params = router.query as { slug: string };
   const compId = params.slug?.replace("-", "/");
-  const athletes = await api.competition.getAthletes({ compId });
+  const athletes = api.competition.getAthletes.useQuery(
+    { compId },
+    { refetchInterval: 1000 },
+  );
+  if (athletes.isLoading || !athletes.data) {
+    return <div>Loading...</div>;
+  }
   return (
     <>
       <Navbar />
@@ -62,7 +71,7 @@ export default async function Comp({ params }: { params: { slug: string } }) {
             </TableRow>
           </TableHeader>
           <TableBody className="overflow-y-auto">
-            {athletes.Rounds.map((r) =>
+            {athletes.data.Rounds.map((r) =>
               r.Heats.map((h) =>
                 h.Allocations.sort((a, b) => {
                   if (
@@ -95,7 +104,7 @@ export default async function Comp({ params }: { params: { slug: string } }) {
                                 {at.Line1.toUpperCase()}
                               </li>
                             ))
-                          : "no bitches"}
+                          : null}
                       </ul>
                     </TableCell>
                   </TableRow>
@@ -106,7 +115,7 @@ export default async function Comp({ params }: { params: { slug: string } }) {
         </Table>
         <div>
           <ul className="flex flex-col gap-3 lg:hidden">
-            {athletes.Rounds.map((r) =>
+            {athletes.data.Rounds.map((r) =>
               r.Heats.map((h) =>
                 h.Allocations.sort((a, b) => {
                   if (
@@ -144,7 +153,7 @@ export default async function Comp({ params }: { params: { slug: string } }) {
                               {at.Line1.toUpperCase()}
                             </li>
                           ))
-                        : "no mans"}
+                        : null}
                     </ul>
                   </li>
                 )),

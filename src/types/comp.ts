@@ -1,3 +1,17 @@
+export type CompetitionProperties = {
+  Settings: [];
+  Competition: CompetitionDetails;
+};
+
+export type CompetitionDetails = {
+  Id: number;
+  Name: string;
+  BeginDate: Date;
+  Organization: string;
+  ConfirmationDeadlineInMinutes: number;
+  ConfirmationOpensWindowInDays: number;
+};
+
 export type CompetitionList = {
   Id: number;
   Name: string;
