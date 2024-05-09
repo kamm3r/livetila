@@ -1,19 +1,23 @@
-import { useRouter } from "next/router";
+"use client";
 import { cn } from "~/@/lib/utils";
 import { AnimatedList } from "~/@/components/animated-list";
-import { api } from "~/utils/api";
+import { api } from "~/trpc/react";
+import { Suspense } from "react";
+import { Loader2Icon } from "lucide-react";
 
 function butterParse(a: string): number {
   if (a === "NM" || Number.isNaN(a)) {
+    return 0;
+  } else if (a === null) {
+    return 0;
+  } else if (a === "DNS" || a === "DQ" || a === "DNF" || a === "DSQ") {
     return 0;
   } else {
     return parseFloat(a);
   }
 }
 
-export default function Obs() {
-  const router = useRouter();
-  const params = router.query as { slug: string };
+export default function Obs({ params }: { params: { slug: string } }) {
   const compId = params.slug?.replace("-", "/");
   const competitionDetailsId = params.slug?.split("-")[0];
   const obsAthletes = api.competition.getAthletes.useQuery(
@@ -24,7 +28,7 @@ export default function Obs() {
     competitionDetailsId: competitionDetailsId!,
   });
   return (
-    <>
+    <Suspense fallback={<Loader2Icon className="animate-spin" />}>
       <div className="max-w-xs text-gray-50">
         <div className="w-full max-w-xs border-t-2 border-cyan-300 bg-black/90">
           <h2 className="px-2 uppercase text-cyan-300">
@@ -36,7 +40,6 @@ export default function Obs() {
             </h3>
             <h4 className="px-2 uppercase">Tulos</h4>
           </div>
-
           <AnimatedList>
             {obsAthletes.data?.Rounds.map((r) =>
               r.Heats.map((h) =>
@@ -78,10 +81,11 @@ export default function Obs() {
                             key={idx}
                             className={cn(
                               a.Result === at.Line1 && "!bg-cyan-300/50",
-                              "min-w-[16.7%] px-1 py-2 even:bg-gray-200",
+                              "flex min-w-[16.7%] flex-col px-1 py-2 even:bg-gray-200",
                             )}
                           >
-                            {at.Line1}
+                            <span>{at.Line1}</span>
+                            {at.Line2 && <span>{at.Line2}</span>}
                           </li>
                         ))
                       )}
@@ -96,6 +100,6 @@ export default function Obs() {
           {obsCompetition.data?.Competition.Name}
         </h1>
       </div>
-    </>
+    </Suspense>
   );
 }

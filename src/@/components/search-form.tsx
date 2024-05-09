@@ -1,3 +1,4 @@
+"use client";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +15,6 @@ import {
   FormLabel,
   FormMessage,
 } from "~/@/components/ui/form";
-import { toast } from "~/@/components/ui/use-toast";
 
 const inputSchema = z.object({
   compId: z
@@ -34,20 +34,10 @@ export function SearchForm() {
   const router = useRouter();
   const form = useForm<z.infer<typeof inputSchema>>({
     resolver: zodResolver(inputSchema),
-
     mode: "onChange",
   });
-  function busta(data: z.infer<typeof inputSchema>): void {
-    console.log(data);
-    void router.push(`/competition/${data.compId}`);
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  function busta(value: z.infer<typeof inputSchema>): void {
+    void router.push(`/competition/${value.compId}`);
   }
   return (
     <Form {...form}>

@@ -8,6 +8,7 @@ export const competitionsRouter = createTRPCRouter({
     .query(async ({ input }): Promise<Competition> => {
       const res = await fetch(
         `https://cached-public-api.tuloslista.com/live/v1/results/${input.compId}`,
+        { cache: "no-store" },
       );
       if (!res.ok) {
         // This will activate the closest `error.js` Error Boundary

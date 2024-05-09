@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 
