@@ -15,10 +15,12 @@ jobs:
     name: Run linter
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-
+          node-version: 20
+          cache: "pnpm"
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm lint
 
   prettier:
@@ -26,10 +28,12 @@ jobs:
     name: Run Prettier
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-
+          node-version: 20
+          cache: "pnpm"
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm format:check
 
   tsc:
@@ -37,8 +41,10 @@ jobs:
     name: Run TypeScript compiler
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-
+          node-version: 20
+          cache: "pnpm"
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm typecheck
