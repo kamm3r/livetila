@@ -12,7 +12,6 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    name: Run linter
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -20,9 +19,12 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
-      - run: |
-            pnpm install --no-frozen-lockfile
-            pnpm lint
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run linter
+        run: |
+          pnpm lint
 
   prettier:
     runs-on: ubuntu-latest
