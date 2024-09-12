@@ -44,28 +44,28 @@ export default function Obs({ params }: { params: { slug: string } }) {
             {obsAthletes.data?.Rounds.map((r) =>
               r.Heats.map((h) =>
                 h.Allocations.sort((a, b) => {
-                    if (
-                      butterParse(a.Result) === null ||
-                      butterParse(b.Result) === null
-                    ) {
-                      return -1;
-                    } else if (butterParse(a.Result) === -1) {
-                      return 1;
-                    } else if (butterParse(b.Result) === -1) {
-                      return -1;
-                    } else if (butterParse(a.Result) === 0) {
-                      return 1;
-                    } else if (butterParse(b.Result) === 0) {
-                      return -1;
-                    } else {
-                      return butterParse(a.Result) > butterParse(b.Result)
-                        ? -1
-                        : 1;
-                    }
-                  }).map((a) => (
+                  if (
+                    butterParse(a.Result) === null ||
+                    butterParse(b.Result) === null
+                  ) {
+                    return -1;
+                  } else if (butterParse(a.Result) === -1) {
+                    return 1;
+                  } else if (butterParse(b.Result) === -1) {
+                    return -1;
+                  } else if (butterParse(a.Result) === 0) {
+                    return 1;
+                  } else if (butterParse(b.Result) === 0) {
+                    return -1;
+                  } else {
+                    return butterParse(a.Result) > butterParse(b.Result)
+                      ? -1
+                      : 1;
+                  }
+                }).map((a) => (
                   <li
                     key={a.Id}
-                    className=" flex flex-wrap justify-between border-t-2 border-black/50"
+                    className="flex flex-wrap justify-between border-t-2 border-black/50"
                   >
                     <div className="flex flex-[1_1_100%] justify-between px-4 py-1">
                       {a.Name}
@@ -73,7 +73,7 @@ export default function Obs({ params }: { params: { slug: string } }) {
                     </div>
                     <ul
                       className={cn(
-                        "ml-1  flex-[1_1_100%] bg-gray-300 text-black",
+                        "ml-1 flex-[1_1_100%] bg-gray-300 text-black",
                         a.Id ? "flex" : "hidden",
                       )}
                     >

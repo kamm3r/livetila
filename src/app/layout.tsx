@@ -6,7 +6,6 @@ import { type Metadata } from "next";
 import { TRPCReactProvider } from "~/trpc/react";
 import { ThemeProvider } from "~/@/components/theme-provider";
 
-
 export const metadata: Metadata = {
   title: "Livetila",
   description: "live.tuloslista API, live result overlay for Live streams",

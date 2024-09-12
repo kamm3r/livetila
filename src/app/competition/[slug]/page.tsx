@@ -39,7 +39,7 @@ export default async function Comp({ params }: { params: { slug: string } }) {
       <Navbar />
       <main className="relative flex flex-grow flex-col p-4 sm:p-8">
         <Popover>
-          <PopoverTrigger asChild className=" right-5 top-9 z-50">
+          <PopoverTrigger asChild className="right-5 top-9 z-50">
             <Button variant="ghost" className="px-2" size="icon">
               <InfoIcon />
             </Button>
@@ -78,10 +78,10 @@ export default async function Comp({ params }: { params: { slug: string } }) {
                     ) {
                       return -1;
                     } else if (butterParse(a.Result) === -1) {
-                        return 1;
+                      return 1;
                     } else if (butterParse(b.Result) === -1) {
-                        return -1;
-                    }else if (butterParse(a.Result) === 0) {
+                      return -1;
+                    } else if (butterParse(a.Result) === 0) {
                       return 1;
                     } else if (butterParse(b.Result) === 0) {
                       return -1;
