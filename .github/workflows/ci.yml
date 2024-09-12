@@ -19,35 +19,15 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run linter
-        run: |
-          pnpm lint
+        run: pnpm lint
 
-  prettier:
-    runs-on: ubuntu-latest
-    name: Run Prettier
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "pnpm"
-      - run: pnpm install --frozen-lockfile=false
-      - run: pnpm format:check
+      - name: Run prettier
+        run: pnpm format:check
 
-  tsc:
-    runs-on: ubuntu-latest
-    name: Run TypeScript compiler
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "pnpm"
-      - run: pnpm install --frozen-lockfile=false
-      - run: pnpm typecheck
+      - name: Run typecheck
+        run: pnpm typecheck
