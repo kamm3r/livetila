@@ -20,7 +20,7 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile=true
 
       - name: Run linter
         run: |
@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
-      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm install --frozen-lockfile=true
       - run: pnpm format:check
 
   tsc:
@@ -49,5 +49,5 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
-      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm install --frozen-lockfile=true
       - run: pnpm typecheck
