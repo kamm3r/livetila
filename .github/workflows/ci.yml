@@ -5,9 +5,9 @@ on:
     branches: ["*"]
   merge_group:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   lint:
@@ -20,8 +20,9 @@ jobs:
         with:
           node-version: 20
           cache: "pnpm"
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm lint
+      - run: |
+            pnpm install --no-frozen-lockfile
+            pnpm lint
 
   prettier:
     runs-on: ubuntu-latest
