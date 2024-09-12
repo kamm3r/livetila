@@ -11,7 +11,7 @@ function butterParse(a: string): number {
   } else if (a === null) {
     return 0;
   } else if (a === "DNS" || a === "DQ" || a === "DNF" || a === "DSQ") {
-    return 0;
+    return -1;
   } else {
     return parseFloat(a);
   }
@@ -44,21 +44,25 @@ export default function Obs({ params }: { params: { slug: string } }) {
             {obsAthletes.data?.Rounds.map((r) =>
               r.Heats.map((h) =>
                 h.Allocations.sort((a, b) => {
-                  if (
-                    butterParse(a.Result) === null ||
-                    butterParse(b.Result) === null
-                  ) {
-                    return -1;
-                  } else if (butterParse(a.Result) === 0) {
-                    return 1;
-                  } else if (butterParse(b.Result) === 0) {
-                    return -1;
-                  } else {
-                    return butterParse(a.Result) > butterParse(b.Result)
-                      ? -1
-                      : 1;
-                  }
-                }).map((a) => (
+                    if (
+                      butterParse(a.Result) === null ||
+                      butterParse(b.Result) === null
+                    ) {
+                      return -1;
+                    } else if (butterParse(a.Result) === -1) {
+                      return 1;
+                    } else if (butterParse(b.Result) === -1) {
+                      return -1;
+                    } else if (butterParse(a.Result) === 0) {
+                      return 1;
+                    } else if (butterParse(b.Result) === 0) {
+                      return -1;
+                    } else {
+                      return butterParse(a.Result) > butterParse(b.Result)
+                        ? -1
+                        : 1;
+                    }
+                  }).map((a) => (
                   <li
                     key={a.Id}
                     className=" flex flex-wrap justify-between border-t-2 border-black/50"

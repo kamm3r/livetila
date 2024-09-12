@@ -20,10 +20,10 @@ const inputSchema = z.object({
   compId: z
     .string()
     .regex(new RegExp("[0-9]-[0-9]"), {
-      message: "It has to look like THIS number-number",
+      message: "Sen pitää näyttää tältä 1234-567890",
     })
     .min(10, {
-      message: "compId must be at least 10 characters.",
+      message: "kilpailu id pitää olla minimissä 10 karakteria",
     })
     .max(15, {
       message: "thing again putting amount of number here.",
@@ -48,12 +48,12 @@ export function SearchForm() {
             name="compId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Competition id</FormLabel>
+                <FormLabel>Kilpailu id</FormLabel>
                 <FormControl>
                   <Input placeholder="type comp id" {...field} required />
                 </FormControl>
                 <FormDescription className="text-xs text-muted-foreground">
-                  Expected format is `number-number`
+                  Odotettu formaatti `1234-567890`
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -67,7 +67,7 @@ export function SearchForm() {
                 : true
             }
           >
-            Go To
+            Menee kilpailuun
           </Button>
         </CardContent>
       </form>

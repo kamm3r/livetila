@@ -25,7 +25,7 @@ function butterParse(a: string): number {
   } else if (a === null) {
     return 0;
   } else if (a === "DNS" || a === "DQ" || a === "DNF" || a === "DSQ") {
-    return 0;
+    return -1;
   } else {
     return parseFloat(a);
   }
@@ -77,7 +77,11 @@ export default async function Comp({ params }: { params: { slug: string } }) {
                       butterParse(b.Result) === null
                     ) {
                       return -1;
-                    } else if (butterParse(a.Result) === 0) {
+                    } else if (butterParse(a.Result) === -1) {
+                        return 1;
+                    } else if (butterParse(b.Result) === -1) {
+                        return -1;
+                    }else if (butterParse(a.Result) === 0) {
                       return 1;
                     } else if (butterParse(b.Result) === 0) {
                       return -1;
@@ -127,6 +131,10 @@ export default async function Comp({ params }: { params: { slug: string } }) {
                       butterParse(a.Result) === null ||
                       butterParse(b.Result) === null
                     ) {
+                      return -1;
+                    } else if (butterParse(a.Result) === -1) {
+                      return 1;
+                    } else if (butterParse(b.Result) === -1) {
                       return -1;
                     } else if (butterParse(a.Result) === 0) {
                       return 1;
