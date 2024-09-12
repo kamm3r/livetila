@@ -16,7 +16,7 @@ export default async function Home() {
           <div className="flex flex-col items-center">
             <Card>
               <CardHeader>
-                <CardTitle>Competition Overlay</CardTitle>
+                <CardTitle>Kilpailu Overlay</CardTitle>
                 <CardDescription>
                   Get overlay for your live stream. Get competition id from
                   live.tulospalvelu.com
