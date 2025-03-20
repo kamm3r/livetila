@@ -2,7 +2,7 @@
 import { cn } from "~/@/lib/utils";
 import { AnimatedList } from "~/@/components/animated-list";
 import { api } from "~/trpc/react";
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 import { Loader2Icon } from "lucide-react";
 
 function butterParse(a: string): number {
@@ -17,9 +17,10 @@ function butterParse(a: string): number {
   }
 }
 
-export default function Obs({ params }: { params: { slug: string } }) {
-  const compId = params.slug?.replace("-", "/");
-  const competitionDetailsId = params.slug?.split("-")[0];
+export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
+  const cachedParams = use(params ?? { slug: "" }) as { slug: string };
+  const compId = cachedParams.slug?.replace("-", "/");
+  const competitionDetailsId = cachedParams.slug?.split("-")[0];
   const obsAthletes = api.competition.getAthletes.useQuery(
     { compId },
     { refetchInterval: 1000 },
@@ -84,7 +85,7 @@ export default function Obs({ params }: { params: { slug: string } }) {
                           <li
                             key={idx}
                             className={cn(
-                              a.Result === at.Line1 && "!bg-cyan-300/50",
+                              a.Result === at.Line1 && "bg-cyan-300/50!",
                               "flex min-w-[16.7%] flex-col px-1 py-2 even:bg-gray-200",
                             )}
                           >
