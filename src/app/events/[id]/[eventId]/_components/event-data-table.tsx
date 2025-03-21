@@ -96,7 +96,7 @@ export function EventDataTable<T>({
                       : "bg-muted/10 dark:bg-muted/5",
                     isSelectable && "cursor-pointer",
                     isSelected && "bg-blue-50 dark:bg-blue-900/20",
-                    rowClassName && rowClassName(item, index, isSelected),
+                    rowClassName?.(item, index, isSelected),
                   )}
                   onClick={
                     onRowClick ? () => onRowClick(item, index) : undefined

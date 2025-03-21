@@ -39,6 +39,11 @@ import {
   TabsList,
   TabsTrigger,
 } from "~/@/components/ui/tabs";
+import { SectionHeader } from "~/app/events/[id]/[eventId]/_components/section-header";
+import { EventCard } from "~/app/events/[id]/[eventId]/_components/event-card";
+import { getStatusLabel } from "~/@/utils/event-utils";
+import { StatusIndicator } from "~/@/components/ui/status-indicator";
+import { EventDataTable } from "~/app/events/[id]/[eventId]/_components/event-data-table";
 
 function getDates(datesArray: Events): string[] | undefined {
   const availableDates = Object.keys(datesArray);
@@ -58,10 +63,9 @@ export function EventsPage({
 }) {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<EventList | null>(null);
-  const [competitionData, setCompetitionData] = useState<EventList | null>(
-    null,
-  );
+  const [selectedEvent, setSelectedEvent] = useState<Events | null>(null);
+  const [competitionData, setCompetitionData] =
+    useState<CompetitionProperties | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const dates = getDates(data);
@@ -193,71 +197,53 @@ export function EventsPage({
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-12">
             {/* Left side - Timetable */}
-            <Card className="h-fit overflow-hidden border-0 shadow-md">
-              <CardContent className="p-0">
-                <Tabs defaultValue={dates[0]}>
-                  <div className="bg-gradient-to-r from-blue-100 to-blue-200 p-4 dark:from-blue-900/50 dark:to-blue-800/50">
-                    <div className="flex items-center">
-                      <div className="mr-2 rounded-full bg-blue-200/50 p-1.5 dark:bg-blue-700/30">
-                        <Calendar className="h-5 w-5 text-blue-700 dark:text-blue-300" />
-                      </div>
-                      {dates?.map((date) => (
-                        <TabsList
-                          key={date}
-                          className="grid w-full grid-cols-2"
-                        >
-                          <TabsTrigger
-                            value={date}
-                            onClick={() => setSelectedDate(date)}
-                          >
-                            <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
-                              {date}
-                            </h2>
-                          </TabsTrigger>
-                        </TabsList>
-                      ))}
-                    </div>
-                  </div>
-                  {dates?.map((date) => (
-                    <TabsContent
-                      key={date}
-                      value={date}
-                      className="overflow-x-auto"
-                    >
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
-                            <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                              Aika
-                            </th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                              Laji
-                            </th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                              Kierros
-                            </th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                              Tila
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {events.map((event, index) => (
-                            <tr
-                              key={event.Id}
-                              className={cn(
-                                "cursor-pointer border-b transition-colors dark:border-gray-800",
-                                selectedEvent?.Id === event.Id
-                                  ? "bg-blue-50 dark:bg-blue-900/20"
-                                  : index % 2 === 0
-                                    ? "bg-white dark:bg-transparent"
-                                    : "bg-gray-50/50 dark:bg-gray-900/10",
-                              )}
-                              onClick={() => setSelectedEvent(event)}
-                            >
-                              <td className="px-4 py-3">
+            <div className="w-full lg:col-span-6">
+              <Card className="h-fit w-full overflow-hidden border-0 shadow-md">
+                <CardContent className="p-0">
+                  <Tabs
+                    defaultValue={dates[0]}
+                    value={selectedDate}
+                    onValueChange={setSelectedDate}
+                    className="w-full"
+                  >
+                    {dates.map((date) => (
+                      <TabsContent
+                        key={date}
+                        value={date}
+                        className="mt-0 overflow-x-auto"
+                      >
+                        <div className="bg-gradient-to-r from-blue-100 to-blue-200 p-4 dark:from-blue-900/50 dark:to-blue-800/50">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="mr-2 rounded-full bg-blue-200/50 p-1.5 dark:bg-blue-700/30">
+                                <Calendar className="h-5 w-5 text-blue-700 dark:text-blue-300" />
+                              </div>
+                              <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                                {date}
+                              </h2>
+                            </div>
+                            <TabsList className="h-9 bg-blue-200/70 dark:bg-blue-800/50">
+                              {dates.map((tabDate) => (
+                                <TabsTrigger
+                                  key={tabDate}
+                                  value={tabDate}
+                                  className="text-blue-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white dark:text-blue-200 dark:data-[state=active]:bg-blue-700"
+                                >
+                                  {tabDate}
+                                </TabsTrigger>
+                              ))}
+                            </TabsList>
+                          </div>
+                        </div>
+                        <EventDataTable
+                          data={events}
+                          columns={[
+                            {
+                              key: "time",
+                              header: "Aika",
+                              cell: (event) => (
                                 <div className="flex items-center">
                                   <div className="mr-2 rounded-full bg-blue-100 p-1 dark:bg-blue-900/30">
                                     <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -266,173 +252,167 @@ export function EventsPage({
                                     {formatTime(event.BeginDateTimeWithTZ)}
                                   </span>
                                 </div>
-                              </td>
-                              <td className="px-4 py-3 font-medium">
-                                {event.EventName}
-                              </td>
-                              <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                                {event.Name}
-                              </td>
-                              <td className="px-4 py-3">
-                                <Badge
-                                  className={cn(
-                                    "transition-colors",
-                                    event.Status === "Official"
-                                      ? "bg-green-500 hover:bg-green-600 dark:bg-green-700 dark:hover:bg-green-800"
-                                      : event.Status === "Unofficial"
-                                        ? "bg-amber-500 hover:bg-amber-600 dark:bg-amber-700 dark:hover:bg-amber-800"
-                                        : "bg-blue-500 hover:bg-blue-600 dark:bg-blue-700 dark:hover:bg-blue-800",
-                                  )}
-                                >
-                                  {event.Status === "Official"
-                                    ? "Completed"
-                                    : event.Status}
-                                </Badge>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              </CardContent>
-            </Card>
+                              ),
+                            },
+                            {
+                              key: "event",
+                              header: "Laji",
+                              cell: (event) => (
+                                <span className="font-medium">
+                                  {event.EventName}
+                                </span>
+                              ),
+                            },
+                            {
+                              key: "round",
+                              header: "Kierros",
+                              cell: (event) => (
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  {event.Name}
+                                </span>
+                              ),
+                            },
+                            {
+                              key: "status",
+                              header: "Tila",
+                              cell: (event) => (
+                                <StatusIndicator
+                                  status={
+                                    getStatusLabel(
+                                      event.BeginDateTimeWithTZ,
+                                    ).toLowerCase() as any
+                                  }
+                                />
+                              ),
+                            },
+                          ]}
+                          keyExtractor={(event) => event.Id}
+                          onRowClick={(event) => setSelectedEvent(event)}
+                          selectedItem={selectedEvent}
+                          isSelectable={true}
+                        />
+                      </TabsContent>
+                    ))}
+                  </Tabs>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Right side - Event details */}
-            <Card className="overflow-hidden border-0 shadow-md">
-              <CardContent className="p-0">
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white dark:from-blue-800 dark:to-blue-900">
-                  <div className="flex items-start justify-between">
-                    <h3 className="text-xl font-semibold">
-                      {selectedEvent?.EventName}
-                    </h3>
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <div className="flex items-center rounded-full bg-white/10 px-3 py-1 dark:bg-black/20">
-                      <Clock className="mr-1.5 h-4 w-4" />
-                      <span>
-                        {formatTime(selectedEvent?.BeginDateTimeWithTZ || "")}
-                      </span>
-                    </div>
-                    <div className="flex items-center rounded-full bg-white/10 px-3 py-1 dark:bg-black/20">
-                      <span>{selectedEvent?.Name}</span>
-                    </div>
-                    <Badge
-                      className={cn(
-                        "ml-0 transition-colors",
-                        selectedEvent?.Status === "Official"
-                          ? "bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
-                          : selectedEvent?.Status === "Unofficial"
-                            ? "bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-800"
-                            : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800",
-                      )}
-                    >
-                      {selectedEvent?.Status === "Official"
-                        ? "Completed"
-                        : selectedEvent?.Status}
-                    </Badge>
-                  </div>
-                </div>
+            <div className="w-full lg:col-span-6">
+              <Card className="w-full overflow-hidden border-0 shadow-md">
+                <CardContent className="p-0">
+                  {selectedEvent && (
+                    <>
+                      <EventCard
+                        title={selectedEvent.EventName}
+                        time={formatTime(selectedEvent.BeginDateTimeWithTZ)}
+                        status={
+                          getStatusLabel(
+                            selectedEvent.BeginDateTimeWithTZ,
+                          ).toLowerCase() as any
+                        }
+                        footer={
+                          <Link
+                            href={`/events/${competitionId}/${selectedEvent.EventId}`}
+                          >
+                            <Button className="w-full bg-blue-600 shadow-sm transition-colors hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800">
+                              <ExternalLink className="mr-2 h-4 w-4" />
+                              View Full Event Details
+                            </Button>
+                          </Link>
+                        }
+                      >
+                        <SectionHeader
+                          title="Results"
+                          icon={<Calendar />}
+                          size="sm"
+                          className="mb-3"
+                        />
 
-                <div className="p-6">
-                  {/* Results section */}
-                  <div className="mb-4 flex items-center">
-                    <div className="mr-3 rounded-full bg-blue-100 p-2 dark:bg-blue-900/30">
-                      <Trophy className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <h4 className="text-lg font-semibold">Results</h4>
-                  </div>
-
-                  {selectedEvent?.Rounds && selectedEvent.Rounds.length > 0 ? (
-                    <div className="overflow-x-auto rounded-lg border dark:border-gray-800">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="bg-gray-50 dark:bg-gray-900/50">
-                            <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                              Pos
-                            </th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                              Name
-                            </th>
-                            <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                              Club
-                            </th>
-                            <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
-                              Result
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {selectedEvent.Rounds[
-                            selectedEvent.Rounds.length - 1
-                          ].TotalResults.filter(
-                            (result) =>
-                              result.ResultRank && result.ResultRank <= 5,
-                          )
-                            .sort(
-                              (a, b) =>
-                                (a.ResultRank || 999) - (b.ResultRank || 999),
-                            )
-                            .map((result) => (
-                              <tr
-                                key={result.AllocId}
-                                className="border-t transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/30"
-                              >
-                                <td className="px-4 py-3">
-                                  <div
-                                    className={cn(
-                                      "flex h-8 w-8 items-center justify-center rounded-full font-medium text-white shadow-sm transition-transform hover:scale-105",
-                                      result.ResultRank === 1
-                                        ? "bg-yellow-500 dark:bg-yellow-600"
-                                        : result.ResultRank === 2
-                                          ? "bg-gray-400 dark:bg-gray-500"
-                                          : result.ResultRank === 3
-                                            ? "bg-amber-700 dark:bg-amber-800"
-                                            : "bg-blue-500 dark:bg-blue-600",
-                                    )}
-                                  >
-                                    {result.ResultRank}
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3 font-medium">
-                                  {result.Name}
-                                </td>
-                                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                                  {result.Organization.Name}
-                                </td>
-                                <td className="px-4 py-3 text-right font-medium">
-                                  {result.Result.replace(",", ".")}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border bg-gray-50 py-8 text-center dark:border-gray-800 dark:bg-gray-900/30">
-                      <div className="mb-3 text-gray-400">
-                        <Trophy className="mx-auto h-10 w-10 opacity-30" />
-                      </div>
-                      <p className="text-gray-500 dark:text-gray-400">
-                        No results available for this event yet.
-                      </p>
-                    </div>
+                        {selectedEvent.Rounds &&
+                        selectedEvent.Rounds.length > 0 ? (
+                          <div className="overflow-x-auto rounded-lg border dark:border-gray-800">
+                            <table className="w-full">
+                              <thead>
+                                <tr className="bg-gray-50 dark:bg-gray-900/50">
+                                  <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                                    Pos
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                                    Name
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                                    Club
+                                  </th>
+                                  <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                                    Result
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {selectedEvent.Rounds[
+                                  selectedEvent.Rounds.length - 1
+                                ].TotalResults.filter(
+                                  (result) =>
+                                    result.ResultRank && result.ResultRank <= 5,
+                                )
+                                  .sort(
+                                    (a, b) =>
+                                      (a.ResultRank || 999) -
+                                      (b.ResultRank || 999),
+                                  )
+                                  .map((result) => (
+                                    <tr
+                                      key={result.AllocId}
+                                      className="border-t transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/30"
+                                    >
+                                      <td className="px-4 py-3">
+                                        <div
+                                          className={cn(
+                                            "flex h-8 w-8 items-center justify-center rounded-full font-medium text-white shadow-sm transition-transform hover:scale-105",
+                                            result.ResultRank === 1
+                                              ? "bg-yellow-500 dark:bg-yellow-600"
+                                              : result.ResultRank === 2
+                                                ? "bg-gray-400 dark:bg-gray-500"
+                                                : result.ResultRank === 3
+                                                  ? "bg-amber-700 dark:bg-amber-800"
+                                                  : "bg-blue-500 dark:bg-blue-600",
+                                          )}
+                                        >
+                                          {result.ResultRank}
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-3 font-medium">
+                                        {result.Name}
+                                      </td>
+                                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                                        {result.Organization.Name}
+                                      </td>
+                                      <td className="px-4 py-3 text-right font-medium">
+                                        {result.Result.replace(",", ".")}
+                                      </td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="rounded-lg border bg-gray-50 py-8 text-center dark:border-gray-800 dark:bg-gray-900/30">
+                            <div className="mb-3 text-gray-400">
+                              <Calendar className="mx-auto h-10 w-10 opacity-30" />
+                            </div>
+                            <p className="text-gray-500 dark:text-gray-400">
+                              No results available for this event yet.
+                            </p>
+                          </div>
+                        )}
+                      </EventCard>
+                    </>
                   )}
-
-                  <div className="mt-6">
-                    <Link
-                      href={`/events/${competitionId}/${selectedEvent?.EventId}`}
-                    >
-                      <Button className="w-full bg-blue-600 shadow-sm transition-colors hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800">
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        View Full Event Details
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </>
       )}

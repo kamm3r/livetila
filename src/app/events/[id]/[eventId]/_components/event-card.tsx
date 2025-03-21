@@ -46,7 +46,7 @@ export function EventCard({
 
   return (
     <Card className={cn("w-full", className, "overflow-hidden")}>
-      {/* <CardHeader
+      <CardHeader
         className={cn(
           isCompact ? "px-4 py-3" : "px-6 py-4",
           "bg-muted/20",
@@ -74,7 +74,7 @@ export function EventCard({
             {headerActions}
           </div>
         </div>
-      </CardHeader> */}
+      </CardHeader>
 
       <CardContent>{children}</CardContent>
 

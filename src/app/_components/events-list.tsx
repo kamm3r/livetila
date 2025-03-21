@@ -142,8 +142,7 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
         comp.OrganizationName.toLowerCase().includes(
           searchTerm.toLowerCase(),
         ) ||
-        (comp.Stadion.Name &&
-          comp.Stadion.Name.toLowerCase().includes(searchTerm.toLowerCase()));
+        (comp.Stadion.Name?.toLowerCase().includes(searchTerm.toLowerCase()));
 
       // Date range filter
       let matchesDate = true;
@@ -294,12 +293,6 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
     selectedLocations.length > 0 ||
     showFavoritesOnly ||
     statusFilter !== "all";
-
-  console.log(`competitions`, competitions);
-  console.log(`filteredCompetitions`, filteredCompetitions);
-  console.log(`organizations`, organizations);
-  console.log(`categories`, categories);
-  console.log(`locations`, locations);
 
   return (
     <>

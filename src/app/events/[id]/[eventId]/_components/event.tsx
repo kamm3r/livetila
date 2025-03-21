@@ -119,9 +119,11 @@ export default function EventDetailTabs({
                   header: "Nimi",
                   cell: (participant) => (
                     <div className="flex items-center">
-                      <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                        {participant.Number}
-                      </span>
+                      {!!participant.Number && (
+                        <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                          {participant.Number}
+                        </span>
+                      )}
                       <span className="font-medium">{participant.Name}</span>
                     </div>
                   ),
@@ -217,9 +219,11 @@ export default function EventDetailTabs({
                       cell: (allocation) => (
                         <div className="flex flex-col">
                           <div className="flex items-center">
-                            <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                              {allocation.Number}
-                            </span>
+                            {!!allocation.Number && (
+                              <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                {allocation.Number}
+                              </span>
+                            )}
                             <span className="font-medium">
                               {allocation.Name}
                             </span>
