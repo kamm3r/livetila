@@ -17,7 +17,10 @@ export type StatusType =
   | "info"
   | "tuleva"
   | "käynnissä"
-  | "päättynyt";
+  | "päättynyt"
+  | "eräjaot puuttuvat"
+  | "eräjaot tehty"
+  | "tuntematon";
 
 interface StatusIndicatorProps {
   status: StatusType;
@@ -79,19 +82,44 @@ export function StatusIndicator({
     // Add Finnish status mappings
     tuleva: {
       color: "bg-blue-500 hover:bg-blue-600 text-white",
-      label: "Upcoming",
+      label: "Tuleva",
     },
     käynnissä: {
-      color: "bg-amber-500 hover:bg-amber-600 text-white",
-      label: "Live",
+      color: "bg-amber-500 hover:bg-amber-600 text-white animate-pulse",
+      label: "Käynnissä",
     },
     päättynyt: {
       color: "bg-green-600 hover:bg-green-700 text-white",
-      label: "Completed",
+      label: "Päättynyt",
+    },
+    // Add new round status mappings
+    Unallocated: {
+      color: "bg-red-500 hover:bg-red-600 text-white",
+      label: "Eräjaot puuttuvat",
+    },
+    Allocated: {
+      color: "bg-blue-500 hover:bg-blue-600 text-white",
+      label: "Eräjaot tehty",
+    },
+    Progress: {
+      color: "bg-amber-500 hover:bg-amber-600 text-green-700 animate-bounce",
+      label: "Käynnissä",
+    },
+    Official: {
+      color: "bg-green-600 hover:bg-green-700 text-white",
+      label: "päättynyt",
+    },
+    tuntematon: {
+      color: "bg-gray-500 hover:bg-gray-600 text-white",
+      label: "Tuntematon",
     },
   };
 
-  const config = statusConfig[status];
+  // Get the config for the current status, or use a default if not found
+  const config = statusConfig[status] || {
+    color: "bg-gray-500 hover:bg-gray-600 text-white",
+    label: status as string,
+  };
 
   if (variant === "dot") {
     return (
@@ -119,13 +147,17 @@ export function StatusIndicator({
           "text-sm font-medium",
           status === "completed" ||
             status === "official" ||
-            status === "success"
+            status === "success" ||
+            status === "päättynyt"
             ? "text-green-600 dark:text-green-400"
-            : status === "cancelled" || status === "error"
+            : status === "cancelled" ||
+                status === "error" ||
+                status === "eräjaot puuttuvat"
               ? "text-red-600 dark:text-red-400"
               : status === "postponed" ||
                   status === "unofficial" ||
-                  status === "warning"
+                  status === "warning" ||
+                  status === "käynnissä"
                 ? "text-amber-600 dark:text-amber-400"
                 : "text-blue-600 dark:text-blue-400",
           className,

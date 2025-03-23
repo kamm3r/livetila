@@ -47,3 +47,19 @@ export function getVenueType(type: number): string {
       return "Other";
   }
 }
+
+export function getRoundStatusLabel(status: string | undefined): string {
+  console.log(status);
+  switch (status?.toLowerCase()) {
+    case "Unallocated":
+      return "eräjaot puuttuvat";
+    case "Allocated":
+      return "eräjaot tehty";
+    case "progress":
+      return "käynnissä";
+    case "Official":
+      return "päättynyt";
+    default:
+      return status || "tuntematon";
+  }
+}

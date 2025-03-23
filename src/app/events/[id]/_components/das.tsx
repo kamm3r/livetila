@@ -3,31 +3,31 @@
 import type React from "react";
 
 import { Card, CardContent } from "~/@/components/ui/card";
-import { Badge } from "~/@/components/ui/badge";
+// import { Badge } from "~/@/components/ui/badge";
 import {
   Clock,
   Calendar,
-  Medal,
+  // Medal,
   ExternalLink,
-  Star,
+  // Star,
   ArrowLeft,
   Home,
   ChevronRight,
   Trophy,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "~/@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "~/@/components/ui/tooltip";
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipProvider,
+//   TooltipTrigger,
+// } from "~/@/components/ui/tooltip";
 import { cn } from "~/@/lib/utils";
 import {
-  type CompetitionProperties,
   type EventList,
+  type CompetitionProperties,
   type Events,
 } from "~/types/comp";
 import { Skeleton } from "~/@/components/ui/skeleton";
@@ -41,7 +41,7 @@ import {
 } from "~/@/components/ui/tabs";
 import { SectionHeader } from "~/app/events/[id]/[eventId]/_components/section-header";
 import { EventCard } from "~/app/events/[id]/[eventId]/_components/event-card";
-import { getStatusLabel } from "~/@/utils/event-utils";
+import { getRoundStatusLabel, getStatusLabel } from "~/@/utils/event-utils";
 import { StatusIndicator } from "~/@/components/ui/status-indicator";
 import { EventDataTable } from "~/app/events/[id]/[eventId]/_components/event-data-table";
 
@@ -62,7 +62,20 @@ export function EventsPage({
   competitionId: string;
 }) {
   const [loading, setLoading] = useState(true);
-  const [events, setEvents] = useState<Event[]>([]);
+
+  const sortedEventsData = useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(data).map(([date, events]) => [
+        date,
+        [...events].sort(
+          (a, b) =>
+            new Date(a.BeginDateTimeWithTZ).getTime() -
+            new Date(b.BeginDateTimeWithTZ).getTime(),
+        ),
+      ]),
+    );
+  }, [data]);
+  const [events, setEvents] = useState<EventList[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Events | null>(null);
   const [competitionData, setCompetitionData] =
     useState<CompetitionProperties | null>(null);
@@ -71,39 +84,44 @@ export function EventsPage({
   const dates = getDates(data);
 
   useEffect(() => {
-    const defaultDate = selectedDate || dates[0];
-    setSelectedDate(defaultDate);
+    const defaultDate = selectedDate ?? dates![0];
+    setSelectedDate(defaultDate!);
     const timer = setTimeout(() => {
-      setEvents(data[defaultDate]);
+      setEvents(sortedEventsData[defaultDate!]!);
       setSelectedEvent(
-        data[defaultDate].find((e) => e.isFavorite) || data[defaultDate][0],
+        // sortedEventsData[defaultDate!]!.find((e) => e.isFavorite) ||
+        // @ts-expect-error TODO: Fix this
+        sortedEventsData[defaultDate!]![0]!,
       );
       setCompetitionData(details);
       setLoading(false);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [data, selectedDate]);
+  }, [data, dates, details, selectedDate, sortedEventsData]);
 
   // Toggle favorite status for an event
-  const toggleFavorite = (id: number, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the row click
+  // const toggleFavorite = (id: number, e: React.MouseEvent) => {
+  //   e.stopPropagation(); // Prevent triggering the row click
 
-    // Update the events array with the toggled favorite status
-    const updatedEvents = events.map((event) =>
-      event.Id === id ? { ...event, isFavorite: !event.isFavorite } : event,
-    );
+  //   // Update the events array with the toggled favorite status
+  //   const updatedEvents = events.map((event) =>
+  //     // @ts-expect-error TODO: Fix this
+  //     event.Id === id ? { ...event, isFavorite: !event.isFavorite } : event,
+  //   );
 
-    setEvents(updatedEvents);
+  //   setEvents(updatedEvents);
 
-    // Find the updated selected event if it was the one toggled
-    if (selectedEvent?.Id === id) {
-      const updatedEvent = updatedEvents.find((event) => event.Id === id);
-      if (updatedEvent) {
-        setSelectedEvent(updatedEvent);
-      }
-    }
-  };
+  //   // Find the updated selected event if it was the one toggled
+  //   // @ts-expect-error TODO: Fix this
+  //   if (selectedEvent?.Id === id) {
+  //     const updatedEvent = updatedEvents.find((event) => event.Id === id);
+  //     if (updatedEvent) {
+  //       // @ts-expect-error TODO: Fix this
+  //       setSelectedEvent(updatedEvent);
+  //     }
+  //   }
+  // };
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -155,7 +173,8 @@ export function EventsPage({
                 <div className="flex items-center rounded-full bg-white/10 px-3 py-1 dark:bg-white/5">
                   <Calendar className="mr-1.5 h-4 w-4" />
                   <span>
-                    {formatDate(competitionData?.Competition.BeginDate || "")}
+                    {/* @ts-expect-error TODO: Fix this */}
+                    {formatDate(competitionData?.Competition.BeginDate ?? "")}
                   </span>
                 </div>
                 <div className="flex items-center rounded-full bg-white/10 px-3 py-1 dark:bg-white/5">
@@ -203,12 +222,14 @@ export function EventsPage({
               <Card className="h-fit w-full overflow-hidden border-0 shadow-md">
                 <CardContent className="p-0">
                   <Tabs
+                    // @ts-expect-error TODO: Fix this
                     defaultValue={dates[0]}
+                    // @ts-expect-error TODO: Fix this
                     value={selectedDate}
                     onValueChange={setSelectedDate}
                     className="w-full"
                   >
-                    {dates.map((date) => (
+                    {dates?.map((date) => (
                       <TabsContent
                         key={date}
                         value={date}
@@ -225,7 +246,7 @@ export function EventsPage({
                               </h2>
                             </div>
                             <TabsList className="h-9 bg-blue-200/70 dark:bg-blue-800/50">
-                              {dates.map((tabDate) => (
+                              {dates?.map((tabDate) => (
                                 <TabsTrigger
                                   key={tabDate}
                                   value={tabDate}
@@ -249,7 +270,7 @@ export function EventsPage({
                                     <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                   </div>
                                   <span>
-                                    {formatTime(event.BeginDateTimeWithTZ)}
+                                    {formatTime(event!.BeginDateTimeWithTZ)}
                                   </span>
                                 </div>
                               ),
@@ -259,7 +280,7 @@ export function EventsPage({
                               header: "Laji",
                               cell: (event) => (
                                 <span className="font-medium">
-                                  {event.EventName}
+                                  {event?.EventName}
                                 </span>
                               ),
                             },
@@ -268,7 +289,7 @@ export function EventsPage({
                               header: "Kierros",
                               cell: (event) => (
                                 <span className="text-gray-600 dark:text-gray-400">
-                                  {event.Name}
+                                  {event?.Name}
                                 </span>
                               ),
                             },
@@ -277,17 +298,16 @@ export function EventsPage({
                               header: "Tila",
                               cell: (event) => (
                                 <StatusIndicator
-                                  status={
-                                    getStatusLabel(
-                                      event.BeginDateTimeWithTZ,
-                                    ).toLowerCase() as any
-                                  }
+                                  // @ts-expect-error TODO: Fix this
+                                  status={getRoundStatusLabel(event?.Status)}
                                 />
                               ),
                             },
                           ]}
-                          keyExtractor={(event) => event.Id}
+                          keyExtractor={(event) => event!.Id}
+                          // @ts-expect-error TODO: Fix this
                           onRowClick={(event) => setSelectedEvent(event)}
+                          // @ts-expect-error TODO: Fix this
                           selectedItem={selectedEvent}
                           isSelectable={true}
                         />
@@ -305,6 +325,7 @@ export function EventsPage({
                   {selectedEvent && (
                     <>
                       <EventCard
+                        // @ts-expect-error TODO: Fix this
                         title={selectedEvent.EventName}
                         time={formatTime(selectedEvent.BeginDateTimeWithTZ)}
                         status={

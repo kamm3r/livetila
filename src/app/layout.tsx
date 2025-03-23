@@ -18,7 +18,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fi" className={`${GeistSans.variable}`}>
-      <body className="container mx-auto max-w-5xl">
+      <body className="container mx-auto max-w-lvw">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

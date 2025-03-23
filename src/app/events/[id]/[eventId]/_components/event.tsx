@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CardContent } from "~/@/components/ui/card";
 import { Card } from "~/@/components/ui/card";
 import {
@@ -26,6 +26,12 @@ import { SectionHeader } from "./section-header";
 import { type Competition } from "~/types/comp";
 import { useEventRounds } from "~/@/hooks/use-event-rounds";
 import { useRound } from "~/@/components/round-provider";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/@/components/ui/tooltip";
 
 export default function EventDetailTabs({
   eventData,
@@ -53,6 +59,21 @@ export default function EventDetailTabs({
   // const toggleFavorite = () => {
   //   setIsFavorite(!isFavorite);
   // };
+
+  // Determine if this is a field event with multiple attempts
+  const isFieldEvent = eventData.EventType.Category === "Field";
+
+  // Check if we have attempts data to display
+  const hasAttemptsData = useMemo(() => {
+    if (!currentRound?.TotalResults) return false;
+
+    return currentRound.TotalResults.some(
+      (result) =>
+        result.Attempts &&
+        result.Attempts.length > 0 &&
+        result.Attempts.some((attempt) => attempt.Line1),
+    );
+  }, [currentRound]);
 
   return (
     <div className="border-b">
@@ -355,9 +376,11 @@ export default function EventDetailTabs({
                                     <td className="px-4 py-3">
                                       <div className="flex flex-col">
                                         <div className="flex items-center">
-                                          <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                                            {result.Number}
-                                          </span>
+                                          {!!result.Number && (
+                                            <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                              {result.Number}
+                                            </span>
+                                          )}
                                           <span className="font-medium">
                                             {result.Name}
                                           </span>
@@ -406,6 +429,286 @@ export default function EventDetailTabs({
                   className="mb-4"
                 />
 
+                {/* Field Event with Attempts */}
+                {isFieldEvent && hasAttemptsData ? (
+                  <Card className="overflow-hidden border-0 shadow-md">
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
+                              <th className="px-4 py-3 text-left font-medium text-blue-800 dark:text-blue-200">
+                                Sij.
+                              </th>
+                              <th className="px-4 py-3 text-left font-medium text-blue-800 dark:text-blue-200">
+                                Nimi ja seura
+                              </th>
+                              <th className="px-4 py-3 text-center font-medium text-blue-800 dark:text-blue-200">
+                                tulos
+                              </th>
+                              <th className="px-4 py-3 text-center font-medium text-blue-800 dark:text-blue-200"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {currentRound.TotalResults.filter(
+                              (r) =>
+                                r.Result !== "DNF" && r.ResultRank !== null,
+                            )
+                              .sort(
+                                (a, b) =>
+                                  (a.ResultRank || 999) - (b.ResultRank || 999),
+                              )
+                              .map((result) => (
+                                <tr
+                                  key={result.AllocId}
+                                  className="border-b transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                >
+                                  <td className="px-4 py-3">
+                                    {result.ResultRank &&
+                                    result.ResultRank <= 3 ? (
+                                      <span
+                                        className={cn(
+                                          "inline-flex h-7 w-7 items-center justify-center rounded-full font-medium text-white",
+                                          result.ResultRank === 1
+                                            ? "bg-yellow-500"
+                                            : result.ResultRank === 2
+                                              ? "bg-gray-400"
+                                              : "bg-amber-700",
+                                        )}
+                                      >
+                                        {result.ResultRank}
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                        {result.ResultRank}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <div className="flex flex-col">
+                                      <div className="flex items-center">
+                                        {!!result.Number && (
+                                          <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                            {result.Number}
+                                          </span>
+                                        )}
+                                        <span className="font-medium">
+                                          {result.Name}
+                                        </span>
+                                      </div>
+                                      <div className="text-muted-foreground mt-1 text-sm">
+                                        {result.Organization.Name}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <div className="flex items-center justify-center">
+                                      <span className="text-lg font-bold">
+                                        {result.Result}
+                                      </span>
+                                      {result.QRank && (
+                                        <Badge className="ml-2 bg-green-600 hover:bg-green-700">
+                                          Q
+                                        </Badge>
+                                      )}
+                                      {result.QResult && (
+                                        <Badge className="ml-2 bg-green-600 hover:bg-green-700">
+                                          q
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    {result.Attempts &&
+                                    result.Attempts.length > 0 ? (
+                                      <div className="flex flex-col">
+                                        {/* First row: measurements */}
+                                        <div className="mb-1 flex justify-center space-x-4">
+                                          {result.Attempts.map(
+                                            (attempt, idx) => (
+                                              <div
+                                                key={idx}
+                                                className={cn(
+                                                  "min-w-10 px-1 text-center",
+                                                  attempt.Line1 ===
+                                                    result.Result
+                                                    ? "font-bold text-blue-600"
+                                                    : "",
+                                                )}
+                                              >
+                                                {attempt.Line1 || "-"}
+                                              </div>
+                                            ),
+                                          )}
+                                        </div>
+
+                                        {/* Second row: attempt status (o, x, xo, etc.) */}
+                                        {result.Attempts.some(
+                                          (a) => a.Line2,
+                                        ) && (
+                                          <div className="flex justify-center space-x-4">
+                                            {result.Attempts.map(
+                                              (attempt, idx) => (
+                                                <div
+                                                  key={idx}
+                                                  className="min-w-10 px-1 text-center text-sm"
+                                                >
+                                                  <TooltipProvider>
+                                                    <Tooltip>
+                                                      <TooltipTrigger asChild>
+                                                        <span
+                                                          className={cn(
+                                                            attempt.Line2 ===
+                                                              "o"
+                                                              ? "text-green-600"
+                                                              : attempt.Line2 ===
+                                                                  "x"
+                                                                ? "text-red-600"
+                                                                : attempt.Line2?.includes(
+                                                                      "x",
+                                                                    )
+                                                                  ? "text-amber-600"
+                                                                  : "",
+                                                          )}
+                                                        >
+                                                          {attempt.Line2 || "-"}
+                                                        </span>
+                                                      </TooltipTrigger>
+                                                      <TooltipContent>
+                                                        <div className="text-xs">
+                                                          {attempt.Line2 === "o"
+                                                            ? "Successful on first attempt"
+                                                            : attempt.Line2 ===
+                                                                "x"
+                                                              ? "Failed attempt"
+                                                              : attempt.Line2 ===
+                                                                  "xo"
+                                                                ? "Successful on second attempt"
+                                                                : attempt.Line2 ===
+                                                                    "xxo"
+                                                                  ? "Successful on third attempt"
+                                                                  : attempt.Line2 ===
+                                                                      "-"
+                                                                    ? "No attempt"
+                                                                    : "Attempt result"}
+                                                        </div>
+                                                      </TooltipContent>
+                                                    </Tooltip>
+                                                  </TooltipProvider>
+                                                </div>
+                                              ),
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div className="text-muted-foreground text-center">
+                                        -
+                                      </div>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <EventDataTable
+                    data={currentRound.TotalResults.filter(
+                      (r) => r.Result !== "DNF" && r.ResultRank !== null,
+                    ).sort(
+                      (a, b) => (a.ResultRank || 999) - (b.ResultRank || 999),
+                    )}
+                    columns={[
+                      {
+                        key: "position",
+                        header: "Sij.",
+                        cell: (result) =>
+                          result.ResultRank && result.ResultRank <= 3 ? (
+                            <span
+                              className={cn(
+                                "inline-flex h-7 w-7 items-center justify-center rounded-full font-medium text-white",
+                                result.ResultRank === 1
+                                  ? "bg-yellow-500"
+                                  : result.ResultRank === 2
+                                    ? "bg-gray-400"
+                                    : "bg-amber-700",
+                              )}
+                            >
+                              {result.ResultRank}
+                            </span>
+                          ) : (
+                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                              {result.ResultRank}
+                            </span>
+                          ),
+                      },
+                      {
+                        key: "name",
+                        header: "Nimi ja seura",
+                        cell: (result) => (
+                          <div className="flex flex-col">
+                            <div className="flex items-center">
+                              {!!result.Number && (
+                                <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                  {result.Number}
+                                </span>
+                              )}
+                              <span className="font-medium">{result.Name}</span>
+                            </div>
+                            <div className="text-muted-foreground mt-1 text-sm">
+                              {result.Organization.Name}
+                            </div>
+                          </div>
+                        ),
+                      },
+                      {
+                        key: "result",
+                        header: "Tulos",
+                        cell: (result) => (
+                          <div className="flex items-center">
+                            <span className="font-medium">{result.Result}</span>
+                            {result.QRank && (
+                              <Badge className="ml-2 bg-green-600 hover:bg-green-700">
+                                Q
+                              </Badge>
+                            )}
+                            {result.QResult && (
+                              <Badge className="ml-2 bg-green-600 hover:bg-green-700">
+                                q
+                              </Badge>
+                            )}
+                          </div>
+                        ),
+                      },
+                    ]}
+                    keyExtractor={(result) => result.AllocId}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="py-8 text-center">
+                <p className="text-muted-foreground">
+                  No results available for this round yet.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+        {/* Overall Results
+                <SectionHeader
+                  title={
+                    currentRound.RoundTypeCategory === "Final"
+                      ? "Lopputulokset"
+                      : "Kokonaistulokset"
+                  }
+                  icon={<Award className="text-blue-600" />}
+                  size="md"
+                  className="mb-4"
+                />
+
                 <EventDataTable
                   data={currentRound.TotalResults.filter(
                     (r) => r.Result !== "DNF" && r.ResultRank !== null,
@@ -442,9 +745,11 @@ export default function EventDetailTabs({
                       cell: (result) => (
                         <div className="flex flex-col">
                           <div className="flex items-center">
-                            <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                              {result.Number}
-                            </span>
+                            {!!result.Number && (
+                              <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                {result.Number}
+                              </span>
+                            )}
                             <span className="font-medium">{result.Name}</span>
                           </div>
                           <div className="text-muted-foreground mt-1 text-sm">
@@ -484,7 +789,7 @@ export default function EventDetailTabs({
               </div>
             )}
           </TabsContent>
-        </Tabs>
+        </Tabs> */}
       </div>
     </div>
   );
