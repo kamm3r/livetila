@@ -18,8 +18,10 @@ export type StatusType =
   | "tuleva"
   | "käynnissä"
   | "päättynyt"
-  | "eräjaot puuttuvat"
-  | "eräjaot tehty"
+  | "Progress"
+  | "Official"
+  | "Unallocated"
+  | "Allocated"
   | "tuntematon";
 
 interface StatusIndicatorProps {
