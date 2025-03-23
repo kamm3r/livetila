@@ -299,7 +299,7 @@ export function EventsPage({
                               cell: (event) => (
                                 <StatusIndicator
                                   // @ts-expect-error TODO: Fix this
-                                  status={getRoundStatusLabel(event?.Status)}
+                                  status={event?.Status}
                                 />
                               ),
                             },

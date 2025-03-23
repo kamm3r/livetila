@@ -102,7 +102,7 @@ export function StatusIndicator({
       label: "Eräjaot tehty",
     },
     Progress: {
-      color: "bg-amber-500 hover:bg-amber-600 text-green-700 animate-bounce",
+      color: "bg-amber-500 hover:bg-amber-600 text-green-700 animate-pulse",
       label: "Käynnissä",
     },
     Official: {
