@@ -150,16 +150,19 @@ export function StatusIndicator({
           status === "completed" ||
             status === "official" ||
             status === "success" ||
-            status === "päättynyt"
+            status === "päättynyt" ||
+            status === "Official"
             ? "text-green-600 dark:text-green-400"
             : status === "cancelled" ||
                 status === "error" ||
-                status === "eräjaot puuttuvat"
+                status === "Unallocated"
               ? "text-red-600 dark:text-red-400"
               : status === "postponed" ||
                   status === "unofficial" ||
                   status === "warning" ||
-                  status === "käynnissä"
+                  status === "käynnissä" ||
+                  status === "Progress" ||
+                  status === "Allocated"
                 ? "text-amber-600 dark:text-amber-400"
                 : "text-blue-600 dark:text-blue-400",
           className,
