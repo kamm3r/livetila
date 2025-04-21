@@ -22,6 +22,7 @@ import { api } from "~/trpc/server";
 import type React from "react";
 
 import { EventsPage } from "~/app/events/[id]/_components/das";
+import { EventsHeader } from "~/@/components/events-header";
 
 // function butterParse(a: string): number {
 //   if (a === "NM" || Number.isNaN(a)) {
@@ -45,17 +46,21 @@ export default async function Comp({
   params: Promise<{ id: string }>;
 }) {
   const { id: cachedEventId } = await params;
-  const compData = await api.competition.getEvents({
+  const competitionData = await api.competition.getEvents({
     competitionId: cachedEventId,
   });
   const compDetailsData = await api.competition.getCompetitionDetails({
     competitionDetailsId: cachedEventId,
   });
+
   return (
-    <EventsPage
-      data={compData}
-      details={compDetailsData}
-      competitionId={cachedEventId}
-    />
+    <>
+      <EventsHeader competitionData={compDetailsData} />
+      <EventsPage
+        data={competitionData}
+        details={compDetailsData}
+        competitionId={cachedEventId}
+      />
+    </>
   );
 }

@@ -3,36 +3,26 @@
 import type React from "react";
 
 import { Card, CardContent } from "~/@/components/ui/card";
-// import { Badge } from "~/@/components/ui/badge";
 import {
   Clock,
   Calendar,
-  // Medal,
   ExternalLink,
-  // Star,
   ArrowLeft,
   Home,
   ChevronRight,
   Trophy,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "~/@/components/ui/button";
-// import {
-//   Tooltip,
-//   TooltipContent,
-//   TooltipProvider,
-//   TooltipTrigger,
-// } from "~/@/components/ui/tooltip";
 import { cn } from "~/@/lib/utils";
 import {
   type EventList,
   type CompetitionProperties,
   type Events,
+  Competition,
 } from "~/types/comp";
 import { Skeleton } from "~/@/components/ui/skeleton";
-import { format } from "date-fns";
-import { fi } from "date-fns/locale";
 import {
   Tabs,
   TabsContent,
@@ -41,15 +31,94 @@ import {
 } from "~/@/components/ui/tabs";
 import { SectionHeader } from "~/app/events/[id]/[eventId]/_components/section-header";
 import { EventCard } from "~/app/events/[id]/[eventId]/_components/event-card";
-import { getRoundStatusLabel, getStatusLabel } from "~/@/utils/event-utils";
+import { formatDate, formatTime, getStatusLabel } from "~/@/utils/event-utils";
 import { StatusIndicator } from "~/@/components/ui/status-indicator";
 import { EventDataTable } from "~/app/events/[id]/[eventId]/_components/event-data-table";
+import { api } from "~/trpc/react";
+import { Timetable } from "~/app/events/[id]/_components/timetable";
+import { useQueries } from "@tanstack/react-query";
 
 function getDates(datesArray: Events): string[] | undefined {
   const availableDates = Object.keys(datesArray);
   if (availableDates.length === 0) return; // Handle case where no data exists
 
   return availableDates;
+}
+
+function useAthleteCountData(
+  selectedDate: string | undefined,
+  dates: string[] | undefined,
+  data: Events,
+  competitionId: string,
+) {
+  // Extract all event IDs first
+  const eventIds: string[] = [];
+
+  for (const date of dates!) {
+    if (date) {
+      const events = data[selectedDate] ?? [];
+      for (const event of events) {
+        if (event.EventId) {
+          eventIds.push(`${event.EventId}`);
+        }
+      }
+    }
+  }
+
+  // Use the new procedure to fetch all counts at once
+  const countsQuery = api.competition.getAthleteCounts.useQuery(
+    {
+      competitionId,
+      eventIds,
+    },
+    {
+      enabled: eventIds.length > 0 && !!competitionId,
+      refetchOnMount: true,
+      staleTime: 0, // Don't use stale data
+    },
+  );
+
+  // Process the data once received
+  const athleteCountData = useMemo(() => {
+    console.log("Processing data in useMemo:", countsQuery.data);
+
+    if (!countsQuery.data) {
+      console.log("No data available yet");
+      return [];
+    }
+
+    const countMap = new Map(
+      countsQuery.data.map((item) => {
+        console.log(`Mapping event ID ${item.eventId} to count ${item.count}`);
+        return [item.eventId, item.count];
+      }),
+    );
+
+    const result = [];
+
+    for (const date of dates!) {
+      if (date) {
+        const events = data[selectedDate] ?? [];
+        for (const event of events) {
+          if (event.EventId) {
+            result.push({
+              date,
+              event: event.EventName,
+              athleteCount: countMap.get(`${event.EventId}`) ?? 0,
+            });
+          }
+        }
+      }
+    }
+
+    return result;
+  }, [countsQuery.data, dates, data]);
+
+  return {
+    athleteCountData,
+    isLoading: countsQuery.isLoading,
+    isError: countsQuery.isError,
+  };
 }
 
 export function EventsPage({
@@ -75,66 +144,96 @@ export function EventsPage({
       ]),
     );
   }, [data]);
+
   const [events, setEvents] = useState<EventList[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<Events | null>(null);
-  const [competitionData, setCompetitionData] =
-    useState<CompetitionProperties | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventList | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [compId, setCompId] = useState<string>("");
 
   const dates = getDates(data);
 
   useEffect(() => {
-    const defaultDate = selectedDate ?? dates![0];
-    setSelectedDate(defaultDate!);
-    const timer = setTimeout(() => {
-      setEvents(sortedEventsData[defaultDate!]!);
-      setSelectedEvent(
-        // sortedEventsData[defaultDate!]!.find((e) => e.isFavorite) ||
-        // @ts-expect-error TODO: Fix this
-        sortedEventsData[defaultDate!]![0]!,
-      );
-      setCompetitionData(details);
-      setLoading(false);
-    }, 500);
+    if (!selectedDate && dates && dates.length > 0) {
+      // Only set the default date if it hasn't been set yet
+      setSelectedDate(dates[0]!);
+    }
+  }, [dates, selectedDate]);
 
-    return () => clearTimeout(timer);
-  }, [data, dates, details, selectedDate, sortedEventsData]);
+  // Then, handle updates when selectedDate changes
+  useEffect(() => {
+    if (!selectedDate) return; // Skip if no date selected
 
-  // Toggle favorite status for an event
-  // const toggleFavorite = (id: number, e: React.MouseEvent) => {
-  //   e.stopPropagation(); // Prevent triggering the row click
+    // Update events based on selected date
+    setEvents(sortedEventsData[selectedDate] ?? []);
 
-  //   // Update the events array with the toggled favorite status
-  //   const updatedEvents = events.map((event) =>
-  //     // @ts-expect-error TODO: Fix this
-  //     event.Id === id ? { ...event, isFavorite: !event.isFavorite } : event,
-  //   );
+    // Get the first event for this date if no event is selected yet
+    // if (!selectedEvent) {
+    //   const eventsForDate = sortedEventsData[selectedDate] ?? [];
+    //   const firstEvent = eventsForDate[0] ?? null;
+    //   setSelectedEvent(firstEvent);
+    // }
 
-  //   setEvents(updatedEvents);
+    // Update compId whenever selectedDate or selectedEvent changes
+    if (selectedEvent) {
+      setCompId(`${competitionId}/${selectedEvent.EventId}`);
+    }
 
-  //   // Find the updated selected event if it was the one toggled
-  //   // @ts-expect-error TODO: Fix this
-  //   if (selectedEvent?.Id === id) {
-  //     const updatedEvent = updatedEvents.find((event) => event.Id === id);
-  //     if (updatedEvent) {
-  //       // @ts-expect-error TODO: Fix this
-  //       setSelectedEvent(updatedEvent);
+    setLoading(false);
+  }, [selectedDate, selectedEvent, sortedEventsData, details, competitionId]);
+
+  const eventCompData = api.competition.getAthletes.useQuery(
+    { compId },
+    { enabled: !!compId },
+  );
+
+  // console.log(dates);
+  // function getAthleteCount() {
+  //   const countData = [];
+
+  //   for (const date of dates) {
+  //     if (!!date) {
+  //       const events = data[date] ?? [];
+  //       if (events.length === 0) {
+  //         // No events for this date
+  //         console.assert(false, "No events for this events");
+  //         return;
+  //       }
+  //       for (const event of events) {
+  //         const count = api.competition.getAthleteCount.useQuery(
+  //           { compId: `${competitionId}/${event.EventId}` },
+  //           { enabled: !!event.EventId },
+  //         );
+
+  //         countData.push({
+  //           date: date,
+  //           event: event.EventName,
+  //           athleteCount: count.data,
+  //         }); // Store date and count
+  //       }
   //     }
   //   }
-  // };
+  //   return countData;
+  // }
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "d.M.yyyy", { locale: fi });
-  };
-
-  // Format time for display
-  const formatTime = (dateString: string) => {
-    return format(new Date(dateString), "HH:mm", { locale: fi });
-  };
-
+  const athleteCount = api.competition.getAthleteCount.useQuery(
+    { compId },
+    { enabled: !!compId },
+  );
+  const athleteCounts = useAthleteCountData(
+    selectedDate,
+    dates,
+    data,
+    competitionId,
+  );
+  if (athleteCounts.isLoading) {
+    console.log("loading");
+  } else if (athleteCounts.isError) {
+    console.log("error");
+  } else {
+    console.table(athleteCounts.athleteCountData);
+  }
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto py-6">
       {loading ? (
         // Loading skeleton UI
         <>
@@ -156,69 +255,9 @@ export function EventsPage({
       ) : (
         // Actual content
         <>
-          {/* Header */}
-          <div className="mb-6 overflow-hidden rounded-lg bg-gradient-to-r from-blue-700 to-indigo-800 shadow-lg dark:from-blue-800 dark:to-indigo-900">
-            <div className="p-6">
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="mr-3 rounded-full bg-white/10 p-2 dark:bg-white/5">
-                    <Trophy className="h-6 w-6 text-blue-100" />
-                  </div>
-                  <h1 className="text-2xl font-bold text-white md:text-3xl">
-                    {competitionData?.Competition.Name}
-                  </h1>
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-blue-100">
-                <div className="flex items-center rounded-full bg-white/10 px-3 py-1 dark:bg-white/5">
-                  <Calendar className="mr-1.5 h-4 w-4" />
-                  <span>
-                    {/* @ts-expect-error TODO: Fix this */}
-                    {formatDate(competitionData?.Competition.BeginDate ?? "")}
-                  </span>
-                </div>
-                <div className="flex items-center rounded-full bg-white/10 px-3 py-1 dark:bg-white/5">
-                  <span>{competitionData?.Competition.Organization}</span>
-                </div>
-                <p className="ml-1">
-                  Valitse laji, jonka tuloksia haluat tarkastella tarkemmin.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Breadcrumbs */}
-          <div className="text-muted-foreground mb-4 flex items-center text-sm">
-            <Link
-              href="/"
-              className="flex items-center transition-colors hover:text-blue-600"
-            >
-              <Home className="mr-1 h-3.5 w-3.5" />
-              <span>Home</span>
-            </Link>
-            <ChevronRight className="mx-1 h-3.5 w-3.5" />
-            <span className="text-foreground font-medium">
-              {competitionData?.Competition.Name}
-            </span>
-          </div>
-
-          {/* Back button */}
-          <div className="mb-6">
-            <Link href="/">
-              <Button
-                variant="outline"
-                size="sm"
-                className="hover:bg-muted/80 flex items-center transition-colors"
-              >
-                <ArrowLeft className="mr-1 h-4 w-4" />
-                Back to Schedule
-              </Button>
-            </Link>
-          </div>
-
           <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-12">
             {/* Left side - Timetable */}
-            <div className="w-full lg:col-span-6">
+            {/* <div className="w-full lg:col-span-6">
               <Card className="h-fit w-full overflow-hidden border-0 shadow-md">
                 <CardContent className="p-0">
                   <Tabs
@@ -259,6 +298,7 @@ export function EventsPage({
                           </div>
                         </div>
                         <EventDataTable
+                          className="max-h-96 overflow-y-scroll"
                           data={events}
                           columns={[
                             {
@@ -305,9 +345,7 @@ export function EventsPage({
                             },
                           ]}
                           keyExtractor={(event) => event!.Id}
-                          // @ts-expect-error TODO: Fix this
                           onRowClick={(event) => setSelectedEvent(event)}
-                          // @ts-expect-error TODO: Fix this
                           selectedItem={selectedEvent}
                           isSelectable={true}
                         />
@@ -316,124 +354,178 @@ export function EventsPage({
                   </Tabs>
                 </CardContent>
               </Card>
-            </div>
+            </div> */}
+            <Tabs
+              defaultValue={dates[0]}
+              value={selectedDate}
+              onValueChange={setSelectedDate}
+              className="w-full lg:col-span-6"
+            >
+              {dates?.map((date) => (
+                <TabsContent key={date} value={date} className="w-full">
+                  {dates.length > 1 && (
+                    <div className="flex items-center py-2">
+                      <TabsList className="">
+                        {dates.map((tabDate) => (
+                          <TabsTrigger
+                            key={tabDate}
+                            value={tabDate}
+                            className=""
+                          >
+                            {tabDate}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </div>
+                  )}
+
+                  <Timetable
+                    data={events}
+                    athleteCounts={athleteCounts}
+                    selectedEvent={selectedEvent}
+                    setSelectedEvent={setSelectedEvent}
+                  />
+                </TabsContent>
+              ))}
+            </Tabs>
 
             {/* Right side - Event details */}
-            <div className="w-full lg:col-span-6">
-              <Card className="w-full overflow-hidden border-0 shadow-md">
-                <CardContent className="p-0">
-                  {selectedEvent && (
-                    <>
-                      <EventCard
-                        // @ts-expect-error TODO: Fix this
-                        title={selectedEvent.EventName}
-                        time={formatTime(selectedEvent.BeginDateTimeWithTZ)}
-                        status={
-                          getStatusLabel(
+            {selectedEvent ? (
+              <div className="w-full lg:col-span-6">
+                <Card className="w-full overflow-hidden border-0 shadow-md">
+                  <CardContent className="p-0">
+                    {selectedEvent && (
+                      <>
+                        <EventCard
+                          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                          title={selectedEvent.EventName}
+                          time={formatTime(selectedEvent.BeginDateTimeWithTZ)}
+                          // @ts-expect-error TODO: Fix this StatusType return
+                          status={getStatusLabel(
                             selectedEvent.BeginDateTimeWithTZ,
-                          ).toLowerCase() as any
-                        }
-                        footer={
-                          <Link
-                            href={`/events/${competitionId}/${selectedEvent.EventId}`}
-                          >
-                            <Button className="w-full bg-blue-600 shadow-sm transition-colors hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800">
-                              <ExternalLink className="mr-2 h-4 w-4" />
-                              View Full Event Details
-                            </Button>
-                          </Link>
-                        }
-                      >
-                        <SectionHeader
-                          title="Results"
-                          icon={<Calendar />}
-                          size="sm"
-                          className="mb-3"
-                        />
+                          ).toLowerCase()}
+                          footer={
+                            <Link
+                              href={`/events/${competitionId}/${selectedEvent.EventId}`}
+                            >
+                              <Button className="w-full bg-blue-600 shadow-sm transition-colors hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800">
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                View Full Event Details
+                              </Button>
+                            </Link>
+                          }
+                        >
+                          <SectionHeader
+                            title="Results"
+                            icon={<Calendar />}
+                            size="sm"
+                            className="mb-3"
+                          />
 
-                        {selectedEvent.Rounds &&
-                        selectedEvent.Rounds.length > 0 ? (
-                          <div className="overflow-x-auto rounded-lg border dark:border-gray-800">
-                            <table className="w-full">
-                              <thead>
-                                <tr className="bg-gray-50 dark:bg-gray-900/50">
-                                  <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                                    Pos
-                                  </th>
-                                  <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                                    Name
-                                  </th>
-                                  <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
-                                    Club
-                                  </th>
-                                  <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
-                                    Result
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {selectedEvent.Rounds[
-                                  selectedEvent.Rounds.length - 1
-                                ].TotalResults.filter(
-                                  (result) =>
-                                    result.ResultRank && result.ResultRank <= 5,
-                                )
-                                  .sort(
-                                    (a, b) =>
-                                      (a.ResultRank || 999) -
-                                      (b.ResultRank || 999),
-                                  )
-                                  .map((result) => (
-                                    <tr
-                                      key={result.AllocId}
-                                      className="border-t transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/30"
-                                    >
-                                      <td className="px-4 py-3">
-                                        <div
-                                          className={cn(
-                                            "flex h-8 w-8 items-center justify-center rounded-full font-medium text-white shadow-sm transition-transform hover:scale-105",
-                                            result.ResultRank === 1
-                                              ? "bg-yellow-500 dark:bg-yellow-600"
-                                              : result.ResultRank === 2
-                                                ? "bg-gray-400 dark:bg-gray-500"
-                                                : result.ResultRank === 3
-                                                  ? "bg-amber-700 dark:bg-amber-800"
-                                                  : "bg-blue-500 dark:bg-blue-600",
-                                          )}
-                                        >
-                                          {result.ResultRank}
-                                        </div>
-                                      </td>
-                                      <td className="px-4 py-3 font-medium">
-                                        {result.Name}
-                                      </td>
-                                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                                        {result.Organization.Name}
-                                      </td>
-                                      <td className="px-4 py-3 text-right font-medium">
-                                        {result.Result.replace(",", ".")}
-                                      </td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <div className="rounded-lg border bg-gray-50 py-8 text-center dark:border-gray-800 dark:bg-gray-900/30">
-                            <div className="mb-3 text-gray-400">
-                              <Calendar className="mx-auto h-10 w-10 opacity-30" />
-                            </div>
-                            <p className="text-gray-500 dark:text-gray-400">
-                              No results available for this event yet.
-                            </p>
-                          </div>
-                        )}
-                      </EventCard>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                          {eventCompData.isLoading ? (
+                            <Skeleton className="h-96 w-full rounded-lg" />
+                          ) : (
+                            <>
+                              {eventCompData.data?.Rounds &&
+                              eventCompData.data?.Rounds.length > 0 &&
+                              !!eventCompData.data.Rounds[
+                                eventCompData.data.Rounds.length - 1
+                              ]?.TotalResults[0]?.Result ? (
+                                <div className="overflow-x-auto rounded-lg border dark:border-gray-800">
+                                  <table className="w-full">
+                                    <thead>
+                                      <tr className="bg-gray-50 dark:bg-gray-900/50">
+                                        <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                                          Pos
+                                        </th>
+                                        <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                                          Name
+                                        </th>
+                                        <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                                          Club
+                                        </th>
+                                        <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                                          Result
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {eventCompData.data?.Rounds[
+                                        eventCompData.data?.Rounds.length - 1
+                                      ]!.TotalResults.filter(
+                                        (result) =>
+                                          result.ResultRank &&
+                                          result.ResultRank <= 5,
+                                      )
+                                        .sort(
+                                          (a, b) =>
+                                            (a.ResultRank ?? 999) -
+                                            (b.ResultRank ?? 999),
+                                        )
+                                        .map((result) => (
+                                          <tr
+                                            key={result.AllocId}
+                                            className="border-t transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900/30"
+                                          >
+                                            <td className="px-4 py-3">
+                                              <div
+                                                className={cn(
+                                                  "flex h-8 w-8 items-center justify-center rounded-full font-medium text-white shadow-sm transition-transform hover:scale-105",
+                                                  result.ResultRank === 1
+                                                    ? "bg-yellow-500 dark:bg-yellow-600"
+                                                    : result.ResultRank === 2
+                                                      ? "bg-gray-400 dark:bg-gray-500"
+                                                      : result.ResultRank === 3
+                                                        ? "bg-amber-700 dark:bg-amber-800"
+                                                        : "bg-blue-500 dark:bg-blue-600",
+                                                )}
+                                              >
+                                                {result.ResultRank}
+                                              </div>
+                                            </td>
+                                            <td className="px-4 py-3 font-medium">
+                                              {result.Name}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                                              {result.Organization.Name}
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-medium">
+                                              {result.Result.replace(",", ".")}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ) : (
+                                <div className="rounded-lg border bg-gray-50 py-8 text-center dark:border-gray-800 dark:bg-gray-900/30">
+                                  <div className="mb-3 text-gray-400">
+                                    <Calendar className="mx-auto h-10 w-10 opacity-30" />
+                                  </div>
+                                  <p className="text-gray-500 dark:text-gray-400">
+                                    No results available for this event yet.{" "}
+                                    {athleteCount.data}
+                                  </p>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </EventCard>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center rounded-lg border-2 border-dashed p-8 text-center lg:col-span-6">
+                <div>
+                  <h3 className="mb-1 text-lg font-medium">Valitse laji</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Valitse laji vasemmalta nähdäksesi sen tulokset
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}

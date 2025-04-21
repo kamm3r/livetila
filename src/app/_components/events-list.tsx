@@ -20,12 +20,13 @@ import {
   Download,
   Share2,
   MapPin,
-  List,
   Star,
   Clock,
   Tag,
   ChevronDown,
   ChevronUp,
+  LayoutGrid,
+  LayoutList,
 } from "lucide-react";
 import { format, isWithinInterval, parseISO } from "date-fns";
 import { fi } from "date-fns/locale";
@@ -65,6 +66,15 @@ import {
   getVenueType,
 } from "~/@/utils/event-utils";
 import { type Competitions } from "~/types/events";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "~/@/components/ui/table";
 
 export function EventsList({ competitions }: { competitions: Competitions }) {
   const isMobile = useMediaQuery("(max-width: 768px)");
@@ -119,8 +129,8 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
   const mapLiveStatus = (
     status: string,
   ): "upcoming" | "ongoing" | "completed" => {
-    const now = new Date();
-    const compDate = new Date();
+    // const now = new Date();
+    // const compDate = new Date();
 
     // For demo purposes, we'll consider competitions before today as completed,
     // today as ongoing, and after today as upcoming
@@ -142,7 +152,7 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
         comp.OrganizationName.toLowerCase().includes(
           searchTerm.toLowerCase(),
         ) ||
-        (comp.Stadion.Name?.toLowerCase().includes(searchTerm.toLowerCase()));
+        comp.Stadion.Name?.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Date range filter
       let matchesDate = true;
@@ -170,7 +180,7 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
         (comp.Stadion.Name && selectedLocations.includes(comp.Stadion.Name));
 
       // Favorites filter
-      const matchesFavorites = !showFavoritesOnly || comp.isFavorite === true;
+      // const matchesFavorites = !showFavoritesOnly || comp.isFavorite === true;
 
       // Status filter
       const mappedStatus = mapLiveStatus(comp.LiveStatus);
@@ -183,7 +193,7 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
         matchesOrganization &&
         matchesCategory &&
         matchesLocation &&
-        matchesFavorites &&
+        // matchesFavorites &&
         matchesStatus
       );
     })
@@ -266,9 +276,8 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
           `"${comp.OrganizationName}"`,
           `"${comp.Name}"`,
           getVenueType(comp.Stadion.Type),
-          `"${comp.Stadion.Name || ""}"`,
+          `"${comp.Stadion.Name}"`,
           mapLiveStatus(comp.LiveStatus),
-          comp.isFavorite ? "Yes" : "No",
         ].join(","),
       ),
     ].join("\n");
@@ -285,13 +294,13 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
 
   // Check if any filters are active
   const hasActiveFilters =
-    searchTerm ||
-    dateRange.from ||
-    dateRange.to ||
-    selectedOrganizations.length > 0 ||
-    selectedCategories.length > 0 ||
-    selectedLocations.length > 0 ||
-    showFavoritesOnly ||
+    searchTerm ??
+    dateRange.from ??
+    dateRange.to ??
+    selectedOrganizations.length > 0 ??
+    selectedCategories.length > 0 ??
+    selectedLocations.length > 0 ??
+    showFavoritesOnly ??
     statusFilter !== "all";
 
   return (
@@ -366,6 +375,7 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
                     mode="range"
                     defaultMonth={dateRange.from}
                     selected={dateRange}
+                    // @ts-expect-error TODO: Fix this
                     onSelect={setDateRange}
                     numberOfMonths={2}
                   />
@@ -545,7 +555,7 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
             {hasActiveFilters && (
               <div className="-mx-1 flex flex-nowrap gap-1.5 overflow-x-auto px-1 pb-1">
                 {/* Date Range Tag */}
-                {(dateRange.from || dateRange.to) && (
+                {(dateRange.from ?? dateRange.to) && (
                   <Badge
                     variant="secondary"
                     className="h-6 cursor-pointer px-2 text-xs whitespace-nowrap"
@@ -792,9 +802,9 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
                         className="h-7 w-7 p-0"
                       >
                         {viewMode === "table" ? (
-                          <MapPin className="h-3.5 w-3.5" />
+                          <LayoutGrid className="h-3.5 w-3.5" />
                         ) : (
-                          <List className="h-3.5 w-3.5" />
+                          <LayoutList className="h-3.5 w-3.5" />
                         )}
                       </Button>
                     </TooltipTrigger>
@@ -843,116 +853,57 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
         viewMode === "table" ? (
           // Table View
           <Card className="overflow-hidden border-0 shadow-md">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
-                      <th className="px-4 py-3 text-left font-medium text-blue-800 dark:text-blue-200">
-                        Päivämäärä
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-blue-800 dark:text-blue-200">
-                        Seura
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-blue-800 dark:text-blue-200">
-                        Kilpailun nimi
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-blue-800 dark:text-blue-200">
-                        Kategoria
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-blue-800 dark:text-blue-200">
-                        Sijainti
-                      </th>
-                      <th className="px-4 py-3 text-left font-medium text-blue-800 dark:text-blue-200">
-                        Tila
-                      </th>
-                      <th className="px-4 py-3 text-center font-medium text-blue-800 dark:text-blue-200">
-                        Suosikki
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCompetitions.map((comp) => (
-                      <tr
-                        key={comp.Id}
-                        className="border-b transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      >
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {format(new Date(comp.Date), "d.M.yyyy", {
-                            locale: fi,
-                          })}
-                        </td>
-                        <td className="px-4 py-3">{comp.OrganizationName}</td>
-                        <td className="px-4 py-3">
-                          <Link
-                            href={`/events/${comp.Id}`}
-                            className="text-blue-600 transition-colors hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
-                          >
-                            {comp.Name}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge
-                            variant="outline"
-                            className="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                          >
-                            {getVenueType(comp.Stadion.Type)}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3">
-                          {comp.Stadion.Name || "-"}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge
-                            className={cn(
-                              "transition-colors",
-                              getStatusBadgeColor(comp.Date),
-                            )}
-                          >
-                            {getStatusLabel(comp.Date)}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-full"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    toggleFavorite(comp.Id);
-                                  }}
-                                >
-                                  <Star
-                                    className={cn(
-                                      "h-5 w-5 transition-all",
-                                      comp.isFavorite
-                                        ? "fill-amber-500 text-amber-500"
-                                        : "text-muted-foreground",
-                                    )}
-                                  />
-                                  <span className="sr-only">
-                                    {comp.isFavorite
-                                      ? "Poista suosikeista"
-                                      : "Lisää suosikkeihin"}
-                                  </span>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {comp.isFavorite
-                                  ? "Poista suosikeista"
-                                  : "Lisää suosikkeihin"}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <CardContent className="">
+              <Table>
+                <TableCaption>viimeisimmät kilpailut</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Päivämäärä</TableHead>
+                    <TableHead>Kilpailun nimi</TableHead>
+                    <TableHead>Kategoria</TableHead>
+                    <TableHead>Sijainti</TableHead>
+                    <TableHead>Tila</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCompetitions.map((comp) => (
+                    <TableRow
+                      key={comp.Id}
+                      // className="border-b transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    >
+                      <TableCell>
+                        {format(new Date(comp.Date), "d.M.yyyy", {
+                          locale: fi,
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/events/${comp.Id}`}
+                          className="text-blue-600 transition-colors hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+                        >
+                          {comp.Name}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="">
+                          {getVenueType(comp.Stadion.Type)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{comp.Stadion.Name ?? "-"}</TableCell>
+                      <TableCell>
+                        <Badge
+                          className={cn(
+                            "transition-colors",
+                            getStatusBadgeColor(comp.Date),
+                          )}
+                        >
+                          {getStatusLabel(comp.Date)}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         ) : (
@@ -968,37 +919,27 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
                     <Badge className={cn(getStatusBadgeColor(comp.Date))}>
                       {getStatusLabel(comp.Date)}
                     </Badge>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="-mt-1 -mr-2 h-8 w-8 rounded-full"
-                            onClick={() => toggleFavorite(comp.Id)}
-                          >
-                            <Star
-                              className={cn(
-                                "h-5 w-5 transition-all",
-                                comp.isFavorite
-                                  ? "fill-amber-500 text-amber-500"
-                                  : "text-muted-foreground",
-                              )}
-                            />
-                            <span className="sr-only">
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="-mt-1 -mr-2 h-8 w-8 rounded-full"
+                      // onClick={() => toggleFavorite(comp.Id)}
+                    >
+                      <Star
+                        className={cn(
+                          "h-5 w-5 transition-all",
+                          // comp.isFavorite
+                          //   ? "fill-amber-500 text-amber-500"
+                          //   : "text-muted-foreground",
+                        )}
+                      />
+                      {/* <span className="sr-only">
                               {comp.isFavorite
                                 ? "Poista suosikeista"
                                 : "Lisää suosikkeihin"}
-                            </span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {comp.isFavorite
-                            ? "Poista suosikeista"
-                            : "Lisää suosikkeihin"}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                            </span> */}
+                    </Button>
                   </div>
                   <CardTitle className="mt-2 text-lg">
                     <Link
@@ -1022,7 +963,7 @@ export function EventsList({ competitions }: { competitions: Competitions }) {
                     </div>
                     <div className="flex items-center text-sm">
                       <MapPin className="text-muted-foreground mr-2 h-4 w-4" />
-                      <span>{comp.Stadion.Name || "Ei sijaintia"}</span>
+                      <span>{comp.Stadion.Name ?? "Ei sijaintia"}</span>
                     </div>
                     <div className="flex items-center text-sm">
                       <Tag className="text-muted-foreground mr-2 h-4 w-4" />

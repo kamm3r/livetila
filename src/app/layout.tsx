@@ -17,16 +17,18 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fi" className={`${GeistSans.variable}`}>
-      <body className="container mx-auto max-w-lvw">
+    <html lang="fi" className={`${GeistSans.variable} antialiased`}>
+      <body className="">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TRPCReactProvider>
+            <Navbar />
+            {children}
+          </TRPCReactProvider>
         </ThemeProvider>
       </body>
     </html>

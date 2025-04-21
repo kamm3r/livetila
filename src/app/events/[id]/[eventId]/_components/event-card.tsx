@@ -76,7 +76,9 @@ export function EventCard({
         </div>
       </CardHeader>
 
-      <CardContent>{children}</CardContent>
+      <CardContent className={cn(isCompact ? "p-3" : "p-6", contentClassName)}>
+        {children}
+      </CardContent>
 
       {footer && (
         <CardFooter

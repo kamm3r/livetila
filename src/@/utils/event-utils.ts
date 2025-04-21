@@ -1,3 +1,6 @@
+import { format } from "date-fns";
+import { fi } from "date-fns/locale";
+
 // Helper function to determine status based on date
 export function getStatusLabel(dateString: string) {
   const eventDate = new Date(dateString);
@@ -48,18 +51,65 @@ export function getVenueType(type: number): string {
   }
 }
 
-export function getRoundStatusLabel(status: string | undefined): string {
-  console.log(status);
-  switch (status?.toLowerCase()) {
-    case "Unallocated":
-      return "eräjaot puuttuvat";
-    case "Allocated":
-      return "eräjaot tehty";
-    case "progress":
-      return "käynnissä";
-    case "Official":
-      return "päättynyt";
-    default:
-      return status || "tuntematon";
-  }
+// // Helper function to get qualification badge
+// const QualificationBadge = ({
+//   type,
+// }: {
+//   type: "Q" | "q" | "DQ" | undefined;
+// }) => {
+//   if (!type) return null;
+
+//   switch (type) {
+//     case "Q":
+//       return (
+//         <TooltipProvider>
+//           <Tooltip>
+//             <TooltipTrigger>
+//               <Badge className="ml-2 bg-green-600 hover:bg-green-700">Q</Badge>
+//             </TooltipTrigger>
+//             <TooltipContent>
+//               <p>Direct Qualification</p>
+//             </TooltipContent>
+//           </Tooltip>
+//         </TooltipProvider>
+//       );
+//     case "q":
+//       return (
+//         <TooltipProvider>
+//           <Tooltip>
+//             <TooltipTrigger>
+//               <Badge className="ml-2 bg-blue-600 hover:bg-blue-700">q</Badge>
+//             </TooltipTrigger>
+//             <TooltipContent>
+//               <p>Qualified by Time</p>
+//             </TooltipContent>
+//           </Tooltip>
+//         </TooltipProvider>
+//       );
+//     case "DQ":
+//       return (
+//         <TooltipProvider>
+//           <Tooltip>
+//             <TooltipTrigger>
+//               <Badge className="ml-2 bg-red-600 hover:bg-red-700">DQ</Badge>
+//             </TooltipTrigger>
+//             <TooltipContent>
+//               <p>Disqualified</p>
+//             </TooltipContent>
+//           </Tooltip>
+//         </TooltipProvider>
+//       );
+//     default:
+//       return null;
+//   }
+// };
+
+// Format date for display
+export function formatDate(dateString: string) {
+  return format(new Date(dateString), "d.M.yyyy", { locale: fi });
+}
+
+// Format time for display
+export function formatTime(dateString: string) {
+  return format(new Date(dateString), "HH:mm", { locale: fi });
 }
