@@ -24,6 +24,13 @@ export function SectionHeader({
   subtitleClassName,
   actionsClassName,
 }: SectionHeaderProps) {
+  // Determine icon size based on the size prop
+  const iconSize =
+    size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5";
+
+  // Determine icon container padding based on size
+  const iconPadding = size === "sm" ? "p-1" : size === "lg" ? "p-2.5" : "p-2";
+
   return (
     <div
       className={cn(
@@ -37,19 +44,13 @@ export function SectionHeader({
           <div
             className={cn(
               "mr-2 rounded-full bg-blue-100 dark:bg-blue-900/30",
-              size === "sm" ? "p-1" : size === "lg" ? "p-2.5" : "p-2",
+              iconPadding,
             )}
           >
-            {React.cloneElement(icon as React.ReactElement, {
-              className: cn(
-                "text-blue-600 dark:text-blue-400",
-                size === "sm"
-                  ? "h-4 w-4"
-                  : size === "lg"
-                    ? "h-6 w-6"
-                    : "h-5 w-5",
-              ),
-            })}
+            {/* Render the icon without cloneElement */}
+            <div className={cn("text-blue-600 dark:text-blue-400", iconSize)}>
+              {icon}
+            </div>
           </div>
         )}
         <div>

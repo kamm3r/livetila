@@ -3,16 +3,8 @@
 import type React from "react";
 
 import { Card, CardContent } from "~/@/components/ui/card";
-import {
-  Clock,
-  Calendar,
-  ExternalLink,
-  ArrowLeft,
-  Home,
-  ChevronRight,
-  Trophy,
-} from "lucide-react";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Calendar, ExternalLink } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "~/@/components/ui/button";
 import { cn } from "~/@/lib/utils";
@@ -20,7 +12,7 @@ import {
   type EventList,
   type CompetitionProperties,
   type Events,
-  Competition,
+  // Competition,
 } from "~/types/comp";
 import { Skeleton } from "~/@/components/ui/skeleton";
 import {
@@ -31,12 +23,11 @@ import {
 } from "~/@/components/ui/tabs";
 import { SectionHeader } from "~/app/events/[id]/[eventId]/_components/section-header";
 import { EventCard } from "~/app/events/[id]/[eventId]/_components/event-card";
-import { formatDate, formatTime, getStatusLabel } from "~/@/utils/event-utils";
-import { StatusIndicator } from "~/@/components/ui/status-indicator";
-import { EventDataTable } from "~/app/events/[id]/[eventId]/_components/event-data-table";
+import { formatTime, getStatusLabel } from "~/@/utils/event-utils";
+// import { StatusIndicator } from "~/@/components/ui/status-indicator";
+// import { EventDataTable } from "~/app/events/[id]/[eventId]/_components/event-data-table";
 import { api } from "~/trpc/react";
 import { Timetable } from "~/app/events/[id]/_components/timetable";
-import { useQueries } from "@tanstack/react-query";
 
 function getDates(datesArray: Events): string[] | undefined {
   const availableDates = Object.keys(datesArray);
@@ -46,7 +37,7 @@ function getDates(datesArray: Events): string[] | undefined {
 }
 
 function useAthleteCountData(
-  selectedDate: string | undefined,
+  selectedDate: string,
   dates: string[] | undefined,
   data: Events,
   competitionId: string,
@@ -56,6 +47,7 @@ function useAthleteCountData(
 
   for (const date of dates!) {
     if (date) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const events = data[selectedDate] ?? [];
       for (const event of events) {
         if (event.EventId) {
@@ -112,6 +104,7 @@ function useAthleteCountData(
     }
 
     return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countsQuery.data, dates, data]);
 
   return {
