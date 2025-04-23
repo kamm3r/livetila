@@ -81,7 +81,7 @@ export default function EventDetailTabs({
         <TabsList className="grid h-auto w-full grid-cols-3 bg-transparent p-0">
           <TabsTrigger
             value="participants"
-            className="data-[state=active]:bg-background data-[state=active]:border-primary text-muted-foreground data-[state=active]:text-foreground rounded-none border-b-2 border-transparent py-3 data-[state=active]:shadow-none"
+            className="data-[state=active]:bg-background data-[state=active]:border-primary hover:border-primary/70 hover:text-foreground/70 text-muted-foreground data-[state=active]:text-foreground rounded-none border-b-2 border-transparent py-3 data-[state=active]:shadow-none"
           >
             <div className="flex items-center justify-center gap-2">
               <span className="flex h-5 w-5 items-center justify-center rounded-full border">
@@ -92,7 +92,7 @@ export default function EventDetailTabs({
           </TabsTrigger>
           <TabsTrigger
             value="protocol"
-            className="data-[state=active]:bg-background data-[state=active]:border-primary text-muted-foreground data-[state=active]:text-foreground rounded-none border-b-2 border-transparent py-3 data-[state=active]:shadow-none"
+            className="data-[state=active]:bg-background data-[state=active]:border-primary hover:border-primary/70 hover:text-foreground/70 text-muted-foreground data-[state=active]:text-foreground rounded-none border-b-2 border-transparent py-3 data-[state=active]:shadow-none"
           >
             <div className="flex items-center justify-center gap-2">
               <span className="flex h-5 w-5 items-center justify-center rounded-full border">
@@ -103,7 +103,7 @@ export default function EventDetailTabs({
           </TabsTrigger>
           <TabsTrigger
             value="results"
-            className="data-[state=active]:bg-background data-[state=active]:border-primary text-muted-foreground data-[state=active]:text-foreground rounded-none border-b-2 border-transparent py-3 data-[state=active]:shadow-none"
+            className="data-[state=active]:bg-background data-[state=active]:border-primary text-muted-foreground data-[state=active]:text-foreground hover:border-primary/70 hover:text-foreground/70 rounded-none border-b-2 border-transparent py-3 data-[state=active]:shadow-none"
           >
             <div className="flex items-center justify-center gap-2">
               <span className="flex h-5 w-5 items-center justify-center rounded-full border">
@@ -135,25 +135,24 @@ export default function EventDetailTabs({
               },
               {
                 key: "name",
-                header: "Nimi",
+                header: "Nimi ja Seura",
                 cell: (participant) => (
-                  <div className="flex items-center">
-                    {!!participant.Number && (
-                      <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                        {participant.Number}
-                      </span>
-                    )}
-                    <span className="font-medium">{participant.Name}</span>
+                  <div className="flex flex-col">
+                    <div className="flex items-center">
+                      {!!participant.Number && (
+                        <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                          {participant.Number}
+                        </span>
+                      )}
+                      <span className="font-medium">{participant.Name}</span>
+                    </div>
+                    <div className="text-muted-foreground mt-1 text-xs">
+                      {!!participant.Organization
+                        ? participant.Organization.Name
+                        : "-"}
+                    </div>
                   </div>
                 ),
-              },
-              {
-                key: "club",
-                header: "Seura",
-                cell: (participant) =>
-                  !!participant.Organization
-                    ? participant.Organization.Name
-                    : "-",
               },
               {
                 key: "pb",
@@ -205,65 +204,69 @@ export default function EventDetailTabs({
               )}
 
               {/* Current Heat */}
-              <EventDataTable
-                data={currentHeat?.Allocations ?? []}
-                columns={[
-                  {
-                    key: "position",
-                    header:
-                      showHeatNumbers && heats.length > 1 ? "Rata" : "Järj",
-                    cell: (allocation) => (
-                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                        {allocation.Position}
-                      </span>
-                    ),
-                  },
-                  {
-                    key: "name",
-                    header: "Nimi",
-                    cell: (allocation) => (
-                      <div className="flex flex-col">
-                        <div className="flex items-center">
-                          {!!allocation.Number && (
-                            <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                              {allocation.Number}
-                            </span>
-                          )}
-                          <span className="font-medium">{allocation.Name}</span>
-                        </div>
-                      </div>
-                    ),
-                  },
-                  {
-                    key: "club",
-                    header: "Seura",
-                    cell: (allocation) =>
-                      !!allocation.Organization
-                        ? allocation.Organization.Name
-                        : "-",
-                  },
-                  {
-                    key: "pb",
-                    header: "PB",
-                    cell: (allocation) => (
-                      <span className="font-medium">
-                        {allocation.PB || "-"}
-                      </span>
-                    ),
-                  },
-                  {
-                    key: "sb",
-                    header: "SB",
-                    cell: (allocation) => (
-                      <span className="font-medium">
-                        {allocation.SB || "-"}
-                      </span>
-                    ),
-                  },
-                ]}
-                keyExtractor={(allocation) => allocation.AllocId}
-                wrapWithCard={false}
-              />
+              <Card className="overflow-hidden border-0 shadow-md">
+                <CardContent className="p-0">
+                  <EventDataTable
+                    data={currentHeat?.Allocations ?? []}
+                    columns={[
+                      {
+                        key: "position",
+                        header:
+                          showHeatNumbers && heats.length > 1 ? "Rata" : "Järj",
+                        cell: (allocation) => (
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full font-medium">
+                            {allocation.Position}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: "name",
+                        header: "Nimi ja seura",
+                        cell: (allocation) => (
+                          <div className="flex flex-col">
+                            <div className="flex items-center">
+                              {!!allocation.Number && (
+                                <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                  {allocation.Number}
+                                </span>
+                              )}
+                              <span className="font-medium">
+                                {allocation.Name}
+                              </span>
+                            </div>
+                            <div className="text-muted-foreground mt-1 text-xs">
+                              {!!allocation.Organization
+                                ? allocation.Organization.Name
+                                : "-"}
+                            </div>
+                          </div>
+                        ),
+                      },
+
+                      {
+                        key: "pb",
+                        header: "PB",
+                        cell: (allocation) => (
+                          <span className="font-medium">
+                            {allocation.PB || "-"}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: "sb",
+                        header: "SB",
+                        cell: (allocation) => (
+                          <span className="font-medium">
+                            {allocation.SB || "-"}
+                          </span>
+                        ),
+                      },
+                    ]}
+                    keyExtractor={(allocation) => allocation.AllocId}
+                    wrapWithCard={false}
+                  />
+                </CardContent>
+              </Card>
             </div>
           ) : (
             <div className="py-8 text-center">
@@ -338,10 +341,10 @@ export default function EventDetailTabs({
                             .map((result) => (
                               <TableRow
                                 key={result.AllocId}
-                                className="border-b transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                className="border-b"
                               >
                                 <TableCell>
-                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full font-medium">
                                     {result.HeatRank}
                                   </span>
                                 </TableCell>
@@ -357,7 +360,7 @@ export default function EventDetailTabs({
                                         {result.Name}
                                       </span>
                                     </div>
-                                    <div className="text-muted-foreground mt-1 text-sm">
+                                    <div className="text-muted-foreground mt-1 text-xs">
                                       {result.Organization.Name}
                                     </div>
                                   </div>
@@ -438,7 +441,7 @@ export default function EventDetailTabs({
                                     {result.ResultRank}
                                   </span>
                                 ) : (
-                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full font-medium">
                                     {result.ResultRank}
                                   </span>
                                 )}
@@ -451,11 +454,11 @@ export default function EventDetailTabs({
                                         {result.Number}
                                       </span>
                                     )}
-                                    <span className="font-medium">
+                                    <span className="text-muted-foreground font-medium">
                                       {result.Name}
                                     </span>
                                   </div>
-                                  <div className="text-muted-foreground mt-1 text-sm">
+                                  <div className="text-muted-foreground mt-1 text-xs">
                                     {result.Organization.Name}
                                   </div>
                                 </div>
@@ -587,7 +590,7 @@ export default function EventDetailTabs({
                             {result.ResultRank}
                           </span>
                         ) : (
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full font-medium">
                             {result.ResultRank}
                           </span>
                         ),
@@ -605,7 +608,7 @@ export default function EventDetailTabs({
                             )}
                             <span className="font-medium">{result.Name}</span>
                           </div>
-                          <div className="text-muted-foreground mt-1 text-sm">
+                          <div className="text-muted-foreground mt-1 text-xs">
                             {result.Organization.Name}
                           </div>
                         </div>
@@ -644,99 +647,6 @@ export default function EventDetailTabs({
           )}
         </TabsContent>
       </Tabs>
-      {/* Overall Results
-                <SectionHeader
-                  title={
-                    currentRound.RoundTypeCategory === "Final"
-                      ? "Lopputulokset"
-                      : "Kokonaistulokset"
-                  }
-                  icon={<Award className="text-blue-600" />}
-                  size="md"
-                  className="mb-4"
-                />
-
-                <EventDataTable
-                  data={currentRound.TotalResults.filter(
-                    (r) => r.Result !== "DNF" && r.ResultRank !== null,
-                  ).sort(
-                    (a, b) => (a.ResultRank || 999) - (b.ResultRank || 999),
-                  )}
-                  columns={[
-                    {
-                      key: "position",
-                      header: "Sij.",
-                      cell: (result) =>
-                        result.ResultRank && result.ResultRank <= 3 ? (
-                          <span
-                            className={cn(
-                              "inline-flex h-7 w-7 items-center justify-center rounded-full font-medium text-white",
-                              result.ResultRank === 1
-                                ? "bg-yellow-500"
-                                : result.ResultRank === 2
-                                  ? "bg-gray-400"
-                                  : "bg-amber-700",
-                            )}
-                          >
-                            {result.ResultRank}
-                          </span>
-                        ) : (
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                            {result.ResultRank}
-                          </span>
-                        ),
-                    },
-                    {
-                      key: "name",
-                      header: "Nimi ja seura",
-                      cell: (result) => (
-                        <div className="flex flex-col">
-                          <div className="flex items-center">
-                            {!!result.Number && (
-                              <span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-                                {result.Number}
-                              </span>
-                            )}
-                            <span className="font-medium">{result.Name}</span>
-                          </div>
-                          <div className="text-muted-foreground mt-1 text-sm">
-                            {result.Organization.Name}
-                          </div>
-                        </div>
-                      ),
-                    },
-                    {
-                      key: "result",
-                      header: "Tulos",
-                      cell: (result) => (
-                        <div className="flex items-center">
-                          <span className="font-medium">{result.Result}</span>
-                          {result.QRank && (
-                            <Badge className="ml-2 bg-green-600 hover:bg-green-700">
-                              Q
-                            </Badge>
-                          )}
-                          {result.QResult && (
-                            <Badge className="ml-2 bg-green-600 hover:bg-green-700">
-                              q
-                            </Badge>
-                          )}
-                        </div>
-                      ),
-                    },
-                  ]}
-                  keyExtractor={(result) => result.AllocId}
-                />
-              </div>
-            ) : (
-              <div className="py-8 text-center">
-                <p className="text-muted-foreground">
-                  No results available for this round yet.
-                </p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs> */}
     </div>
   );
 }

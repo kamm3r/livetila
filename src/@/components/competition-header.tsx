@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { fi } from "date-fns/locale";
 import { ArrowLeft, Clock, RefreshCw, Trophy } from "lucide-react";
 import Link from "next/link";
+import { CopytoClipboard } from "~/@/components/copy-to-clipboard";
 import { Rounds } from "~/@/components/rounds";
 // import { Badge } from "~/@/components/ui/badge";
 import {
@@ -27,14 +28,16 @@ export function CompetitionHeader({
   id,
   dataComp,
   latestRound,
+  slug,
 }: {
   dataEvent: Competition;
   id: string;
   dataComp: CompetitionProperties;
   latestRound: Round;
+  slug: string;
 }) {
   return (
-    <div className="overflow-hidden border-r border-l">
+    <div className="container mx-auto overflow-hidden border-r border-l">
       <div className="border-t border-b p-3 sm:p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex flex-1 items-start gap-2">
@@ -78,6 +81,8 @@ export function CompetitionHeader({
               <RefreshCw className="mr-1 h-3.5 w-3.5" />
               Päivitä
             </Button>
+
+            <CopytoClipboard slug={slug} />
           </div>
         </div>
       </div>

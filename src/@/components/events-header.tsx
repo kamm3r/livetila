@@ -17,7 +17,7 @@ export function EventsHeader({
   competitionData: CompetitionProperties;
 }) {
   return (
-    <div className="overflow-hidden border-r border-l">
+    <div className="container mx-auto overflow-hidden border-r border-l">
       <div className="border-t border-b p-3 sm:p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="flex flex-1 items-center gap-2">

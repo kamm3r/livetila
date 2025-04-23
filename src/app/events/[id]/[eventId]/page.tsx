@@ -32,6 +32,7 @@ export default async function EventDetailPage({
           id={id}
           dataComp={compData}
           latestRound={latestRound!}
+          slug={`${id}-${eventId}`}
         />
         {/* Round selection and tabs - moved to client component */}
         <EventDetailTabs eventData={eventData} />

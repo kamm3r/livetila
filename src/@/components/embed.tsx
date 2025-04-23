@@ -12,15 +12,11 @@ export function Embed({ slug }: { slug: string }) {
   };
   return (
     <Button
-      className="-m-2 flex gap-2 p-2!"
+      // className="-m-2 flex gap-2 p-2!"
       onClick={() => copyUrlToClipboard(`/obs/${slug}`)}
       variant="ghost"
     >
-      {copy ? (
-        <ClipboardCheckIcon className="text-neutral-100" />
-      ) : (
-        <ClipboardCopyIcon />
-      )}
+      {copy ? <ClipboardCheckIcon /> : <ClipboardCopyIcon />}
       <span className="sr-only text-sm sm:not-sr-only">Embed url</span>
     </Button>
   );

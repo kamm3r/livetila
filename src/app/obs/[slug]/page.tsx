@@ -32,11 +32,11 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
     <Suspense fallback={<Loader2Icon className="animate-spin" />}>
       <div className="max-w-xs text-gray-50">
         <div className="w-full max-w-xs border-t-2 border-cyan-300 bg-black/90">
-          <h2 className="px-2 uppercase text-cyan-300">
+          <h2 className="px-2 text-cyan-300 uppercase">
             {obsAthletes.data?.Rounds[0]?.Name}
           </h2>
           <div className="flex justify-between">
-            <h3 className="bg-cyan-300 px-2 uppercase text-black">
+            <h3 className="bg-cyan-300 px-2 text-black uppercase">
               {obsAthletes.data?.Name}
             </h3>
             <h4 className="px-2 uppercase">Tulos</h4>
@@ -72,36 +72,38 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
                       {a.Name}
                       <span>{butterParse(a.Result) >= 0 ? a.Result : ""}</span>
                     </div>
-                    <ul
-                      className={cn(
-                        "ml-1 flex-[1_1_100%] bg-gray-300 text-black",
-                        a.Id ? "flex" : "hidden",
-                      )}
-                    >
-                      {a.Attempts === null ? (
-                        <p className="opacity-0">no</p>
-                      ) : (
-                        a.Attempts?.map((at, idx) => (
-                          <li
-                            key={idx}
-                            className={cn(
-                              a.Result === at.Line1 && "bg-cyan-300/50!",
-                              "flex min-w-[16.7%] flex-col px-1 py-2 even:bg-gray-200",
-                            )}
-                          >
-                            <span>{at.Line1}</span>
-                            {at.Line2 && <span>{at.Line2}</span>}
-                          </li>
-                        ))
-                      )}
-                    </ul>
+                    {a.Attempts.length > 1 && (
+                      <ul
+                        className={cn(
+                          "ml-1 flex-[1_1_100%] bg-gray-300 text-black",
+                          a.Id ? "flex" : "hidden",
+                        )}
+                      >
+                        {a.Attempts === null ? (
+                          <p className="opacity-0">no</p>
+                        ) : (
+                          a.Attempts?.map((at, idx) => (
+                            <li
+                              key={idx}
+                              className={cn(
+                                a.Result === at.Line1 && "bg-cyan-300/50!",
+                                "flex min-w-[16.7%] flex-col px-1 py-2 even:bg-gray-200",
+                              )}
+                            >
+                              <span>{at.Line1}</span>
+                              {at.Line2 && <span>{at.Line2}</span>}
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                    )}
                   </li>
                 )),
               ),
             )}
           </AnimatedList>
         </div>
-        <h1 className="mt-1 inline-flex bg-black/90 p-1 uppercase text-cyan-300">
+        <h1 className="mt-1 inline-flex bg-black/90 p-1 text-cyan-300 uppercase">
           {obsCompetition.data?.Competition.Name}
         </h1>
       </div>
