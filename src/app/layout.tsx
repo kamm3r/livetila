@@ -18,7 +18,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fi" className={`${GeistSans.variable} antialiased`}>
-      <body className="px-6 data-[scroll-locked]:px-6! sm:px-0 sm:data-[scroll-locked]:px-0!">
+      <body className="px-2 data-[scroll-locked]:px-2! sm:px-0 sm:data-[scroll-locked]:px-0!">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

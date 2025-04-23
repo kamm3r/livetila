@@ -109,11 +109,15 @@ export function CompetitionHeader({
         </Breadcrumb>
       </div>
 
-      <div className="border-b">
-        <div className="flex items-center justify-between px-3 py-2">
+      <div className="flex w-full border-b">
+        <div className="flex w-full justify-between">
           <Link href={`/events/${id}`}>
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+            <Button
+              variant="link"
+              size="sm"
+              className="h-8 px-2 text-xs font-medium md:text-sm"
+            >
+              <ArrowLeft className="mr-1 h-4 w-4" />
               Takaisin kilpailuun
             </Button>
           </Link>

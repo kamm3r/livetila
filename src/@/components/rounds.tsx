@@ -11,13 +11,14 @@ export function Rounds({ competition }: { competition: Competition }) {
     return null;
   }
   return (
-    <div className="flex gap-1">
+    <div className="flex">
       {competition.Rounds.map((round) => (
         <Button
           key={round.Index}
-          variant={selectedRound === round.Index ? "default" : "outline"}
+          variant={selectedRound === round.Index ? "default" : "ghost"}
           onClick={() => handleRoundChange(round.Index)}
           size="sm"
+          className="h-8 rounded-none px-3 text-xs md:text-sm"
         >
           {round.Name}
         </Button>
