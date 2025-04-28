@@ -5,6 +5,7 @@ import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { ThemeProvider } from "~/@/components/theme-provider";
+import { Navbar } from "~/@/components/navbar";
 
 export const metadata: Metadata = {
   title: "Livetila",
@@ -16,15 +17,18 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`font-sans ${GeistSans.variable}`}>
-      <body>
+    <html lang="fi" className={`${GeistSans.variable} antialiased`}>
+      <body className="px-2 data-[scroll-locked]:px-2! sm:px-0 sm:data-[scroll-locked]:px-0!">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TRPCReactProvider>
+            <Navbar />
+            {children}
+          </TRPCReactProvider>
         </ThemeProvider>
       </body>
     </html>
