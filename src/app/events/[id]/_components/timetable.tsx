@@ -7,13 +7,18 @@ import { cn } from "~/@/lib/utils";
 import { formatTime } from "~/@/utils/event-utils";
 import { type EventList } from "~/types/comp";
 
-type AthleteCount =
-  | {
-      date: string;
-      event: any;
-      athleteCount: number | undefined;
-    }[]
-  | undefined;
+type AthleteCounts = {
+  athleteCountData: AthleteCount[];
+  isLoading: boolean;
+  isError: boolean;
+};
+
+type AthleteCount = {
+  date: string;
+  event: string;
+  athleteCount: number | undefined;
+};
+
 export function Timetable({
   data,
   athleteCounts,
@@ -21,7 +26,7 @@ export function Timetable({
   setSelectedEvent,
 }: {
   data: EventList[];
-  athleteCounts: AthleteCount;
+  athleteCounts: AthleteCounts;
   selectedEvent: EventList | null;
   setSelectedEvent: React.Dispatch<React.SetStateAction<EventList | null>>;
 }) {

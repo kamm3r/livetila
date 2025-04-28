@@ -87,7 +87,7 @@ export default function EventDetailTabs({
               <span className="flex h-5 w-5 items-center justify-center rounded-full border">
                 <Users className="h-3 w-3" />
               </span>
-              <span>Ilmoittautuneet</span>
+              <span className="hidden sm:block">Ilmoittautuneet</span>
             </div>
           </TabsTrigger>
           <TabsTrigger
@@ -98,7 +98,7 @@ export default function EventDetailTabs({
               <span className="flex h-5 w-5 items-center justify-center rounded-full border">
                 <ClipboardList className="h-3 w-3" />
               </span>
-              <span>Pöytäkirjat</span>
+              <span className="hidden sm:block">Pöytäkirjat</span>
             </div>
           </TabsTrigger>
           <TabsTrigger
@@ -109,7 +109,7 @@ export default function EventDetailTabs({
               <span className="flex h-5 w-5 items-center justify-center rounded-full border">
                 <Trophy className="h-3 w-3" />
               </span>
-              <span>Tulokset</span>
+              <span className="hidden sm:block">Tulokset</span>
             </div>
           </TabsTrigger>
         </TabsList>

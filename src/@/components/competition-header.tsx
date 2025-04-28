@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { fi } from "date-fns/locale";
-import { ArrowLeft, Clock, RefreshCw, Trophy } from "lucide-react";
+import { ArrowLeft, Clock, Trophy } from "lucide-react";
 import Link from "next/link";
 import { CopytoClipboard } from "~/@/components/copy-to-clipboard";
 import { Rounds } from "~/@/components/rounds";
@@ -55,14 +55,6 @@ export function CompetitionHeader({
           </div>
 
           <div className="mt-2 flex items-center justify-between gap-3 sm:mt-0 sm:justify-end">
-            {/* {dataEvent.S === "completed" && (
-              <Badge
-                variant="secondary"
-                className="bg-green-500 text-white hover:bg-green-500"
-              >
-                Completed
-              </Badge>
-            )} */}
             <div className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
               <span className="text-sm">
@@ -72,16 +64,6 @@ export function CompetitionHeader({
                 )}
               </span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              //   onClick={onRefresh}
-              className="text-xs"
-            >
-              <RefreshCw className="mr-1 h-3.5 w-3.5" />
-              Päivitä
-            </Button>
-
             <CopytoClipboard slug={slug} />
           </div>
         </div>

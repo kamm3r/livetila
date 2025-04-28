@@ -28,7 +28,7 @@ export type Stadion = {
 };
 
 export type Events = {
-  EventLists: EventList[];
+  [date: string]: EventList[];
 };
 
 export type EventList = {

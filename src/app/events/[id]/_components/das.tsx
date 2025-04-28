@@ -47,8 +47,7 @@ function useAthleteCountData(
 
   for (const date of dates!) {
     if (date) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const events = data[selectedDate] ?? [];
+      const events = (data[selectedDate] ?? []) as EventList[];
       for (const event of events) {
         if (event.EventId) {
           eventIds.push(`${event.EventId}`);
@@ -179,41 +178,12 @@ export function EventsPage({
     { enabled: !!compId },
   );
 
-  // console.log(dates);
-  // function getAthleteCount() {
-  //   const countData = [];
-
-  //   for (const date of dates) {
-  //     if (!!date) {
-  //       const events = data[date] ?? [];
-  //       if (events.length === 0) {
-  //         // No events for this date
-  //         console.assert(false, "No events for this events");
-  //         return;
-  //       }
-  //       for (const event of events) {
-  //         const count = api.competition.getAthleteCount.useQuery(
-  //           { compId: `${competitionId}/${event.EventId}` },
-  //           { enabled: !!event.EventId },
-  //         );
-
-  //         countData.push({
-  //           date: date,
-  //           event: event.EventName,
-  //           athleteCount: count.data,
-  //         }); // Store date and count
-  //       }
-  //     }
-  //   }
-  //   return countData;
-  // }
-
   const athleteCount = api.competition.getAthleteCount.useQuery(
     { compId },
     { enabled: !!compId },
   );
   const athleteCounts = useAthleteCountData(
-    selectedDate,
+    selectedDate!,
     dates,
     data,
     competitionId,
@@ -349,8 +319,8 @@ export function EventsPage({
               </Card>
             </div> */}
             <Tabs
-              defaultValue={dates[0]}
-              value={selectedDate}
+              defaultValue={dates![0]}
+              value={selectedDate!}
               onValueChange={setSelectedDate}
               className="w-full lg:col-span-6"
             >
