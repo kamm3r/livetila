@@ -18,6 +18,7 @@ import { Embed } from "~/@/components/embed";
 import { api } from "~/trpc/server";
 import { Suspense } from "react";
 import { Skeleton } from "~/@/components/ui/skeleton";
+import { Separator } from "~/@/components/ui/separator";
 
 function butterParse(a: string): number {
   if (a === "NM" || Number.isNaN(a)) {
@@ -49,8 +50,15 @@ export default async function Comp({ params }: { params: { slug: string } }) {
               <div className="space-y-2">
                 <h4 className="font-medium leading-none">OBS Overlay</h4>
                 <p className="text-sm text-muted-foreground">
-                  Get your live stream overlay for track and field
+                  jos haluut näyttää vain tietyn erän tulokset niin tee näin
                 </p>
+                <Separator className="" />
+                <div className="break-all rounded-lg border bg-popover-foreground/10 p-3 pr-12 font-mono text-sm text-gray-300">
+                  https://livetila.vercel.app/obs/{params.slug}
+                  <span className="rounded bg-cyan-300/40 px-1 py-0.5 text-white">
+                    ?heat=1
+                  </span>
+                </div>
               </div>
               <div className="flex gap-4">
                 <Embed slug={params.slug} />
