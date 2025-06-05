@@ -30,7 +30,7 @@ export function CompetitionLayout() {
           {showHeatNumbers && heats.length > 1 && (
             <div className="mb-4 flex flex-wrap gap-2">
               <div className="mb-2 w-full text-sm text-muted-foreground">
-                Select heat:
+                Valiste erä:
               </div>
               {heats.map((heat) => (
                 <Button
@@ -38,12 +38,12 @@ export function CompetitionLayout() {
                   variant={selectedHeat === heat.Index ? "default" : "outline"}
                   onClick={() => handleHeatChange(heat.Index)}
                 >
-                  Heat {heat.Index}
+                  Erä {heat.Index}
                 </Button>
               ))}
             </div>
           )}
-          <Table className="relative hidden max-h-[600px] lg:block">
+          <Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
             <TableHeader className="sticky top-0 backdrop-blur-md">
               <TableRow>
                 <TableHead className="w-[100px]">Sija</TableHead>
@@ -52,7 +52,7 @@ export function CompetitionLayout() {
                 <TableHead>SB</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="overflow-y-auto">
+            <TableBody>
               <Suspense>
                 {currentHeat?.Allocations.sort(
                   (a, b) => a.Position - b.Position,
@@ -126,7 +126,7 @@ export function ResultLayout() {
           {showHeatNumbers && heats.length > 1 && (
             <div className="mb-4 flex flex-wrap gap-2">
               <div className="mb-2 w-full text-sm text-muted-foreground">
-                Select heat:
+                Valiste erä:
               </div>
               {heats.map((heat) => (
                 <Button
@@ -134,7 +134,7 @@ export function ResultLayout() {
                   variant={selectedHeat === heat.Index ? "default" : "outline"}
                   onClick={() => handleHeatChange(heat.Index)}
                 >
-                  Heat {heat.Index}
+                  Erä {heat.Index}
                 </Button>
               ))}
             </div>

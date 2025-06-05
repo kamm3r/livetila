@@ -130,7 +130,7 @@ export default async function Comp({ params }: { params: { slug: string } }) {
             value="participants"
             className="duration-300 animate-in fade-in-50"
           >
-            <Table className="relative hidden max-h-[600px] lg:block">
+            <Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
               <TableHeader className="sticky top-0 backdrop-blur-md">
                 <TableRow>
                   <TableHead>Varm.</TableHead>
@@ -139,7 +139,7 @@ export default async function Comp({ params }: { params: { slug: string } }) {
                   <TableHead>SB</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody className="overflow-y-auto">
+              <TableBody>
                 <Suspense>
                   {athletes.Enrollments.map((participant) => (
                     <TableRow key={participant.Id}>
