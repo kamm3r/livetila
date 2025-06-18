@@ -14,8 +14,8 @@ function parseScopedQuery(input: string) {
   const match = /^(.+?)\s*\/\s*(.*)$/.exec(input);
   if (match) {
     return {
-      compName: match[1].trim(),
-      eventQuery: match[2].trim(),
+      compName: match[1]?.trim(),
+      eventQuery: match[2]?.trim(),
     };
   }
   return {
