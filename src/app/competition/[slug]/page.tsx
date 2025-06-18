@@ -82,6 +82,7 @@ function ObsPopover({ params }: { params: { slug: string } }) {
 }
 
 export default async function Comp({ params }: { params: { slug: string } }) {
+  console.log("Comp params:", params.slug);
   const compId = params.slug?.replace("-", "/");
   const athletes = await api.competition.getAthletes({ compId });
 

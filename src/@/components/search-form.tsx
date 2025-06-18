@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Command,
   CommandInput,
@@ -37,7 +38,7 @@ function extractEvents(data: Events): EventData[] {
       const hours = String(compDate.getHours()).padStart(2, "0");
       const minutes = String(compDate.getMinutes()).padStart(2, "0");
       results.push({
-        Id: event.Id,
+        Id: event.EventId,
         EventName: event.EventName,
         Date: `${day}.${month}.`,
         Time: `${hours}:${minutes}`,
@@ -48,6 +49,7 @@ function extractEvents(data: Events): EventData[] {
 }
 
 export function SearchForm() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [competitions, setCompetitions] = useState<CompetitionList[]>([]);
   const [selectedComp, setSelectedComp] = useState<CompetitionList | null>(
@@ -133,6 +135,17 @@ export function SearchForm() {
     setQuery(val);
   };
 
+  const handleEventSelect = (event: EventData) => {
+    if (selectedComp) {
+      console.log("Redirecting with:", {
+        compId: selectedComp.Id,
+        eventId: event.Id,
+      });
+      // Redirect to competition page with compId-eventId format
+      router.push(`/competition/${selectedComp.Id}-${event.Id}`);
+    }
+  };
+
   console.log("Render state:", {
     selectedComp: selectedComp?.Name,
     eventsCount: events.length,
@@ -207,7 +220,8 @@ export function SearchForm() {
               {events.map((evt) => (
                 <CommandItem
                   key={evt.Id}
-                  onSelect={() => console.log("Selected event:", evt)}
+                  onSelect={() => handleEventSelect(evt)}
+                  className="cursor-pointer hover:bg-accent"
                 >
                   <div className="flex w-full justify-between">
                     <span>{evt.EventName}</span>

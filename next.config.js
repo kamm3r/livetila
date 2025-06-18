@@ -7,7 +7,7 @@ await import("./src/env.js");
 /** @type {import("next").NextConfig} */
 const config = {
   transpilePackages: ["geist"],
-      typescript: {
+  typescript: {
     /**
      * Disable type checking since eslint handles this for us.
      */
