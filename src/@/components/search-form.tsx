@@ -12,11 +12,13 @@ import { tryCatch } from "~/shared/try-catch";
 import type { CompetitionList, Events } from "~/types/comp";
 
 function parseScopedQuery(input: string) {
-  const match = /^(.+?)\s*\/\s*(.*)$/.exec(input);
-  if (match) {
+  const parts = input.split("/");
+  if (parts.length > 1) {
+    const compName = parts.join("/").trim();
+    const eventQuery = parts.pop()?.trim() ?? "";
     return {
-      compName: match[1]?.trim(),
-      eventQuery: match[2]?.trim(),
+      compName: compName,
+      eventQuery: eventQuery,
     };
   }
   return {
@@ -64,9 +66,6 @@ export function SearchForm() {
     const timeout = setTimeout(async () => {
       if (eventQuery !== null && selectedComp) {
         // Search events in selected competition
-        console.log(
-          `Searching events for: "${eventQuery}" in ${selectedComp.Name}`,
-        );
         setIsLoadingEvents(true);
 
         const res = await tryCatch(
@@ -77,22 +76,16 @@ export function SearchForm() {
 
         if (res.data?.ok) {
           const parsed = await res.data.json();
-          console.log("Raw API response:", parsed);
           const allEvents = extractEvents(parsed);
-          console.log("All extracted events:", allEvents);
           const filtered = allEvents.filter((e) =>
             e.EventName.toLowerCase().includes(eventQuery.toLowerCase()),
           );
-          console.log(
-            `Found ${filtered.length} events matching "${eventQuery}":`,
-            filtered,
-          );
+
           setEvents(filtered);
         }
         setIsLoadingEvents(false);
       } else if (eventQuery === null && compName) {
         // Search competitions
-        console.log(`Searching competitions for: "${compName}"`);
         const res = await tryCatch(
           fetch("https://cached-public-api.tuloslista.com/live/v1/competition"),
         );
@@ -137,21 +130,9 @@ export function SearchForm() {
 
   const handleEventSelect = (event: EventData) => {
     if (selectedComp) {
-      console.log("Redirecting with:", {
-        compId: selectedComp.Id,
-        eventId: event.Id,
-      });
-      // Redirect to competition page with compId-eventId format
       router.push(`/competition/${selectedComp.Id}-${event.Id}`);
     }
   };
-
-  console.log("Render state:", {
-    selectedComp: selectedComp?.Name,
-    eventsCount: events.length,
-    events,
-    query,
-  });
 
   return (
     <div className="rounded-lg border shadow-md">
@@ -180,13 +161,6 @@ export function SearchForm() {
           value={query}
           onValueChange={handleInputChange}
         />
-
-        {selectedComp && (
-          <div className="px-3 py-2 text-xs text-muted-foreground">
-            Debug: {events.length} events loaded, loading:{" "}
-            {isLoadingEvents.toString()}
-          </div>
-        )}
 
         <CommandList>
           {!selectedComp && competitions.length > 0 && (
