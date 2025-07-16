@@ -246,35 +246,27 @@ export function SearchForm({ initialCompName }: SearchFormProps) {
           onValueChange={handleInputChange}
           autoFocus={selectedComp ? true : false}
         />
-        <CommandList>
-          {showCompetitions && (
-            <CommandGroup heading="Kilpailut">
-              {competitions.map((comp) => (
-                <CommandItem
-                  key={comp.Id}
-                  onSelect={() => handleCompetitionSelect(comp)}
-                >
-                  {comp.Name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-          {showLoading && (
-            <CommandGroup heading="Lajit">
-              <p className="px-3 py-2 text-sm text-muted-foreground">
-                ladataan lajeja...
-              </p>
-            </CommandGroup>
-          )}
-          <Suspense
-            fallback={
+        <Suspense fallback={<div>L...</div>}>
+          <CommandList>
+            {showCompetitions && (
+              <CommandGroup heading="Kilpailut">
+                {competitions.map((comp) => (
+                  <CommandItem
+                    key={comp.Id}
+                    onSelect={() => handleCompetitionSelect(comp)}
+                  >
+                    {comp.Name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            {showLoading && (
               <CommandGroup heading="Lajit">
                 <p className="px-3 py-2 text-sm text-muted-foreground">
                   ladataan lajeja...
                 </p>
               </CommandGroup>
-            }
-          >
+            )}
             {showEvents && (
               <CommandGroup heading="Lajit">
                 {events.map((evt) => (
@@ -300,11 +292,11 @@ export function SearchForm({ initialCompName }: SearchFormProps) {
                 ))}
               </CommandGroup>
             )}
-          </Suspense>
-          <CommandEmpty>
-            {selectedComp ? "Ei lajeja löytynyt" : "Ei kilpailuja löytynyt"}
-          </CommandEmpty>
-        </CommandList>
+            <CommandEmpty>
+              {selectedComp ? "Ei lajeja löytynyt" : "Ei kilpailuja löytynyt"}
+            </CommandEmpty>
+          </CommandList>
+        </Suspense>
       </Command>
     </div>
   );
