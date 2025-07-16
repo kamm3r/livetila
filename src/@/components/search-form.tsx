@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Command,
@@ -246,57 +246,56 @@ export function SearchForm({ initialCompName }: SearchFormProps) {
           onValueChange={handleInputChange}
           autoFocus={selectedComp ? true : false}
         />
-        <Suspense fallback={<div>L...</div>}>
-          <CommandList>
-            {showCompetitions && (
-              <CommandGroup heading="Kilpailut">
-                {competitions.map((comp) => (
-                  <CommandItem
-                    key={comp.Id}
-                    onSelect={() => handleCompetitionSelect(comp)}
-                  >
-                    {comp.Name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-            {showLoading && (
-              <CommandGroup heading="Lajit">
-                <p className="px-3 py-2 text-sm text-muted-foreground">
-                  ladataan lajeja...
-                </p>
-              </CommandGroup>
-            )}
-            {showEvents && (
-              <CommandGroup heading="Lajit">
-                {events.map((evt) => (
-                  <CommandItem
-                    key={`${evt.Id}-${evt.Date}-${evt.Time}`}
-                    onSelect={() => handleEventSelect(evt)}
-                    className="cursor-pointer hover:bg-accent"
-                  >
-                    <div className="flex w-full justify-between">
-                      <span className="font-medium">{evt.EventName}</span>
-                      <ul className="flex items-center gap-3 text-muted-foreground">
-                        <li className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span className="text-sm">{evt.Time}</span>
-                        </li>
-                        <li className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span className="text-sm">{evt.Date}</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-            <CommandEmpty>
-              {selectedComp ? "Ei lajeja löytynyt" : "Ei kilpailuja löytynyt"}
-            </CommandEmpty>
-          </CommandList>
-        </Suspense>
+
+        <CommandList>
+          {showCompetitions && (
+            <CommandGroup heading="Kilpailut">
+              {competitions.map((comp) => (
+                <CommandItem
+                  key={comp.Id}
+                  onSelect={() => handleCompetitionSelect(comp)}
+                >
+                  {comp.Name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          {showLoading && (
+            <CommandGroup heading="Lajit">
+              <p className="px-3 py-2 text-sm text-muted-foreground">
+                ladataan lajeja...
+              </p>
+            </CommandGroup>
+          )}
+          {showEvents && (
+            <CommandGroup heading="Lajit">
+              {events.map((evt) => (
+                <CommandItem
+                  key={`${evt.Id}-${evt.Date}-${evt.Time}`}
+                  onSelect={() => handleEventSelect(evt)}
+                  className="cursor-pointer hover:bg-accent"
+                >
+                  <div className="flex w-full justify-between">
+                    <span className="font-medium">{evt.EventName}</span>
+                    <ul className="flex items-center gap-3 text-muted-foreground">
+                      <li className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span className="text-sm">{evt.Time}</span>
+                      </li>
+                      <li className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        <span className="text-sm">{evt.Date}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          <CommandEmpty>
+            {selectedComp ? "Ei lajeja löytynyt" : "Ei kilpailuja löytynyt"}
+          </CommandEmpty>
+        </CommandList>
       </Command>
     </div>
   );

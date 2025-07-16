@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   Card,
   CardDescription,
@@ -21,7 +22,9 @@ export default async function Home() {
                 live.tulospalvelu.com
               </CardDescription>
             </CardHeader>
-            <SearchForm />
+            <Suspense>
+              <SearchForm />
+            </Suspense>
           </Card>
         </main>
       </div>
