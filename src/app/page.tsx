@@ -4,7 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../@/components/ui/card";
+} from "~/@/components/ui/card";
 import { Navbar } from "~/@/components/navbar";
 import { SearchForm } from "~/@/components/search-form";
 
@@ -13,7 +13,7 @@ export default async function Home() {
     <div className="relative flex h-screen w-screen flex-col">
       <div className="flex min-h-0 flex-1 flex-col">
         <Navbar />
-        <main className="flex flex-grow flex-col items-center p-4 sm:p-8">
+        <main className="flex grow flex-col items-center p-4 sm:p-8">
           <Card className="max-w-xl">
             <CardHeader>
               <CardTitle>Kilpailu Overlay</CardTitle>

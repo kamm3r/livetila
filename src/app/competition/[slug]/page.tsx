@@ -50,7 +50,7 @@ function butterParse(a: string): number {
     return parseFloat(a);
   }
 }
-function ObsPopover({ params }: { params: { slug: string } }) {
+function ObsPopover({slug}: {slug: string } ) {
   return (
     <Popover>
       <PopoverTrigger asChild className="right-5 top-9 z-50">
@@ -67,14 +67,14 @@ function ObsPopover({ params }: { params: { slug: string } }) {
             </p>
             <Separator className="" />
             <div className="break-all rounded-lg border bg-popover-foreground/10 p-3 pr-12 font-mono text-sm text-gray-300">
-              https://livetila.vercel.app/obs/{params.slug}
+              https://livetila.vercel.app/obs/{slug}
               <span className="rounded bg-cyan-300/40 px-1 py-0.5 text-white">
                 ?heat=1
               </span>
             </div>
           </div>
           <div className="flex gap-4">
-            <Embed slug={params.slug} />
+            <Embed slug={slug} />
           </div>
         </div>
       </PopoverContent>
@@ -82,16 +82,17 @@ function ObsPopover({ params }: { params: { slug: string } }) {
   );
 }
 
-export default async function Comp({ params }: { params: { slug: string } }) {
-  console.log("Comp params:", params.slug);
-  const compId = params.slug?.replace("-", "/");
+export default async function Comp({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  console.log("Comp params:", slug);
+  const compId = slug?.replace("-", "/");
   const athletes = await api.competition.getAthletes({ compId });
 
   return (
     <RoundProvider rounds={athletes.Rounds}>
       <Navbar />
-      <main className="container relative mx-auto flex flex-grow flex-col p-4 sm:p-8">
-        <ObsPopover params={params} />
+      <main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
+        <ObsPopover slug={slug} />
         <Tabs defaultValue="participants" className="mt-2 w-full">
           <TabsList className="grid h-auto w-full grid-cols-3 bg-transparent p-0">
             <TabsTrigger
@@ -274,7 +275,7 @@ export default async function Comp({ params }: { params: { slug: string } }) {
                                         key={id}
                                         className={cn(
                                           allocation.Result === at.Line1 &&
-                                            "!bg-neutral-300/50",
+                                            "bg-neutral-300/50!",
                                           "-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
                                         )}
                                       >
