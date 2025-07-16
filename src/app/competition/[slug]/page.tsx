@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "~/@/components/ui/table";
 import {
+  CheckCircle,
   ClipboardList,
   InfoIcon,
   Loader2Icon,
@@ -82,6 +83,7 @@ function ObsPopover({ params }: { params: { slug: string } }) {
 }
 
 export default async function Comp({ params }: { params: { slug: string } }) {
+  console.log("Comp params:", params.slug);
   const compId = params.slug?.replace("-", "/");
   const athletes = await api.competition.getAthletes({ compId });
 
@@ -142,9 +144,22 @@ export default async function Comp({ params }: { params: { slug: string } }) {
               <TableBody>
                 <Suspense>
                   {athletes.Enrollments.map((participant) => (
-                    <TableRow key={participant.Id}>
+                    <TableRow
+                      key={participant.Id}
+                      className={
+                        participant.Confirmed
+                          ? "bg-green-300/10 hover:bg-green-300/15"
+                          : ""
+                      }
+                    >
                       <Suspense>
-                        <TableCell>{participant.Confirmed}</TableCell>
+                        <TableCell>
+                          {participant.Confirmed ? (
+                            <div className="flex h-5 w-5 items-center justify-center">
+                              <CheckCircle className="h-3 w-3 text-white" />
+                            </div>
+                          ) : null}
+                        </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <div className="flex items-center">
