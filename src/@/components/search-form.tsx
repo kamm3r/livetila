@@ -13,6 +13,7 @@ import { tryCatch } from "~/shared/try-catch";
 import type { CompetitionList, Events } from "~/types/comp";
 import { Calendar, Clock } from "lucide-react";
 import { set } from "zod";
+import { SearchComps } from "~/@/components/search-comps";
 
 function parseScopedQuery(input: string) {
   const parts = input.split("/");
@@ -71,8 +72,6 @@ interface SearchFormProps {
 
 export function SearchForm({ initialCompName }: SearchFormProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const searchRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [competitions, setCompetitions] = useState<CompetitionList[]>([]);
   const [selectedComp, setSelectedComp] = useState<CompetitionList | null>(
@@ -81,59 +80,6 @@ export function SearchForm({ initialCompName }: SearchFormProps) {
   const [events, setEvents] = useState<EventData[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-
-  async function searchForComp(compName: string | null, initial: boolean) {
-    if (!compName) return;
-
-    const compData = await getCompData();
-
-    const match = compData.find((c) =>
-      c.Name.toLowerCase().includes(compName.toLowerCase()),
-    );
-    if (match) {
-      setSelectedComp(match);
-      if (!initial) {
-        setTimeout(() => {
-          searchRef.current?.focus();
-        }, 100);
-      }
-    }
-  }
-
-  useEffect(() => {
-    const compFromUrl = searchParams.get("comp");
-
-    if (compFromUrl && compFromUrl !== selectedComp?.Name) {
-      setQuery(`${compFromUrl} / `);
-
-      void searchForComp(compFromUrl, false);
-    } else if (!compFromUrl && selectedComp && isInitialized) {
-      // reset state
-      console.log("Resetting state");
-      setSelectedComp(null);
-      setQuery("");
-      setEvents([]);
-    }
-    setIsInitialized(true);
-  }, [searchParams.get("comp")]);
-
-  useEffect(() => {
-    if (initialCompName && !selectedComp && isInitialized) {
-      setQuery(`${initialCompName} / `);
-
-      void searchForComp(initialCompName, true);
-    }
-  }, [initialCompName, selectedComp, isInitialized]);
-
-  function updateURL(compName: string | null) {
-    const url = new URL(window.location.href);
-    if (compName) {
-      url.searchParams.set("comp", compName);
-    } else {
-      url.searchParams.delete("comp");
-    }
-    window.history.replaceState({}, "", url.toString());
-  }
 
   async function searchSomething(
     eventQuery: string | null,
@@ -235,17 +181,7 @@ export function SearchForm({ initialCompName }: SearchFormProps) {
   return (
     <div className="border-t shadow-md">
       <Command shouldFilter={false}>
-        <CommandInput
-          ref={searchRef}
-          placeholder={
-            selectedComp
-              ? `Haetaan lajeja tulokseen ${selectedComp.Name}`
-              : "Haetaan kilpailuja..."
-          }
-          value={query}
-          onValueChange={handleInputChange}
-          autoFocus={selectedComp ? true : false}
-        />
+        <SearchComps selectedComp={selectedComp} />
 
         <CommandList>
           {showCompetitions && (
