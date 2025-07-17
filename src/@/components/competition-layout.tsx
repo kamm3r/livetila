@@ -186,7 +186,7 @@ export function ResultLayout() {
                                     key={id}
                                     className={cn(
                                       allocation.Result === at.Line1 &&
-                                        "!bg-neutral-300/50",
+                                        "bg-neutral-300/50!",
                                       "-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
                                     )}
                                   >

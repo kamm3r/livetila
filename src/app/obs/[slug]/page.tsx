@@ -95,7 +95,7 @@ export default function Obs({ params }: { params: { slug: string } }) {
                         <li
                           key={idx}
                           className={cn(
-                            a.Result === at.Line1 && "!bg-cyan-300/50",
+                            a.Result === at.Line1 && "bg-cyan-300/50!",
                             "flex min-w-[16.7%] flex-col px-1 py-2 even:bg-gray-200",
                           )}
                         >

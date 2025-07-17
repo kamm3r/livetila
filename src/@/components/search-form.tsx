@@ -106,7 +106,7 @@ export function SearchForm({ initialCompName }: SearchFormProps) {
     if (compFromUrl && compFromUrl !== selectedComp?.Name) {
       setQuery(`${compFromUrl} / `);
 
-      void searchForComp(compFromUrl, true);
+      void searchForComp(compFromUrl, false);
     } else if (!compFromUrl && selectedComp && isInitialized) {
       // reset state
       console.log("Resetting state");
@@ -121,7 +121,7 @@ export function SearchForm({ initialCompName }: SearchFormProps) {
     if (initialCompName && !selectedComp && isInitialized) {
       setQuery(`${initialCompName} / `);
 
-      void searchForComp(initialCompName, false);
+      void searchForComp(initialCompName, true);
     }
   }, [initialCompName, selectedComp, isInitialized]);
 
@@ -262,7 +262,7 @@ export function SearchForm({ initialCompName }: SearchFormProps) {
           )}
           {showLoading && (
             <CommandGroup heading="Lajit">
-              <p className="px-3 py-2 text-sm text-muted-foreground">
+              <p className="text-muted-foreground px-3 py-2 text-sm">
                 ladataan lajeja...
               </p>
             </CommandGroup>
@@ -273,11 +273,11 @@ export function SearchForm({ initialCompName }: SearchFormProps) {
                 <CommandItem
                   key={`${evt.Id}-${evt.Date}-${evt.Time}`}
                   onSelect={() => handleEventSelect(evt)}
-                  className="cursor-pointer hover:bg-accent"
+                  className="hover:bg-accent cursor-pointer"
                 >
                   <div className="flex w-full justify-between">
                     <span className="font-medium">{evt.EventName}</span>
-                    <ul className="flex items-center gap-3 text-muted-foreground">
+                    <ul className="text-muted-foreground flex items-center gap-3">
                       <li className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         <span className="text-sm">{evt.Time}</span>
