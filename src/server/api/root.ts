@@ -1,5 +1,6 @@
 import { createTRPCRouter, createCallerFactory } from "~/server/api/trpc";
 import { competitionsRouter } from "~/server/api/routers/competition";
+import { toolsRouter } from "~/server/api/routers/tools";
 
 /**
  * This is the primary router for your server.
@@ -8,6 +9,7 @@ import { competitionsRouter } from "~/server/api/routers/competition";
  */
 export const appRouter = createTRPCRouter({
   competition: competitionsRouter,
+  tools: toolsRouter,
 });
 
 // export type definition of API
