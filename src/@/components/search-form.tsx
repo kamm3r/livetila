@@ -111,6 +111,7 @@ export function SearchForm() {
   //     } else {
   //       params.delete("query");
   //     }
+  // TODO: fix showDropdown not showing suggestions after selecting a competition
   function handleInputChange(value: string) {
     setQuery(value);
     setIsOpen(true);
@@ -128,6 +129,7 @@ export function SearchForm() {
       void searchEvents(selectedComp, eventQuery);
     } else {
       void searchCompetitions(value);
+      inputRef.current?.focus();
     }
 
     setQuery(value);
@@ -141,7 +143,6 @@ export function SearchForm() {
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
-  // Redirect to competition page with compId-eventId format
   function handleEventSelect(event: EventData) {
     if (selectedComp) {
       router.push(`/competition/${selectedComp.Id}-${event.Id}`);
@@ -172,6 +173,8 @@ export function SearchForm() {
     !showLoading;
   const showDropdown =
     isOpen && (showCompetitions || showEvents || showLoading || showEmpty);
+  // console.log("dropdown", showDropdown);
+  // console.log("isOpen status", isOpen);
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -184,10 +187,11 @@ export function SearchForm() {
               : "Hae kilpailuja nimellä..."
           }
           value={query}
-          onChangeCapture={(event) =>
-            handleInputChange(event.currentTarget.value)
-          }
+          onChangeCapture={(event) => {
+            handleInputChange(event.currentTarget.value);
+          }}
           onFocus={() => setIsOpen(true)}
+          onBlur={() => setIsOpen(false)}
           className=""
         />
         {showLoading && (
@@ -197,6 +201,13 @@ export function SearchForm() {
         {showDropdown && (
           <div className="border-border bg-card animate-in fade-in-0 slide-in-from-top-2 absolute top-full z-50 mt-2 w-full overflow-hidden rounded-xl border-2 shadow-xl duration-200">
             <CommandList className="max-h-80">
+              {showEmpty && (
+                <CommandEmpty className="text-muted-foreground animate-in fade-in-0 py-6 text-center text-sm duration-200">
+                  {selectedComp
+                    ? "Ei lajeja löytynyt"
+                    : "Ei kilpailuja löytynyt"}
+                </CommandEmpty>
+              )}
               {showCompetitions && (
                 <CommandGroup
                   heading="Kilpailut"
@@ -248,7 +259,6 @@ export function SearchForm() {
                         event.preventDefault();
                         handleEventSelect(evt);
                       }}
-                      onSelect={() => handleEventSelect(evt)}
                       className="data-[selected=true]:bg-accent animate-in fade-in-0 slide-in-from-left-2 mx-2 cursor-pointer rounded-lg px-4 py-3 transition-all duration-150"
                       style={{ animationDelay: `${index * 30}ms` }}
                     >
@@ -268,13 +278,6 @@ export function SearchForm() {
                     </CommandItem>
                   ))}
                 </CommandGroup>
-              )}
-              {showEmpty && (
-                <CommandEmpty className="text-muted-foreground animate-in fade-in-0 py-6 text-center text-sm duration-200">
-                  {selectedComp
-                    ? "Ei lajeja löytynyt"
-                    : "Ei kilpailuja löytynyt"}
-                </CommandEmpty>
               )}
             </CommandList>
           </div>
