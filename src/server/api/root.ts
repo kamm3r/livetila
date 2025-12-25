@@ -1,6 +1,5 @@
 import { createTRPCRouter, createCallerFactory } from "~/server/api/trpc";
 import { competitionsRouter } from "~/server/api/routers/competition";
-
 /**
  * This is the primary router for your server.
  *
