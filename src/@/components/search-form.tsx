@@ -6,6 +6,7 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from "~/@/components/ui/command";
@@ -175,25 +176,23 @@ export function SearchForm() {
   return (
     <div ref={containerRef} className="relative w-full">
       <Command shouldFilter={false} className="overflow-visible bg-transparent">
-        <div className="group focus-within:scale[1.01] relative transition-transform duration-200">
-          <Search className="text-muted-foreground group-focus-within:text-primary absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 transition-colors duration-200" />
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder={
-              selectedComp
-                ? `Hae lajeja kilpailusta ${selectedComp.Name}...`
-                : "Hae kilpailuja nimellä..."
-            }
-            value={query}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onFocus={() => setIsOpen(true)}
-            className="border-border bg-card placeholder:text-muted-foreground focus:border-primary focus:shadow-primary/5 h-14 w-full rounded-xl border-2 pr-12 pl-12 text-base shadow-lg transition-all duration-200 outline-none focus:shadow-xl"
-          />
-          {showLoading && (
-            <Loader2 className="text-muted-foreground absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 animate-spin" />
-          )}
-        </div>
+        <CommandInput
+          ref={inputRef}
+          placeholder={
+            selectedComp
+              ? `Hae lajeja kilpailusta ${selectedComp.Name}...`
+              : "Hae kilpailuja nimellä..."
+          }
+          value={query}
+          onChangeCapture={(event) =>
+            handleInputChange(event.currentTarget.value)
+          }
+          onFocus={() => setIsOpen(true)}
+          className=""
+        />
+        {showLoading && (
+          <Loader2 className="text-muted-foreground absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 animate-spin" />
+        )}
 
         {showDropdown && (
           <div className="border-border bg-card animate-in fade-in-0 slide-in-from-top-2 absolute top-full z-50 mt-2 w-full overflow-hidden rounded-xl border-2 shadow-xl duration-200">
@@ -207,14 +206,22 @@ export function SearchForm() {
                     <CommandItem
                       key={comp.Id}
                       value={comp.Name}
-                      onMouseDown={(event) => event.preventDefault()}
-                      onSelect={() => handleCompetitionSelect(comp)}
-                      className="data-[selected=true]:bg-accent animate-in fade-in-0 slide-in-from-left-2 mx-2 cursor-pointer gap-3 rounded-lg px-4 py-3 transition-all duration-150"
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        handleCompetitionSelect(comp);
+                      }}
+                      className="data-[selected=true]:bg-accent animate-in fade-in-0 slide-in-from-left-2 z-[62] mx-2 cursor-pointer gap-3 rounded-lg px-4 py-3 transition-all duration-150"
                       style={{ animationDelay: `${index * 30}ms` }}
                     >
                       <div className="flex flex-1 items-center justify-between">
                         <span className="font-medium">{comp.Name}</span>
-                        <ChevronRight className="text-muted-foreground h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
+                        <div className="flex items-center gap-1.5 text-sm">
+                          <span className="text-muted-foreground">
+                            {new Date(comp.Date).getDate()}.
+                            {new Date(comp.Date).getMonth() + 1}.
+                          </span>
+                          <ChevronRight className="text-muted-foreground h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
+                        </div>
                       </div>
                     </CommandItem>
                   ))}
@@ -237,7 +244,10 @@ export function SearchForm() {
                     <CommandItem
                       key={`${evt.Id}-${evt.Date}-${evt.Time}`}
                       value={evt.EventName}
-                      onMouseDown={(event) => event.preventDefault()}
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        handleEventSelect(evt);
+                      }}
                       onSelect={() => handleEventSelect(evt)}
                       className="data-[selected=true]:bg-accent animate-in fade-in-0 slide-in-from-left-2 mx-2 cursor-pointer rounded-lg px-4 py-3 transition-all duration-150"
                       style={{ animationDelay: `${index * 30}ms` }}
