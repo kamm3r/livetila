@@ -53,6 +53,19 @@ async function getCompData() {
 	return (await data.json()) as CompetitionList[];
 }
 
+async function getEventData(compId: number) {
+	const { data, error } = await tryCatch(
+		fetch(
+			`https://cached-public-api.tuloslista.com/live/v1/competition/${compId}`,
+		),
+	);
+	if (error || !data) {
+		console.error("Error fetching comp data:", error);
+		return [];
+	}
+	return (await data.json()) as Events;
+}
+
 export function SearchForm() {
 	const router = useRouter();
 	const [query, setQuery] = useState("");
@@ -68,12 +81,13 @@ export function SearchForm() {
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	async function searchCompetitions(query: string) {
-		if (!query.trim()) {
-			setCompetitions([]);
-			return;
-		}
 		setIsLoadingComps(true);
 		const data = await getCompData();
+		if (!query || !query.trim()) {
+			setCompetitions(data);
+			setIsLoadingComps(false);
+			return;
+		}
 		const filtered = data.filter((comp) =>
 			comp.Name.toLowerCase().includes(query.toLowerCase()),
 		);
@@ -83,24 +97,19 @@ export function SearchForm() {
 
 	async function searchEvents(comp: CompetitionList, query: string) {
 		setIsLoadingEvents(true);
-		const { error, data } = await tryCatch(
-			fetch(
-				`https://cached-public-api.tuloslista.com/live/v1/competition/${comp.Id}`,
-			),
-		);
-		if (error || !data) {
-			setEvents([]);
+		const events = await getEventData(comp.Id);
+		const allEvents = extractEvents(events);
+		if (!query || query.trim() === "") {
+			setEvents(allEvents.sort((a, b) => a.Time.localeCompare(b.Time)));
+			setIsLoadingEvents(false);
 			return;
-		} else {
-			const parsed = (await data.json()) as Events;
-			const allEvents = extractEvents(parsed);
-			const filtered = query
-				? allEvents.filter((event) =>
-						event.EventName.toLowerCase().includes(query.toLowerCase()),
-					)
-				: allEvents;
-			setEvents(filtered);
 		}
+		const normalizedQuery = query.toLowerCase();
+		const filtered = allEvents.filter((event) =>
+			event.EventName.toLowerCase().includes(normalizedQuery),
+		);
+		setEvents(filtered);
+
 		setIsLoadingEvents(false);
 	}
 
@@ -111,7 +120,7 @@ export function SearchForm() {
 	//     } else {
 	//       params.delete("query");
 	//     }
-	// TODO: fix showDropdown not showing suggestions after selecting a competition
+
 	function handleInputChange(value: string) {
 		setQuery(value);
 		setIsOpen(true);
@@ -172,8 +181,6 @@ export function SearchForm() {
 		!showLoading;
 	const showDropdown =
 		isOpen && (showCompetitions || showEvents || showLoading || showEmpty);
-	// console.log("dropdown", showDropdown);
-	// console.log("isOpen status", isOpen);
 
 	return (
 		<div className="relative w-full" ref={containerRef}>
@@ -219,7 +226,7 @@ export function SearchForm() {
 											}}
 											onSelect={() => handleCompetitionSelect(comp)}
 											style={{ animationDelay: `${index * 30}ms` }}
-											value={comp.Name}
+											value={`${comp.Name}-${comp.Date}-${comp.Id}`}
 										>
 											<div className="flex flex-1 items-center justify-between">
 												<span className="font-medium">{comp.Name}</span>
@@ -255,7 +262,7 @@ export function SearchForm() {
 											}}
 											onSelect={() => handleEventSelect(evt)}
 											style={{ animationDelay: `${index * 30}ms` }}
-											value={evt.EventName}
+											value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
 										>
 											<div className="flex w-full items-center justify-between gap-4">
 												<span className="font-medium">{evt.EventName}</span>
