@@ -181,14 +181,14 @@ export function ResultLayout() {
 												<ul className="flex gap-2">
 													<Suspense fallback={<Skeleton />}>
 														{allocation.Attempts
-															? allocation.Attempts.map((at) => (
+															? allocation.Attempts.map((at, index) => (
 																	<li
 																		className={cn(
 																			allocation.Result === at.Line1 &&
 																				"bg-neutral-300/50!",
 																			"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
 																		)}
-																		key={at.Line1}
+																		key={`${at.Line1}-${index}`}
 																	>
 																		<span>{at.Line1}</span>
 																		{at.Line2 && <span>{at.Line2}</span>}
