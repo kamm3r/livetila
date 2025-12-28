@@ -91,13 +91,13 @@ export default function Obs({ params }: { params: { slug: string } }) {
 										{a.Attempts === null ? (
 											<p className="opacity-0">no</p>
 										) : (
-											a.Attempts?.map((at) => (
+											a.Attempts?.map((at, index) => (
 												<li
 													className={cn(
 														a.Result === at.Line1 && "bg-cyan-300/50!",
 														"flex min-w-[16.7%] flex-col px-1 py-2 even:bg-gray-200",
 													)}
-													key={at.Line1}
+													key={`${at.Line1}-${index}`}
 												>
 													<span>{at.Line1}</span>
 													{at.Line2 && <span>{at.Line2}</span>}

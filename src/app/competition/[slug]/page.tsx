@@ -50,6 +50,7 @@ function butterParse(a: string): number {
 		return parseFloat(a);
 	}
 }
+// TODO: make the popover link not be hardcoded
 function ObsPopover({ slug }: { slug: string }) {
 	return (
 		<Popover>
@@ -274,14 +275,14 @@ export default async function Comp({
 														<ul className="flex gap-2">
 															<Suspense fallback={<Skeleton />}>
 																{allocation.Attempts
-																	? allocation.Attempts.map((at) => (
+																	? allocation.Attempts.map((at, index) => (
 																			<li
 																				className={cn(
 																					allocation.Result === at.Line1 &&
 																						"bg-neutral-300/50!",
 																					"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
 																				)}
-																				key={at.Line1}
+																				key={`${at.Line1}-${index}`}
 																			>
 																				<span>{at.Line1}</span>
 																				{at.Line2 && <span>{at.Line2}</span>}
@@ -341,10 +342,10 @@ export default async function Comp({
 											<ul className="flex gap-2">
 												<Suspense fallback={<Skeleton />}>
 													{a.Attempts
-														? a.Attempts.map((at) => (
+														? a.Attempts.map((at, index) => (
 																<li
 																	className="-my-1 flex flex-col rounded bg-muted px-2 py-1 text-sm dark:bg-neutral-600/50"
-																	key={at.Line1}
+																	key={`${at.Line1}-${index}`}
 																>
 																	<span>{at.Line1}</span>
 																	{at.Line2 && <span>{at.Line2}</span>}

@@ -10,7 +10,7 @@ import {
 	CommandItem,
 	CommandList,
 } from "~/@/components/ui/command";
-import { tryCatch } from "~/shared/try-catch";
+import { api } from "~/trpc/react";
 import type { CompetitionList, Events } from "~/types/comp";
 
 type EventData = {
@@ -41,76 +41,61 @@ function extractEvents(data: Events): EventData[] {
 	return results;
 }
 
-async function getCompData() {
-	const { data, error } = await tryCatch(
-		fetch("https://cached-public-api.tuloslista.com/live/v1/competition"),
-	);
-
-	if (error || !data) {
-		console.error("Error fetching comp data:", error);
-		return [];
-	}
-	return (await data.json()) as CompetitionList[];
-}
-
-async function getEventData(compId: number) {
-	const { data, error } = await tryCatch(
-		fetch(
-			`https://cached-public-api.tuloslista.com/live/v1/competition/${compId}`,
-		),
-	);
-	if (error || !data) {
-		console.error("Error fetching comp data:", error);
-		return [];
-	}
-	return (await data.json()) as Events;
-}
-
 export function SearchForm() {
 	const router = useRouter();
 	const [query, setQuery] = useState("");
-	const [competitions, setCompetitions] = useState<CompetitionList[]>([]);
 	const [selectedComp, setSelectedComp] = useState<CompetitionList | null>(
 		null,
 	);
-	const [events, setEvents] = useState<EventData[]>([]);
-	const [isLoadingComps, setIsLoadingComps] = useState(false);
-	const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 	const [isOpen, setIsOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
-
-	async function searchCompetitions(query: string) {
-		setIsLoadingComps(true);
-		const data = await getCompData();
-		if (!query || !query.trim()) {
-			setCompetitions(data);
-			setIsLoadingComps(false);
-			return;
-		}
-		const filtered = data.filter((comp) =>
-			comp.Name.toLowerCase().includes(query.toLowerCase()),
+	const { data: competitions, isLoading: isLoadingComps } =
+		api.competition.getCompetitions.useQuery();
+	const compId = selectedComp?.Id;
+	console.log("compId", compId);
+	const { data: events, isLoading: isLoadingEvents } =
+		api.competition.getEvents.useQuery(
+			{ compId: compId! },
+			{
+				enabled: !!compId,
+			},
 		);
-		setCompetitions(filtered);
-		setIsLoadingComps(false);
-	}
 
-	async function searchEvents(comp: CompetitionList, query: string) {
-		setIsLoadingEvents(true);
-		const events = await getEventData(comp.Id);
-		const allEvents = extractEvents(events);
-		if (!query || query.trim() === "") {
-			setEvents(allEvents.sort((a, b) => a.Time.localeCompare(b.Time)));
-			setIsLoadingEvents(false);
-			return;
+	// Competition filtering (only when no comp selected)
+	const competitionResults =
+		selectedComp || !query.trim()
+			? competitions
+			: competitions?.filter((comp) =>
+					comp.Name.toLowerCase().includes(query.toLowerCase()),
+				);
+
+	// Event filtering (only when comp IS selected)
+	const eventQuery =
+		selectedComp && query.includes("/")
+			? (query.split("/").pop()?.trim() ?? "")
+			: "";
+
+	const eventResults =
+		selectedComp && events
+			? extractEvents(events)
+					.filter(
+						(evt) =>
+							!eventQuery ||
+							evt.EventName.toLowerCase().includes(eventQuery.toLowerCase()),
+					)
+					.sort((a, b) => a.Time.localeCompare(b.Time))
+			: [];
+
+	function handleInputChange(value: string) {
+		setIsOpen(true);
+		setQuery(value);
+
+		// Reset scope if "/" is removed
+		if (selectedComp && !value.includes("/")) {
+			setSelectedComp(null);
+			setQuery("");
 		}
-		const normalizedQuery = query.toLowerCase();
-		const filtered = allEvents.filter((event) =>
-			event.EventName.toLowerCase().includes(normalizedQuery),
-		);
-		setEvents(filtered);
-
-		setIsLoadingEvents(false);
 	}
 
 	// old code that used url for comp and event state
@@ -121,33 +106,9 @@ export function SearchForm() {
 	//       params.delete("query");
 	//     }
 
-	function handleInputChange(value: string) {
-		setQuery(value);
-		setIsOpen(true);
-
-		// Only reset scope if we're removing the "/" entirely
-		if (selectedComp && !value.includes("/")) {
-			setSelectedComp(null);
-			setEvents([]);
-			setQuery("");
-			return;
-		}
-		if (selectedComp) {
-			const parts = value.split("/");
-			const eventQuery = parts[parts.length - 1]?.trim() || "";
-			void searchEvents(selectedComp, eventQuery);
-		} else {
-			void searchCompetitions(value);
-		}
-
-		setQuery(value);
-	}
-
 	function handleCompetitionSelect(comp: CompetitionList) {
 		setSelectedComp(comp);
 		setQuery(`${comp.Name} / `);
-		setCompetitions([]);
-		void searchEvents(comp, "");
 		setTimeout(() => inputRef.current?.focus(), 0);
 	}
 
@@ -170,8 +131,8 @@ export function SearchForm() {
 		return () => document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
 
-	const showCompetitions = !selectedComp && competitions.length > 0;
-	const showEvents = selectedComp && events.length > 0;
+	const showCompetitions = !selectedComp && competitionResults?.length > 0;
+	const showEvents = selectedComp && eventResults.length > 0;
 	const showLoading = isLoadingComps || isLoadingEvents;
 	const showEmpty =
 		isOpen &&
@@ -216,7 +177,7 @@ export function SearchForm() {
 							)}
 							{showCompetitions && (
 								<CommandGroup heading="Kilpailut">
-									{competitions.slice(0, 10).map((comp, index) => (
+									{competitionResults?.slice(0, 10).map((comp, index) => (
 										<CommandItem
 											className="fade-in-0 slide-in-from-left-2 animate-in transition-all duration-150"
 											key={comp.Id}
@@ -252,7 +213,7 @@ export function SearchForm() {
 							)}
 							{showEvents && (
 								<CommandGroup heading="Lajit">
-									{events.slice(0, 15).map((evt, index) => (
+									{eventResults.slice(0, 15).map((evt, index) => (
 										<CommandItem
 											className="fade-in-0 slide-in-from-left-2 animate-in transition-all duration-150"
 											key={`${evt.Id}-${evt.Date}-${evt.Time}`}
