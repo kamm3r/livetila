@@ -326,25 +326,33 @@ export default async function Comp({
 									}
 								}).map((a) => (
 									<li
-										className="flex w-full max-w-[400px] flex-col gap-1 rounded border px-4 py-3"
+										className="flex w-full flex-col gap-2 rounded-lg border px-4 py-4"
 										key={a.Id}
 									>
-										<Suspense>
-											<h2 className="font-semibold text-2xl leading-none tracking-tight">
-												<span>{a.ResultRank}</span> <span>{a.Name}</span>
-											</h2>
-											<span className="text-xs opacity-70">
-												PB: {a.PB} SB: {a.SB}
-											</span>
-											<p className="pb-2 text-muted-foreground text-sm">
-												{a.Organization.Name}
-											</p>
-											<ul className="flex gap-2">
-												<Suspense fallback={<Skeleton />}>
+										<div className="flex flex-col items-start justify-between gap-2">
+											<div className="flex flex-col">
+												<div className="flex gap-2">
+													<h2 className="font-semibold text-base leading-tight">
+														<span className="mr-2 text-muted-foreground">
+															#{a.ResultRank}
+														</span>
+														<span>{a.Name}</span>
+													</h2>
+													<div className="flex shrink-0 gap-2 text-xs opacity-70">
+														<span>PB: {a.PB || "-"}</span>
+														<span>SB: {a.SB || "-"}</span>
+													</div>
+												</div>
+												<p className="text-muted-foreground text-xs">
+													{a.Organization.Name}
+												</p>
+											</div>
+											{a.Attempts && (
+												<ul className="flex flex-wrap gap-2 pt-1">
 													{a.Attempts
 														? a.Attempts.map((at, index) => (
 																<li
-																	className="-my-1 flex flex-col rounded bg-muted px-2 py-1 text-sm dark:bg-neutral-600/50"
+																	className="flex flex-col rounded bg-muted px-2 py-1 text-sm dark:bg-neutral-600/50"
 																	key={`${at.Line1}-${index}`}
 																>
 																	<span>{at.Line1}</span>
@@ -352,9 +360,9 @@ export default async function Comp({
 																</li>
 															))
 														: null}
-												</Suspense>
-											</ul>
-										</Suspense>
+												</ul>
+											)}
+										</div>
 									</li>
 								)),
 							)}
