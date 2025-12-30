@@ -12,7 +12,35 @@ import {
 	TableRow,
 } from "~/@/components/ui/table";
 import { cn } from "~/@/lib/utils";
+import type { Heat } from "~/types/comp";
 
+function HeatSelector({
+	heats,
+	selectedHeat,
+	handleHeatChange,
+}: {
+	heats: Heat[];
+	selectedHeat: number;
+	handleHeatChange: (heat: number) => void;
+}) {
+	return (
+		<div className="mb-4 flex flex-wrap gap-2">
+			<div className="mb-2 w-full text-muted-foreground text-sm">
+				Valiste erä:
+			</div>
+			{heats.map((heat) => (
+				<Button
+					key={heat.Index}
+					onClick={() => handleHeatChange(heat.Index)}
+					variant={selectedHeat === heat.Index ? "default" : "outline"}
+				>
+					Erä {heat.Index}
+				</Button>
+			))}
+		</div>
+	);
+}
+// TODO: maybe combine this with the ResultLayout
 export function CompetitionLayout() {
 	const {
 		currentHeat,
@@ -22,26 +50,28 @@ export function CompetitionLayout() {
 		showHeatNumbers,
 		handleHeatChange,
 	} = useRound();
+
+	if (heats.length === 0) {
+		return (
+			<div className="py-8 text-center">
+				<p className="text-muted-foreground">
+					Eräjakoja ei ole saatavilla vielä.
+				</p>
+			</div>
+		);
+	}
+
 	return (
 		<>
-			{heats.length > 0 ? (
+			{heats.length > 0 && (
 				<div className="space-y-6">
 					{/* Heat Selection Tabs - Only show when there are multiple heats */}
 					{showHeatNumbers && heats.length > 1 && (
-						<div className="mb-4 flex flex-wrap gap-2">
-							<div className="mb-2 w-full text-muted-foreground text-sm">
-								Valiste erä:
-							</div>
-							{heats.map((heat) => (
-								<Button
-									key={heat.Index}
-									onClick={() => handleHeatChange(heat.Index)}
-									variant={selectedHeat === heat.Index ? "default" : "outline"}
-								>
-									Erä {heat.Index}
-								</Button>
-							))}
-						</div>
+						<HeatSelector
+							heats={heats}
+							selectedHeat={selectedHeat}
+							handleHeatChange={handleHeatChange}
+						/>
 					)}
 					<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
 						<TableHeader className="sticky top-0 backdrop-blur-md">
@@ -99,16 +129,11 @@ export function CompetitionLayout() {
 						</TableBody>
 					</Table>
 				</div>
-			) : (
-				<div className="py-8 text-center">
-					<p className="text-muted-foreground">
-						Eräjakoja ei ole saatavilla vielä.
-					</p>
-				</div>
 			)}
 		</>
 	);
 }
+
 export function ResultLayout() {
 	const {
 		currentHeat,
@@ -118,26 +143,28 @@ export function ResultLayout() {
 		showHeatNumbers,
 		handleHeatChange,
 	} = useRound();
+
+	if (heats.length === 0) {
+		return (
+			<div className="py-8 text-center">
+				<p className="text-muted-foreground">
+					Eräjakoja ei ole saatavilla vielä.
+				</p>
+			</div>
+		);
+	}
+
 	return (
 		<>
-			{heats.length > 0 ? (
+			{heats.length > 0 && (
 				<div className="space-y-6">
 					{/* Heat Selection Tabs - Only show when there are multiple heats */}
 					{showHeatNumbers && heats.length > 1 && (
-						<div className="mb-4 flex flex-wrap gap-2">
-							<div className="mb-2 w-full text-muted-foreground text-sm">
-								Valiste erä:
-							</div>
-							{heats.map((heat) => (
-								<Button
-									key={heat.Index}
-									onClick={() => handleHeatChange(heat.Index)}
-									variant={selectedHeat === heat.Index ? "default" : "outline"}
-								>
-									Erä {heat.Index}
-								</Button>
-							))}
-						</div>
+						<HeatSelector
+							heats={heats}
+							selectedHeat={selectedHeat}
+							handleHeatChange={handleHeatChange}
+						/>
 					)}
 					<Table className="relative hidden rounded-md border md:block">
 						<TableHeader className="sticky top-0 backdrop-blur-md">
@@ -204,12 +231,6 @@ export function ResultLayout() {
 							</Suspense>
 						</TableBody>
 					</Table>
-				</div>
-			) : (
-				<div className="py-8 text-center">
-					<p className="text-muted-foreground">
-						Eräjakoja ei ole saatavilla vielä.
-					</p>
 				</div>
 			)}
 		</>
