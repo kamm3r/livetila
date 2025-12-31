@@ -14,6 +14,51 @@ import {
 import { cn } from "~/@/lib/utils";
 import type { Heat } from "~/types/comp";
 
+type Column<T> = {
+	header: React.ReactNode;
+	className?: string;
+	cell: (row: T) => React.ReactNode;
+};
+
+type CompetitionTableProps<T> = {
+	data: T[];
+	columns: Column<T>[];
+	rowClassName?: (row: T) => string;
+};
+
+function CompetitionTable<T>({
+	data,
+	columns,
+	rowClassName,
+}: CompetitionTableProps<T>) {
+	return (
+		<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
+			<TableHeader className="sticky top-0 backdrop-blur-md">
+				<TableRow>
+					{columns.map((col, i) => (
+						<TableHead key={i} className={col.className}>
+							{col.header}
+						</TableHead>
+					))}
+				</TableRow>
+			</TableHeader>
+
+			<TableBody>
+				{data.map((row, i) => (
+					<TableRow
+						key={i}
+						className={rowClassName ? rowClassName(row) : undefined}
+					>
+						{columns.map((col, j) => (
+							<TableCell key={j}>{col.cell(row)}</TableCell>
+						))}
+					</TableRow>
+				))}
+			</TableBody>
+		</Table>
+	);
+}
+
 function HeatSelector({
 	heats,
 	selectedHeat,
@@ -40,7 +85,9 @@ function HeatSelector({
 		</div>
 	);
 }
-// TODO: maybe combine this with the ResultLayout
+// TODO: maybe combine this with the participant and protocol look at mockup that the
+// layout will stay the same on both componnent but the data will be different but result
+// is different as it show heat result and the end result
 export function CompetitionLayout() {
 	const {
 		currentHeat,
