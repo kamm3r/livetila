@@ -9,6 +9,7 @@ import {
 import { Suspense } from "react";
 import {
 	CompetitionLayout,
+	ParticipantLayout,
 	ResultLayout,
 } from "~/@/components/competition-layout";
 import { Embed } from "~/@/components/embed";
@@ -138,70 +139,7 @@ export default async function Comp({
 						className="fade-in-50 animate-in duration-300"
 						value="participants"
 					>
-						<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
-							<TableHeader className="sticky top-0 backdrop-blur-md">
-								<TableRow>
-									<TableHead>Varm.</TableHead>
-									<TableHead className="w-full">Nimi ja Seura</TableHead>
-									<TableHead>PB</TableHead>
-									<TableHead>SB</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								<Suspense>
-									{athletes.Enrollments.map((participant) => (
-										<TableRow
-											className={
-												participant.Confirmed
-													? "bg-green-300/10 hover:bg-green-300/15"
-													: ""
-											}
-											key={participant.Id}
-										>
-											<Suspense>
-												<TableCell>
-													{participant.Confirmed ? (
-														<div className="flex h-5 w-5 items-center justify-center">
-															<CheckCircle className="h-3 w-3 text-white" />
-														</div>
-													) : null}
-												</TableCell>
-												<TableCell>
-													<div className="flex flex-col">
-														<div className="flex items-center">
-															{!!participant.Number && (
-																<span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
-																	{participant.Number}
-																</span>
-															)}
-															<span className="font-medium">
-																{participant.Name}
-															</span>
-														</div>
-														<div className="mt-1 text-muted-foreground text-xs">
-															{participant.Organization
-																? participant.Organization.Name
-																: "-"}
-														</div>
-													</div>
-												</TableCell>
-
-												<TableCell>
-													<span className="font-medium">
-														{participant.PB || "-"}
-													</span>
-												</TableCell>
-												<TableCell>
-													<span className="font-medium">
-														{participant.SB || "-"}
-													</span>
-												</TableCell>
-											</Suspense>
-										</TableRow>
-									))}
-								</Suspense>
-							</TableBody>
-						</Table>
+						<ParticipantLayout athletes={athletes} />
 					</TabsContent>
 					<TabsContent
 						className="fade-in-50 animate-in duration-300"

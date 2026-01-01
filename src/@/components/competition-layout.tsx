@@ -1,4 +1,5 @@
 "use client";
+import { CheckCircle } from "lucide-react";
 import { Suspense } from "react";
 import { useRound } from "~/@/components/round-provider";
 import { Button } from "~/@/components/ui/button";
@@ -12,7 +13,7 @@ import {
 	TableRow,
 } from "~/@/components/ui/table";
 import { cn } from "~/@/lib/utils";
-import type { Heat } from "~/types/comp";
+import type { Competition, Heat } from "~/types/comp";
 
 type Column<T> = {
 	header: React.ReactNode;
@@ -59,6 +60,32 @@ function CompetitionTable<T>({
 	);
 }
 
+function NameAndOrg({
+	name,
+	organization,
+	number,
+}: {
+	name: string;
+	organization?: { Name: string } | null;
+	number?: string | number | null;
+}) {
+	return (
+		<div className="flex flex-col">
+			<div className="flex items-center">
+				{!!number && (
+					<span className="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
+						{number}
+					</span>
+				)}
+				<span className="font-medium">{name}</span>
+			</div>
+			<div className="mt-1 text-muted-foreground text-xs">
+				{organization?.Name ?? "-"}
+			</div>
+		</div>
+	);
+}
+
 function HeatSelector({
 	heats,
 	selectedHeat,
@@ -85,13 +112,55 @@ function HeatSelector({
 		</div>
 	);
 }
+
+export function ParticipantLayout({ athletes }: { athletes: Competition }) {
+	return (
+		// biome-ignore assist/source/useSortedAttributes: no
+		<CompetitionTable
+			data={athletes.Enrollments}
+			columns={[
+				{
+					header: "Varm.",
+					cell: (p) =>
+						p.Confirmed ? (
+							<div className="flex h-5 w-5 items-center justify-center">
+								<CheckCircle className="h-3 w-3 text-white" />
+							</div>
+						) : null,
+				},
+				{
+					header: "Nimi ja Seura",
+					className: "w-full",
+					cell: (p) => (
+						<NameAndOrg
+							name={p.Name}
+							organization={p.Organization}
+							number={p.Number}
+						/>
+					),
+				},
+				{
+					header: "PB",
+					cell: (p) => <span className="font-medium">{p.PB || "-"}</span>,
+				},
+				{
+					header: "SB",
+					cell: (p) => <span className="font-medium">{p.SB || "-"}</span>,
+				},
+			]}
+			rowClassName={(p) =>
+				p.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : ""
+			}
+		/>
+	);
+}
+
 // TODO: maybe combine this with the participant and protocol look at mockup that the
 // layout will stay the same on both componnent but the data will be different but result
 // is different as it show heat result and the end result
 export function CompetitionLayout() {
 	const {
 		currentHeat,
-		// selectedRound,
 		selectedHeat,
 		heats,
 		showHeatNumbers,
@@ -120,61 +189,35 @@ export function CompetitionLayout() {
 							handleHeatChange={handleHeatChange}
 						/>
 					)}
-					<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
-						<TableHeader className="sticky top-0 backdrop-blur-md">
-							<TableRow>
-								<TableHead className="w-[100px]">Sija</TableHead>
-								<TableHead className="w-full">Nimi ja Seura</TableHead>
-								<TableHead>PB</TableHead>
-								<TableHead>SB</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							<Suspense>
-								{currentHeat?.Allocations.sort(
-									(a, b) => a.Position - b.Position,
-								).map((allocation) => (
-									<TableRow
-										className="w-full max-w-[400px]"
-										key={allocation.Id}
-									>
-										<Suspense>
-											<TableCell>{allocation.Position}</TableCell>
-											<TableCell>
-												<div className="flex flex-col">
-													<div className="flex items-center">
-														{!!allocation.Number && (
-															<span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
-																{allocation.Number}
-															</span>
-														)}
-														<span className="font-medium">
-															{allocation.Name}
-														</span>
-													</div>
-													<div className="mt-1 text-muted-foreground text-xs">
-														{allocation.Organization
-															? allocation.Organization.Name
-															: "-"}
-													</div>
-												</div>
-											</TableCell>
-											<TableCell>
-												<span className="font-medium">
-													{allocation.PB || "-"}
-												</span>
-											</TableCell>
-											<TableCell>
-												<span className="font-medium">
-													{allocation.SB || "-"}
-												</span>
-											</TableCell>
-										</Suspense>
-									</TableRow>
-								))}
-							</Suspense>
-						</TableBody>
-					</Table>
+					<CompetitionTable
+						data={currentHeat!.Allocations}
+						columns={[
+							{
+								header: "Sija",
+								className: "w-[100px]",
+								cell: (a) => <span>{a.Position}</span>,
+							},
+							{
+								header: "Nimi ja Seura",
+								className: "w-full",
+								cell: (a) => (
+									<NameAndOrg
+										name={a.Name}
+										organization={a.Organization}
+										number={a.Number}
+									/>
+								),
+							},
+							{
+								header: "PB",
+								cell: (a) => <span className="font-medium">{a.PB || "-"}</span>,
+							},
+							{
+								header: "SB",
+								cell: (a) => <span className="font-medium">{a.SB || "-"}</span>,
+							},
+						]}
+					/>
 				</div>
 			)}
 		</>
@@ -184,7 +227,6 @@ export function CompetitionLayout() {
 export function ResultLayout() {
 	const {
 		currentHeat,
-		// selectedRound,
 		selectedHeat,
 		heats,
 		showHeatNumbers,
@@ -213,71 +255,52 @@ export function ResultLayout() {
 							handleHeatChange={handleHeatChange}
 						/>
 					)}
-					<Table className="relative hidden rounded-md border md:block">
-						<TableHeader className="sticky top-0 backdrop-blur-md">
-							<TableRow>
-								<TableHead className="w-[100px]">Sija</TableHead>
-								<TableHead className="w-full">Nimi ja Seura</TableHead>
-								<TableHead className="w-full">Tulos</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody className="overflow-y-auto">
-							<Suspense>
-								{currentHeat?.Allocations.sort(
-									(a, b) => a.ResultRank! - b.ResultRank!,
-								).map((allocation) => (
-									<TableRow
-										className="w-full max-w-[400px]"
-										key={allocation.Id}
-									>
-										<Suspense>
-											<TableCell>{allocation.Position}</TableCell>
-											<TableCell>
-												<div className="flex flex-col">
-													<div className="flex items-center">
-														{!!allocation.Number && (
-															<span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
-																{allocation.Number}
-															</span>
-														)}
-														<span className="font-medium">
-															{allocation.Name}
-														</span>
-													</div>
-													<div className="mt-1 text-muted-foreground text-xs">
-														{allocation.Organization
-															? allocation.Organization.Name
-															: "-"}
-													</div>
-												</div>
-											</TableCell>
-											<TableCell>
-												<ul className="flex gap-2">
-													<Suspense fallback={<Skeleton />}>
-														{allocation.Attempts
-															? allocation.Attempts.map((at, index) => (
-																	<li
-																		className={cn(
-																			allocation.Result === at.Line1 &&
-																				"bg-neutral-300/50!",
-																			"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-																		)}
-																		key={`${at.Line1}-${index}`}
-																	>
-																		<span>{at.Line1}</span>
-																		{at.Line2 && <span>{at.Line2}</span>}
-																	</li>
-																))
-															: null}
-													</Suspense>
-												</ul>
-											</TableCell>
+					<CompetitionTable
+						data={currentHeat!.Allocations.sort(
+							(a, b) => a.ResultRank! - b.ResultRank!,
+						)}
+						columns={[
+							{
+								header: "Sija",
+								className: "w-[100px]",
+								cell: (a) => <span>{a.Position}</span>,
+							},
+							{
+								header: "Nimi ja Seura",
+								className: "w-full",
+								cell: (a) => (
+									<NameAndOrg
+										name={a.Name}
+										organization={a.Organization}
+										number={a.Number}
+									/>
+								),
+							},
+							{
+								header: "Tulos",
+								cell: (a) => (
+									<ul className="flex gap-2">
+										<Suspense fallback={<Skeleton />}>
+											{a.Attempts
+												? a.Attempts.map((at, index) => (
+														<li
+															className={cn(
+																a.Result === at.Line1 && "bg-neutral-300/50!",
+																"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+															)}
+															key={`${at.Line1}-${index}`}
+														>
+															<span>{at.Line1}</span>
+															{at.Line2 && <span>{at.Line2}</span>}
+														</li>
+													))
+												: null}
 										</Suspense>
-									</TableRow>
-								))}
-							</Suspense>
-						</TableBody>
-					</Table>
+									</ul>
+								),
+							},
+						]}
+					/>
 				</div>
 			)}
 		</>
