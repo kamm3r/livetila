@@ -60,6 +60,52 @@ function CompetitionTable<T>({
 	);
 }
 
+function MobileList<T>({ data }: { data: T[] }) {
+	return (
+		<ul className="flex flex-col gap-4 lg:hidden">
+			{data.map((a) => (
+				<li
+					key={a.Id}
+					className={cn(
+						a.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : "",
+						"rounded-lg border px-4 py-4",
+					)}
+				>
+					<div className="flex items-start justify-between gap-3">
+						<div>
+							<h3 className="font-semibold text-base">
+								{a.Position} {a.Name}
+							</h3>
+							<p className="text-muted-foreground text-xs">
+								{a.Organization?.Name ?? "-"}
+							</p>
+						</div>
+
+						<div className="text-xs opacity-70">
+							PB {a.PB || "-"}
+							<br />
+							SB {a.SB || "-"}
+						</div>
+						<ul className="flex flex-wrap gap-2 pt-1">
+							{a.Attempts
+								? a.Attempts.map((at, index) => (
+										<li
+											className="flex flex-col rounded bg-muted px-2 py-1 text-sm dark:bg-neutral-600/50"
+											key={`${at.Line1}-${index}`}
+										>
+											<span>{at.Line1}</span>
+											{at.Line2 && <span>{at.Line2}</span>}
+										</li>
+									))
+								: null}
+						</ul>
+					</div>
+				</li>
+			))}
+		</ul>
+	);
+}
+
 function NameAndOrg({
 	name,
 	organization,
@@ -115,43 +161,46 @@ function HeatSelector({
 
 export function ParticipantLayout({ athletes }: { athletes: Competition }) {
 	return (
-		// biome-ignore assist/source/useSortedAttributes: no
-		<CompetitionTable
-			data={athletes.Enrollments}
-			columns={[
-				{
-					header: "Varm.",
-					cell: (p) =>
-						p.Confirmed ? (
-							<div className="flex h-5 w-5 items-center justify-center">
-								<CheckCircle className="h-3 w-3 text-white" />
-							</div>
-						) : null,
-				},
-				{
-					header: "Nimi ja Seura",
-					className: "w-full",
-					cell: (p) => (
-						<NameAndOrg
-							name={p.Name}
-							organization={p.Organization}
-							number={p.Number}
-						/>
-					),
-				},
-				{
-					header: "PB",
-					cell: (p) => <span className="font-medium">{p.PB || "-"}</span>,
-				},
-				{
-					header: "SB",
-					cell: (p) => <span className="font-medium">{p.SB || "-"}</span>,
-				},
-			]}
-			rowClassName={(p) =>
-				p.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : ""
-			}
-		/>
+		<>
+			{/* biome-ignore assist/source/useSortedAttributes: no */}
+			<CompetitionTable
+				data={athletes.Enrollments}
+				columns={[
+					{
+						header: "Varm.",
+						cell: (p) =>
+							p.Confirmed ? (
+								<div className="flex h-5 w-5 items-center justify-center">
+									<CheckCircle className="h-3 w-3 text-white" />
+								</div>
+							) : null,
+					},
+					{
+						header: "Nimi ja Seura",
+						className: "w-full",
+						cell: (p) => (
+							<NameAndOrg
+								name={p.Name}
+								organization={p.Organization}
+								number={p.Number}
+							/>
+						),
+					},
+					{
+						header: "PB",
+						cell: (p) => <span className="font-medium">{p.PB || "-"}</span>,
+					},
+					{
+						header: "SB",
+						cell: (p) => <span className="font-medium">{p.SB || "-"}</span>,
+					},
+				]}
+				rowClassName={(p) =>
+					p.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : ""
+				}
+			/>
+			<MobileList data={athletes.Enrollments} />
+		</>
 	);
 }
 
@@ -218,6 +267,7 @@ export function CompetitionLayout() {
 							},
 						]}
 					/>
+					<MobileList data={currentHeat!.Allocations} />
 				</div>
 			)}
 		</>
@@ -300,6 +350,11 @@ export function ResultLayout() {
 								),
 							},
 						]}
+					/>
+					<MobileList
+						data={currentHeat!.Allocations.sort(
+							(a, b) => a.ResultRank! - b.ResultRank!,
+						)}
 					/>
 				</div>
 			)}
