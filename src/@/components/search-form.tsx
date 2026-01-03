@@ -147,7 +147,7 @@ export function SearchForm() {
 		<div className="relative w-full" ref={containerRef}>
 			<Command className="overflow-visible bg-transparent" shouldFilter={false}>
 				<CommandInput
-					className=""
+					// className="text-base"
 					onBlur={() => setIsOpen(false)}
 					onChangeCapture={(event) => {
 						handleInputChange(event.currentTarget.value);
