@@ -80,25 +80,52 @@ function MobileList<T>({ data }: { data: T[] }) {
 								{a.Organization?.Name ?? "-"}
 							</p>
 						</div>
-
-						<div className="text-xs opacity-70">
-							PB {a.PB || "-"}
-							<br />
-							SB {a.SB || "-"}
+						<div className="flex gap-2 text-xs opacity-70">
+							<span>PB {a.PB || "-"}</span>
+							<span>SB {a.SB || "-"}</span>
 						</div>
-						<ul className="flex flex-wrap gap-2 pt-1">
-							{a.Attempts
-								? a.Attempts.map((at, index) => (
-										<li
-											className="flex flex-col rounded bg-muted px-2 py-1 text-sm dark:bg-neutral-600/50"
-											key={`${at.Line1}-${index}`}
-										>
-											<span>{at.Line1}</span>
-											{at.Line2 && <span>{at.Line2}</span>}
-										</li>
-									))
-								: null}
-						</ul>
+					</div>
+				</li>
+			))}
+		</ul>
+	);
+}
+
+function MobileResultList<T>({ data }: { data: T[] }) {
+	return (
+		<ul className="flex flex-col gap-4 lg:hidden">
+			{data.map((a) => (
+				<li
+					key={a.Id}
+					className={cn(
+						a.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : "",
+						"rounded-lg border px-4 py-4",
+					)}
+				>
+					<div className="flex items-start justify-between gap-3">
+						<div>
+							<h3 className="font-semibold text-base">
+								{a.Position} {a.Name}
+							</h3>
+							<p className="text-muted-foreground text-xs">
+								{a.Organization?.Name ?? "-"}
+							</p>
+						</div>
+						{a.Attempts && (
+							<ul className="flex flex-wrap gap-2 pt-1">
+								{a.Attempts
+									? a.Attempts.map((at, index) => (
+											<li
+												className="flex flex-col rounded bg-muted px-2 py-1 text-sm dark:bg-neutral-600/50"
+												key={`${at.Line1}-${index}`}
+											>
+												<span>{at.Line1}</span>
+												{at.Line2 && <span>{at.Line2}</span>}
+											</li>
+										))
+									: null}
+							</ul>
+						)}
 					</div>
 				</li>
 			))}
@@ -351,7 +378,7 @@ export function ResultLayout() {
 							},
 						]}
 					/>
-					<MobileList
+					<MobileResultList
 						data={currentHeat!.Allocations.sort(
 							(a, b) => a.ResultRank! - b.ResultRank!,
 						)}
