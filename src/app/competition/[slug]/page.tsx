@@ -152,91 +152,96 @@ export default async function Comp({
 						value="results"
 					>
 						<ResultLayout />
-
-						<h3 className="scroll-m-20 font-semibold text-2xl tracking-tight">
-							Kokonaistulokset
-						</h3>
-						<Table className="relative hidden rounded-md border md:block">
-							<TableHeader className="sticky top-0 backdrop-blur-md">
-								<TableRow>
-									<TableHead className="w-[100px]">Sija</TableHead>
-									<TableHead className="w-full">Nimi ja Seura</TableHead>
-									<TableHead className="w-full">Tulos</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody className="overflow-y-auto">
-								<Suspense>
-									{athletes.Rounds.map((r) =>
-										r.TotalResults.sort((a, b) => {
-											if (
-												butterParse(a.Result) === null ||
-												butterParse(b.Result) === null
-											) {
-												return -1;
-											} else if (butterParse(a.Result) === -1) {
-												return 1;
-											} else if (butterParse(b.Result) === -1) {
-												return -1;
-											} else if (butterParse(a.Result) === 0) {
-												return 1;
-											} else if (butterParse(b.Result) === 0) {
-												return -1;
-											} else {
-												return butterParse(a.Result) > butterParse(b.Result)
-													? -1
-													: 1;
-											}
-										}).map((allocation) => (
-											<TableRow className="" key={allocation.Id}>
-												<Suspense>
-													<TableCell>{allocation.ResultRank}</TableCell>
-													<TableCell>
-														<div className="flex flex-col">
-															<div className="flex items-center">
-																{!!allocation.Number && (
-																	<span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
-																		{allocation.Number}
-																	</span>
-																)}
-																<span className="font-medium">
-																	{allocation.Name}
-																</span>
-															</div>
-															<div className="mt-1 text-muted-foreground text-xs">
-																{allocation.Organization
-																	? allocation.Organization.Name
-																	: "-"}
-															</div>
-														</div>
-													</TableCell>
-													<TableCell>
-														<ul className="flex gap-2">
-															<Suspense fallback={<Skeleton />}>
-																{allocation.Attempts
-																	? allocation.Attempts.map((at, index) => (
-																			<li
-																				className={cn(
-																					allocation.Result === at.Line1 &&
-																						"bg-neutral-300/50!",
-																					"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-																				)}
-																				key={`${at.Line1}-${index}`}
-																			>
-																				<span>{at.Line1}</span>
-																				{at.Line2 && <span>{at.Line2}</span>}
-																			</li>
-																		))
-																	: null}
-															</Suspense>
-														</ul>
-													</TableCell>
-												</Suspense>
-											</TableRow>
-										)),
-									)}
-								</Suspense>
-							</TableBody>
-						</Table>
+						{athletes.RoundCount > 2 && (
+							<>
+								<h3 className="scroll-m-20 font-semibold text-2xl tracking-tight">
+									Kokonaistulokset
+								</h3>
+								<Table className="relative hidden rounded-md border md:block">
+									<TableHeader className="sticky top-0 backdrop-blur-md">
+										<TableRow>
+											<TableHead className="w-[100px]">Sija</TableHead>
+											<TableHead className="w-full">Nimi ja Seura</TableHead>
+											<TableHead className="w-full">Tulos</TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody className="overflow-y-auto">
+										<Suspense>
+											{athletes.Rounds.map((r) =>
+												r.TotalResults.sort((a, b) => {
+													if (
+														butterParse(a.Result) === null ||
+														butterParse(b.Result) === null
+													) {
+														return -1;
+													} else if (butterParse(a.Result) === -1) {
+														return 1;
+													} else if (butterParse(b.Result) === -1) {
+														return -1;
+													} else if (butterParse(a.Result) === 0) {
+														return 1;
+													} else if (butterParse(b.Result) === 0) {
+														return -1;
+													} else {
+														return butterParse(a.Result) > butterParse(b.Result)
+															? -1
+															: 1;
+													}
+												}).map((allocation) => (
+													<TableRow className="" key={allocation.Id}>
+														<Suspense>
+															<TableCell>{allocation.ResultRank}</TableCell>
+															<TableCell>
+																<div className="flex flex-col">
+																	<div className="flex items-center">
+																		{!!allocation.Number && (
+																			<span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
+																				{allocation.Number}
+																			</span>
+																		)}
+																		<span className="font-medium">
+																			{allocation.Name}
+																		</span>
+																	</div>
+																	<div className="mt-1 text-muted-foreground text-xs">
+																		{allocation.Organization
+																			? allocation.Organization.Name
+																			: "-"}
+																	</div>
+																</div>
+															</TableCell>
+															<TableCell>
+																<ul className="flex gap-2">
+																	<Suspense fallback={<Skeleton />}>
+																		{allocation.Attempts
+																			? allocation.Attempts.map((at, index) => (
+																					<li
+																						className={cn(
+																							allocation.Result === at.Line1 &&
+																								"bg-neutral-300/50!",
+																							"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+																						)}
+																						key={`${at.Line1}-${index}`}
+																					>
+																						<span>{at.Line1}</span>
+																						{at.Line2 && (
+																							<span>{at.Line2}</span>
+																						)}
+																					</li>
+																				))
+																			: null}
+																	</Suspense>
+																</ul>
+															</TableCell>
+														</Suspense>
+													</TableRow>
+												)),
+											)}
+										</Suspense>
+									</TableBody>
+								</Table>
+							</>
+						)}
 					</TabsContent>
 				</Tabs>
 				<div>

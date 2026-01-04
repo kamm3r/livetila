@@ -13,7 +13,7 @@ import {
 	TableRow,
 } from "~/@/components/ui/table";
 import { cn } from "~/@/lib/utils";
-import type { Competition, Heat } from "~/types/comp";
+import type { Allocation, Competition, Heat } from "~/types/comp";
 
 type Column<T> = {
 	header: React.ReactNode;
@@ -116,7 +116,10 @@ function MobileResultList<T>({ data }: { data: T[] }) {
 								{a.Attempts
 									? a.Attempts.map((at, index) => (
 											<li
-												className="flex flex-col rounded bg-muted px-2 py-1 text-sm dark:bg-neutral-600/50"
+												className={cn(
+													a.Result === at.Line1 && "bg-neutral-300/50!",
+													"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+												)}
 												key={`${at.Line1}-${index}`}
 											>
 												<span>{at.Line1}</span>
@@ -301,6 +304,34 @@ export function CompetitionLayout() {
 	);
 }
 
+function butterParse(a: string): number {
+	if (a === "NM" || Number.isNaN(a)) {
+		return 0;
+	} else if (a === null) {
+		return 0;
+	} else if (a === "DNS" || a === "DQ" || a === "DNF" || a === "DSQ") {
+		return -1;
+	} else {
+		return parseFloat(a);
+	}
+}
+
+function sortByResult(a: Allocation, b: Allocation) {
+	if (butterParse(a.Result) === null || butterParse(b.Result) === null) {
+		return -1;
+	} else if (butterParse(a.Result) === -1) {
+		return 1;
+	} else if (butterParse(b.Result) === -1) {
+		return -1;
+	} else if (butterParse(a.Result) === 0) {
+		return 1;
+	} else if (butterParse(b.Result) === 0) {
+		return -1;
+	} else {
+		return butterParse(a.Result) > butterParse(b.Result) ? -1 : 1;
+	}
+}
+
 export function ResultLayout() {
 	const {
 		currentHeat,
@@ -333,9 +364,7 @@ export function ResultLayout() {
 						/>
 					)}
 					<CompetitionTable
-						data={currentHeat!.Allocations.sort(
-							(a, b) => a.ResultRank! - b.ResultRank!,
-						)}
+						data={currentHeat!.Allocations.sort(sortByResult)}
 						columns={[
 							{
 								header: "Sija",
@@ -379,9 +408,7 @@ export function ResultLayout() {
 						]}
 					/>
 					<MobileResultList
-						data={currentHeat!.Allocations.sort(
-							(a, b) => a.ResultRank! - b.ResultRank!,
-						)}
+						data={currentHeat!.Allocations.sort(sortByResult)}
 					/>
 				</div>
 			)}
