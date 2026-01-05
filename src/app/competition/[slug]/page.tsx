@@ -91,8 +91,12 @@ export default async function Comp({
 }) {
 	const { slug } = await params;
 	console.log("Comp params:", slug);
-	const compId = slug?.replace("-", "/");
-	const athletes = await api.competition.getAthletes({ compId });
+	const compId = slug?.slice(0, slug.indexOf("-"));
+	console.log("Comp id:", compId);
+	const eventId = slug?.replace("-", "/");
+	const athletes = await api.competition.getAthletes({ compId: eventId });
+	// const compD = await api.competition.getEvents({ compId: Number(compId) });
+	// console.log("Comp data:", compD);
 
 	return (
 		<RoundProvider rounds={athletes.Rounds}>
@@ -151,167 +155,9 @@ export default async function Comp({
 						className="fade-in-50 animate-in space-y-5 duration-300"
 						value="results"
 					>
-						<ResultLayout />
-						{athletes.RoundCount > 2 && (
-							<>
-								<h3 className="scroll-m-20 font-semibold text-2xl tracking-tight">
-									Kokonaistulokset
-								</h3>
-								<Table className="relative hidden rounded-md border md:block">
-									<TableHeader className="sticky top-0 backdrop-blur-md">
-										<TableRow>
-											<TableHead className="w-[100px]">Sija</TableHead>
-											<TableHead className="w-full">Nimi ja Seura</TableHead>
-											<TableHead className="w-full">Tulos</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody className="overflow-y-auto">
-										<Suspense>
-											{athletes.Rounds.map((r) =>
-												r.TotalResults.sort((a, b) => {
-													if (
-														butterParse(a.Result) === null ||
-														butterParse(b.Result) === null
-													) {
-														return -1;
-													} else if (butterParse(a.Result) === -1) {
-														return 1;
-													} else if (butterParse(b.Result) === -1) {
-														return -1;
-													} else if (butterParse(a.Result) === 0) {
-														return 1;
-													} else if (butterParse(b.Result) === 0) {
-														return -1;
-													} else {
-														return butterParse(a.Result) > butterParse(b.Result)
-															? -1
-															: 1;
-													}
-												}).map((allocation) => (
-													<TableRow className="" key={allocation.Id}>
-														<Suspense>
-															<TableCell>{allocation.ResultRank}</TableCell>
-															<TableCell>
-																<div className="flex flex-col">
-																	<div className="flex items-center">
-																		{!!allocation.Number && (
-																			<span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
-																				{allocation.Number}
-																			</span>
-																		)}
-																		<span className="font-medium">
-																			{allocation.Name}
-																		</span>
-																	</div>
-																	<div className="mt-1 text-muted-foreground text-xs">
-																		{allocation.Organization
-																			? allocation.Organization.Name
-																			: "-"}
-																	</div>
-																</div>
-															</TableCell>
-															<TableCell>
-																<ul className="flex gap-2">
-																	<Suspense fallback={<Skeleton />}>
-																		{allocation.Attempts
-																			? allocation.Attempts.map((at, index) => (
-																					<li
-																						className={cn(
-																							allocation.Result === at.Line1 &&
-																								"bg-neutral-300/50!",
-																							"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-																						)}
-																						key={`${at.Line1}-${index}`}
-																					>
-																						<span>{at.Line1}</span>
-																						{at.Line2 && (
-																							<span>{at.Line2}</span>
-																						)}
-																					</li>
-																				))
-																			: null}
-																	</Suspense>
-																</ul>
-															</TableCell>
-														</Suspense>
-													</TableRow>
-												)),
-											)}
-										</Suspense>
-									</TableBody>
-								</Table>
-							</>
-						)}
+						<ResultLayout athletes={athletes} />
 					</TabsContent>
 				</Tabs>
-				<div>
-					<ul className="flex flex-col gap-3 md:hidden">
-						<Suspense fallback={<Loader2Icon className="animate-spin" />}>
-							{athletes.Rounds.map((r) =>
-								r.TotalResults.sort((a, b) => {
-									if (
-										butterParse(a.Result) === null ||
-										butterParse(b.Result) === null
-									) {
-										return -1;
-									} else if (butterParse(a.Result) === -1) {
-										return 1;
-									} else if (butterParse(b.Result) === -1) {
-										return -1;
-									} else if (butterParse(a.Result) === 0) {
-										return 1;
-									} else if (butterParse(b.Result) === 0) {
-										return -1;
-									} else {
-										return butterParse(a.Result) > butterParse(b.Result)
-											? -1
-											: 1;
-									}
-								}).map((a) => (
-									<li
-										className="flex w-full flex-col gap-2 rounded-lg border px-4 py-4"
-										key={a.Id}
-									>
-										<div className="flex flex-col items-start justify-between gap-2">
-											<div className="flex flex-col">
-												<div className="flex gap-2">
-													<h2 className="font-semibold text-base leading-tight">
-														<span className="mr-2 text-muted-foreground">
-															#{a.ResultRank}
-														</span>
-														<span>{a.Name}</span>
-													</h2>
-													<div className="flex shrink-0 gap-2 text-xs opacity-70">
-														<span>PB: {a.PB || "-"}</span>
-														<span>SB: {a.SB || "-"}</span>
-													</div>
-												</div>
-												<p className="text-muted-foreground text-xs">
-													{a.Organization.Name}
-												</p>
-											</div>
-											{a.Attempts && (
-												<ul className="flex flex-wrap gap-2 pt-1">
-													{a.Attempts
-														? a.Attempts.map((at, index) => (
-																<li
-																	className="flex flex-col rounded bg-muted px-2 py-1 text-sm dark:bg-neutral-600/50"
-																	key={`${at.Line1}-${index}`}
-																>
-																	<span>{at.Line1}</span>
-																	{at.Line2 && <span>{at.Line2}</span>}
-																</li>
-															))
-														: null}
-												</ul>
-											)}
-										</div>
-									</li>
-								)),
-							)}
-						</Suspense>
-					</ul>
-				</div>
 			</main>
 		</RoundProvider>
 	);

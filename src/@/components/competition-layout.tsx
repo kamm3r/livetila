@@ -102,13 +102,22 @@ function MobileResultList<T>({ data }: { data: T[] }) {
 						"rounded-lg border px-4 py-4",
 					)}
 				>
-					<div className="flex items-start justify-between gap-3">
-						<div>
-							<h3 className="font-semibold text-base">
-								{a.Position} {a.Name}
-							</h3>
+					<div className="flex flex-col items-start justify-between gap-2">
+						<div className="flex flex-col">
+							<div className="flex gap-2">
+								<h2 className="font-semibold text-base leading-tight">
+									<span className="mr-2 text-muted-foreground">
+										#{a.ResultRank}
+									</span>
+									<span>{a.Name}</span>
+								</h2>
+								<div className="flex shrink-0 gap-2 text-xs opacity-70">
+									<span>PB: {a.PB || "-"}</span>
+									<span>SB: {a.SB || "-"}</span>
+								</div>
+							</div>
 							<p className="text-muted-foreground text-xs">
-								{a.Organization?.Name ?? "-"}
+								{a.Organization.Name ?? "-"}
 							</p>
 						</div>
 						{a.Attempts && (
@@ -268,13 +277,15 @@ export function CompetitionLayout() {
 							handleHeatChange={handleHeatChange}
 						/>
 					)}
+					{/** biome-ignore assist/source/useSortedAttributes: <explanation> */}
 					<CompetitionTable
+						// biome-ignore lint/style/noNonNullAssertion: fix it later
 						data={currentHeat!.Allocations}
 						columns={[
 							{
-								header: "Sija",
+								header: "Rata/Järj",
 								className: "w-[100px]",
-								cell: (a) => <span>{a.Position}</span>,
+								cell: (a) => <span>{a.Number}</span>,
 							},
 							{
 								header: "Nimi ja Seura",
@@ -297,6 +308,7 @@ export function CompetitionLayout() {
 							},
 						]}
 					/>
+
 					<MobileList data={currentHeat!.Allocations} />
 				</div>
 			)}
@@ -332,7 +344,7 @@ function sortByResult(a: Allocation, b: Allocation) {
 	}
 }
 
-export function ResultLayout() {
+export function ResultLayout({ athletes }: { athletes: Competition }) {
 	const {
 		currentHeat,
 		selectedHeat,
@@ -407,6 +419,60 @@ export function ResultLayout() {
 							},
 						]}
 					/>
+					{athletes.RoundCount > 2 && (
+						<>
+							<h3 className="scroll-m-20 font-semibold text-2xl tracking-tight">
+								Kokonaistulokset
+							</h3>
+							<CompetitionTable
+								data={athletes.Rounds.map((round) =>
+									round.TotalResults.sort(sortByResult),
+								)}
+								columns={[
+									{
+										header: "Sija",
+										className: "w-[100px]",
+										cell: (a) => <span>{a.ResultRank}</span>,
+									},
+									{
+										header: "Nimi ja Seura",
+										className: "w-full",
+										cell: (a) => (
+											<NameAndOrg
+												name={a.Name}
+												organization={a.Organization}
+												number={a.Number}
+											/>
+										),
+									},
+									{
+										header: "Tulos",
+										cell: (a) => (
+											<ul className="flex gap-2">
+												<Suspense fallback={<Skeleton />}>
+													{a.Attempts
+														? a.Attempts.map((at, index) => (
+																<li
+																	className={cn(
+																		allocation.Result === at.Line1 &&
+																			"bg-neutral-300/50!",
+																		"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+																	)}
+																	key={`${at.Line1}-${index}`}
+																>
+																	<span>{at.Line1}</span>
+																	{at.Line2 && <span>{at.Line2}</span>}
+																</li>
+															))
+														: null}
+												</Suspense>
+											</ul>
+										),
+									},
+								]}
+							/>
+						</>
+					)}
 					<MobileResultList
 						data={currentHeat!.Allocations.sort(sortByResult)}
 					/>
