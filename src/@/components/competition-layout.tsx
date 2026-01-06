@@ -13,7 +13,7 @@ import {
 	TableRow,
 } from "~/@/components/ui/table";
 import { cn } from "~/@/lib/utils";
-import type { Allocation, Competition, Heat } from "~/types/comp";
+import type { Allocation, Competition, Enrollment, Heat } from "~/types/comp";
 
 type Column<T> = {
 	header: React.ReactNode;
@@ -60,86 +60,120 @@ function CompetitionTable<T>({
 	);
 }
 
-function MobileList<T>({ data }: { data: T[] }) {
+function BaseMobileCard({
+	highlight,
+	header,
+	meta,
+}: {
+	highlight?: boolean;
+	header: React.ReactNode;
+	meta?: React.ReactNode;
+}) {
+	return (
+		<li
+			className={cn(
+				"rounded-lg border px-4 py-4",
+				highlight && "bg-green-300/10",
+			)}
+		>
+			<div className="flex flex-col gap-2">
+				{header}
+				{meta}
+			</div>
+		</li>
+	);
+}
+
+function ParticipantsMobileList({ data }: { data: Enrollment[] }) {
 	return (
 		<ul className="flex flex-col gap-4 lg:hidden">
-			{data.map((a) => (
-				<li
-					key={a.Id}
-					className={cn(
-						a.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : "",
-						"rounded-lg border px-4 py-4",
-					)}
-				>
-					<div className="flex items-start justify-between gap-3">
+			{data.map((p) => (
+				<BaseMobileCard
+					key={p.Id}
+					highlight={p.Confirmed}
+					header={
 						<div>
-							<h3 className="font-semibold text-base">
-								{a.Position} {a.Name}
-							</h3>
+							<h3 className="font-semibold text-base">{p.Name}</h3>
 							<p className="text-muted-foreground text-xs">
-								{a.Organization?.Name ?? "-"}
+								{p.Organization?.Name ?? "-"}
 							</p>
 						</div>
-						<div className="flex gap-2 text-xs opacity-70">
-							<span>PB {a.PB || "-"}</span>
-							<span>SB {a.SB || "-"}</span>
+					}
+					meta={
+						<div className="flex gap-3 text-xs opacity-70">
+							<span>PB {p.PB || "-"}</span>
+							<span>SB {p.SB || "-"}</span>
 						</div>
-					</div>
-				</li>
+					}
+				/>
 			))}
 		</ul>
 	);
 }
 
-function MobileResultList<T>({ data }: { data: T[] }) {
+function ProtocolMobileList({ data }: { data: Allocation[] }) {
 	return (
 		<ul className="flex flex-col gap-4 lg:hidden">
 			{data.map((a) => (
-				<li
+				<BaseMobileCard
 					key={a.Id}
-					className={cn(
-						a.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : "",
-						"rounded-lg border px-4 py-4",
-					)}
-				>
-					<div className="flex flex-col items-start justify-between gap-2">
-						<div className="flex flex-col">
-							<div className="flex gap-2">
-								<h2 className="font-semibold text-base leading-tight">
-									<span className="mr-2 text-muted-foreground">
-										#{a.ResultRank}
-									</span>
-									<span>{a.Name}</span>
-								</h2>
-								<div className="flex shrink-0 gap-2 text-xs opacity-70">
-									<span>PB: {a.PB || "-"}</span>
-									<span>SB: {a.SB || "-"}</span>
-								</div>
-							</div>
-							<p className="text-muted-foreground text-xs">
-								{a.Organization.Name ?? "-"}
+					header={
+						<div>
+							<h3 className="font-semibold text-base">
+								#{a.Position} {a.Name}
+							</h3>
+							<p className="text-xs text-muted-foreground">
+								{a.Organization?.Name ?? "-"}
 							</p>
 						</div>
-						{a.Attempts && (
+					}
+					meta={
+						<div className="flex gap-3 text-xs opacity-70">
+							<span>PB {a.PB || "-"}</span>
+							<span>SB {a.SB || "-"}</span>
+						</div>
+					}
+				/>
+			))}
+		</ul>
+	);
+}
+
+function ResultsMobileList({ data }: { data: Allocation[] }) {
+	return (
+		<ul className="flex flex-col gap-4 lg:hidden">
+			{data.map((a) => (
+				<BaseMobileCard
+					key={a.Id}
+					header={
+						<>
+							<h3 className="font-semibold text-base">
+								#{a.ResultRank} {a.Name}
+							</h3>
+							<p className="text-xs text-muted-foreground">
+								{a.Organization?.Name ?? "-"}
+							</p>
+						</>
+					}
+					meta={
+						a.Attempts && (
 							<ul className="flex flex-wrap gap-2 pt-1">
-								{a.Attempts
-									? a.Attempts.map((at, index) => (
-											<li
-												className={cn(
-													a.Result === at.Line1 && "bg-neutral-300/50!",
-													"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-												)}
-												key={`${at.Line1}-${index}`}
-											>
-												<span>{at.Line1}</span>
-												{at.Line2 && <span>{at.Line2}</span>}
-											</li>
-										))
-									: null}
+								{a.Attempts.map((at, index) => (
+									<li
+										key={`${at.Line1}-${index}`}
+										className={cn(
+											a.Result === at.Line1 && "bg-neutral-300/50",
+											"rounded bg-muted px-2 py-1 text-xs dark:bg-neutral-600/50",
+										)}
+									>
+										<span>{at.Line1}</span>
+										{at.Line2 && <span>{at.Line2}</span>}
+									</li>
+								))}
 							</ul>
-						)}
-					</div>
-				</li>
+						)
+					}
+				/>
 			))}
 		</ul>
 	);
@@ -200,7 +234,7 @@ function HeatSelector({
 
 export function ParticipantLayout({ athletes }: { athletes: Competition }) {
 	return (
-		<>
+		<div className="space-y-6">
 			{/* biome-ignore assist/source/useSortedAttributes: no */}
 			<CompetitionTable
 				data={athletes.Enrollments}
@@ -238,8 +272,8 @@ export function ParticipantLayout({ athletes }: { athletes: Competition }) {
 					p.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : ""
 				}
 			/>
-			<MobileList data={athletes.Enrollments} />
-		</>
+			<ParticipantsMobileList data={athletes.Enrollments} />
+		</div>
 	);
 }
 
@@ -309,7 +343,7 @@ export function CompetitionLayout() {
 						]}
 					/>
 
-					<MobileList data={currentHeat!.Allocations} />
+					<ProtocolMobileList data={currentHeat!.Allocations} />
 				</div>
 			)}
 		</>
@@ -473,7 +507,7 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 							/>
 						</>
 					)}
-					<MobileResultList
+					<ResultsMobileList
 						data={currentHeat!.Allocations.sort(sortByResult)}
 					/>
 				</div>
