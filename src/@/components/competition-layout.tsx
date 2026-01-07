@@ -1,9 +1,7 @@
 "use client";
 import { CheckCircle } from "lucide-react";
-import { Suspense } from "react";
 import { useRound } from "~/@/components/round-provider";
 import { Button } from "~/@/components/ui/button";
-import { Skeleton } from "~/@/components/ui/skeleton";
 import {
 	Table,
 	TableBody,
@@ -13,7 +11,13 @@ import {
 	TableRow,
 } from "~/@/components/ui/table";
 import { cn } from "~/@/lib/utils";
-import type { Allocation, Competition, Enrollment, Heat } from "~/types/comp";
+import type {
+	Allocation,
+	Competition,
+	Enrollment,
+	Heat,
+	TotalResult,
+} from "~/types/comp";
 
 type Column<T> = {
 	header: React.ReactNode;
@@ -27,156 +31,33 @@ type CompetitionTableProps<T> = {
 	rowClassName?: (row: T) => string;
 };
 
-function CompetitionTable<T>({
-	data,
-	columns,
-	rowClassName,
-}: CompetitionTableProps<T>) {
-	return (
-		<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
-			<TableHeader className="sticky top-0 backdrop-blur-md">
-				<TableRow>
-					{columns.map((col, i) => (
-						<TableHead key={i} className={col.className}>
-							{col.header}
-						</TableHead>
-					))}
-				</TableRow>
-			</TableHeader>
+function butterParse(value: string | null): number {
+	if (!value || value === "NM") {
+		return 0;
+	}
+	if (["DNS", "DQ", "DNF", "DSQ"].includes(value)) {
+		return -1;
+	}
 
-			<TableBody>
-				{data.map((row, i) => (
-					<TableRow
-						key={i}
-						className={rowClassName ? rowClassName(row) : undefined}
-					>
-						{columns.map((col, j) => (
-							<TableCell key={j}>{col.cell(row)}</TableCell>
-						))}
-					</TableRow>
-				))}
-			</TableBody>
-		</Table>
-	);
+	return Number.isNaN(Number(value)) ? 0 : Number(value);
 }
 
-function BaseMobileCard({
-	highlight,
-	header,
-	meta,
-}: {
-	highlight?: boolean;
-	header: React.ReactNode;
-	meta?: React.ReactNode;
-}) {
-	return (
-		<li
-			className={cn(
-				"rounded-lg border px-4 py-4",
-				highlight && "bg-green-300/10",
-			)}
-		>
-			<div className="flex flex-col gap-2">
-				{header}
-				{meta}
-			</div>
-		</li>
-	);
-}
-
-function ParticipantsMobileList({ data }: { data: Enrollment[] }) {
-	return (
-		<ul className="flex flex-col gap-4 lg:hidden">
-			{data.map((p) => (
-				<BaseMobileCard
-					key={p.Id}
-					highlight={p.Confirmed}
-					header={
-						<div>
-							<h3 className="font-semibold text-base">{p.Name}</h3>
-							<p className="text-muted-foreground text-xs">
-								{p.Organization?.Name ?? "-"}
-							</p>
-						</div>
-					}
-					meta={
-						<div className="flex gap-3 text-xs opacity-70">
-							<span>PB {p.PB || "-"}</span>
-							<span>SB {p.SB || "-"}</span>
-						</div>
-					}
-				/>
-			))}
-		</ul>
-	);
-}
-
-function ProtocolMobileList({ data }: { data: Allocation[] }) {
-	return (
-		<ul className="flex flex-col gap-4 lg:hidden">
-			{data.map((a) => (
-				<BaseMobileCard
-					key={a.Id}
-					header={
-						<div>
-							<h3 className="font-semibold text-base">
-								#{a.Position} {a.Name}
-							</h3>
-							<p className="text-xs text-muted-foreground">
-								{a.Organization?.Name ?? "-"}
-							</p>
-						</div>
-					}
-					meta={
-						<div className="flex gap-3 text-xs opacity-70">
-							<span>PB {a.PB || "-"}</span>
-							<span>SB {a.SB || "-"}</span>
-						</div>
-					}
-				/>
-			))}
-		</ul>
-	);
-}
-
-function ResultsMobileList({ data }: { data: Allocation[] }) {
-	return (
-		<ul className="flex flex-col gap-4 lg:hidden">
-			{data.map((a) => (
-				<BaseMobileCard
-					key={a.Id}
-					header={
-						<>
-							<h3 className="font-semibold text-base">
-								#{a.ResultRank} {a.Name}
-							</h3>
-							<p className="text-xs text-muted-foreground">
-								{a.Organization?.Name ?? "-"}
-							</p>
-						</>
-					}
-					meta={
-						a.Attempts && (
-							<ul className="flex flex-wrap gap-2 pt-1">
-								{a.Attempts.map((at, index) => (
-									<li
-										key={`${at.Line1}-${index}`}
-										className={cn(
-											a.Result === at.Line1 && "bg-neutral-300/50",
-											"rounded bg-muted px-2 py-1 text-xs dark:bg-neutral-600/50",
-										)}
-									>
-										<span>{at.Line1}</span>
-										{at.Line2 && <span>{at.Line2}</span>}
-									</li>
-								))}
-							</ul>
-						)
-					}
-				/>
-			))}
-		</ul>
-	);
+function sortByResult(a: Allocation, b: Allocation) {
+	const aResult = butterParse(a.Result);
+	const bResult = butterParse(b.Result);
+	if (aResult === -1 && bResult !== -1) {
+		return 1;
+	}
+	if (bResult === -1 && aResult !== -1) {
+		return -1;
+	}
+	if (aResult === 0 && bResult !== 0) {
+		return 1;
+	}
+	if (bResult === 0 && aResult !== 0) {
+		return -1;
+	}
+	return bResult - aResult;
 }
 
 function NameAndOrg({
@@ -232,12 +113,163 @@ function HeatSelector({
 	);
 }
 
+function CompetitionTable<T extends { Id: string | number }>({
+	data,
+	columns,
+	rowClassName,
+}: CompetitionTableProps<T>) {
+	return (
+		<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
+			<TableHeader className="sticky top-0 backdrop-blur-md">
+				<TableRow>
+					{columns.map((col, i) => (
+						// biome-ignore lint/suspicious/noArrayIndexKey: fix later
+						<TableHead className={col.className} key={i}>
+							{col.header}
+						</TableHead>
+					))}
+				</TableRow>
+			</TableHeader>
+
+			<TableBody>
+				{data.map((row, i) => (
+					<TableRow
+						className={rowClassName ? rowClassName(row) : undefined}
+						key={`${row.Id}-${i}`}
+					>
+						{columns.map((col, j) => (
+							<TableCell key={`${row.Id}-${i}-${j}`}>{col.cell(row)}</TableCell>
+						))}
+					</TableRow>
+				))}
+			</TableBody>
+		</Table>
+	);
+}
+
+function BaseMobileCard({
+	highlight,
+	header,
+	meta,
+}: {
+	highlight?: boolean;
+	header: React.ReactNode;
+	meta?: React.ReactNode;
+}) {
+	return (
+		<li
+			className={cn(
+				"rounded-lg border px-4 py-4",
+				highlight && "bg-green-300/10",
+			)}
+		>
+			<div className="flex flex-col gap-2">
+				{header}
+				{meta}
+			</div>
+		</li>
+	);
+}
+
+function ParticipantsMobileList({ data }: { data: Enrollment[] }) {
+	return (
+		<ul className="flex flex-col gap-4 lg:hidden">
+			{data.map((p) => (
+				<BaseMobileCard
+					header={
+						<div>
+							<h3 className="font-semibold text-base">{p.Name}</h3>
+							<p className="text-muted-foreground text-xs">
+								{p.Organization?.Name ?? "-"}
+							</p>
+						</div>
+					}
+					highlight={p.Confirmed}
+					key={p.Id}
+					meta={
+						<div className="flex gap-3 text-xs opacity-70">
+							<span>PB {p.PB || "-"}</span>
+							<span>SB {p.SB || "-"}</span>
+						</div>
+					}
+				/>
+			))}
+		</ul>
+	);
+}
+
+function ProtocolMobileList({ data }: { data: Allocation[] }) {
+	return (
+		<ul className="flex flex-col gap-4 lg:hidden">
+			{data.map((a) => (
+				<BaseMobileCard
+					header={
+						<div>
+							<h3 className="font-semibold text-base">
+								#{a.Position} {a.Name}
+							</h3>
+							<p className="text-muted-foreground text-xs">
+								{a.Organization?.Name ?? "-"}
+							</p>
+						</div>
+					}
+					key={a.Id}
+					meta={
+						<div className="flex gap-3 text-xs opacity-70">
+							<span>PB {a.PB || "-"}</span>
+							<span>SB {a.SB || "-"}</span>
+						</div>
+					}
+				/>
+			))}
+		</ul>
+	);
+}
+
+function ResultsMobileList({ data }: { data: TotalResult[] }) {
+	return (
+		<ul className="flex flex-col gap-4 lg:hidden">
+			{data.map((a) => (
+				<BaseMobileCard
+					header={
+						<>
+							<h3 className="font-semibold text-base">
+								#{a.ResultRank} {a.Name}
+							</h3>
+							<p className="text-muted-foreground text-xs">
+								{a.Organization?.Name ?? "-"}
+							</p>
+						</>
+					}
+					key={a.Id}
+					meta={
+						a.Attempts && (
+							<ul className="flex flex-wrap gap-2 pt-1">
+								{a.Attempts.map((at, index) => (
+									<li
+										className={cn(
+											a.Result === at.Line1 && "bg-neutral-300/50!",
+											"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+										)}
+										key={`${at.Line1}-${index}`}
+									>
+										<span>{at.Line1}</span>
+										{at.Line2 && <span>{at.Line2}</span>}
+									</li>
+								))}
+							</ul>
+						)
+					}
+				/>
+			))}
+		</ul>
+	);
+}
+
 export function ParticipantLayout({ athletes }: { athletes: Competition }) {
 	return (
 		<div className="space-y-6">
-			{/* biome-ignore assist/source/useSortedAttributes: no */}
 			<CompetitionTable
-				data={athletes.Enrollments}
 				columns={[
 					{
 						header: "Varm.",
@@ -254,8 +286,8 @@ export function ParticipantLayout({ athletes }: { athletes: Competition }) {
 						cell: (p) => (
 							<NameAndOrg
 								name={p.Name}
-								organization={p.Organization}
 								number={p.Number}
+								organization={p.Organization}
 							/>
 						),
 					},
@@ -268,6 +300,7 @@ export function ParticipantLayout({ athletes }: { athletes: Competition }) {
 						cell: (p) => <span className="font-medium">{p.SB || "-"}</span>,
 					},
 				]}
+				data={athletes.Enrollments}
 				rowClassName={(p) =>
 					p.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : ""
 				}
@@ -289,7 +322,7 @@ export function CompetitionLayout() {
 		handleHeatChange,
 	} = useRound();
 
-	if (heats.length === 0) {
+	if (!currentHeat || heats.length === 0) {
 		return (
 			<div className="py-8 text-center">
 				<p className="text-muted-foreground">
@@ -298,6 +331,7 @@ export function CompetitionLayout() {
 			</div>
 		);
 	}
+	const allocations = [...currentHeat.Allocations];
 
 	return (
 		<>
@@ -306,15 +340,12 @@ export function CompetitionLayout() {
 					{/* Heat Selection Tabs - Only show when there are multiple heats */}
 					{showHeatNumbers && heats.length > 1 && (
 						<HeatSelector
+							handleHeatChange={handleHeatChange}
 							heats={heats}
 							selectedHeat={selectedHeat}
-							handleHeatChange={handleHeatChange}
 						/>
 					)}
-					{/** biome-ignore assist/source/useSortedAttributes: <explanation> */}
 					<CompetitionTable
-						// biome-ignore lint/style/noNonNullAssertion: fix it later
-						data={currentHeat!.Allocations}
 						columns={[
 							{
 								header: "Rata/Järj",
@@ -327,8 +358,8 @@ export function CompetitionLayout() {
 								cell: (a) => (
 									<NameAndOrg
 										name={a.Name}
-										organization={a.Organization}
 										number={a.Number}
+										organization={a.Organization}
 									/>
 								),
 							},
@@ -341,41 +372,14 @@ export function CompetitionLayout() {
 								cell: (a) => <span className="font-medium">{a.SB || "-"}</span>,
 							},
 						]}
+						data={allocations}
 					/>
 
-					<ProtocolMobileList data={currentHeat!.Allocations} />
+					<ProtocolMobileList data={allocations} />
 				</div>
 			)}
 		</>
 	);
-}
-
-function butterParse(a: string): number {
-	if (a === "NM" || Number.isNaN(a)) {
-		return 0;
-	} else if (a === null) {
-		return 0;
-	} else if (a === "DNS" || a === "DQ" || a === "DNF" || a === "DSQ") {
-		return -1;
-	} else {
-		return parseFloat(a);
-	}
-}
-
-function sortByResult(a: Allocation, b: Allocation) {
-	if (butterParse(a.Result) === null || butterParse(b.Result) === null) {
-		return -1;
-	} else if (butterParse(a.Result) === -1) {
-		return 1;
-	} else if (butterParse(b.Result) === -1) {
-		return -1;
-	} else if (butterParse(a.Result) === 0) {
-		return 1;
-	} else if (butterParse(b.Result) === 0) {
-		return -1;
-	} else {
-		return butterParse(a.Result) > butterParse(b.Result) ? -1 : 1;
-	}
 }
 
 export function ResultLayout({ athletes }: { athletes: Competition }) {
@@ -387,7 +391,7 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 		handleHeatChange,
 	} = useRound();
 
-	if (heats.length === 0) {
+	if (!currentHeat || heats.length === 0) {
 		return (
 			<div className="py-8 text-center">
 				<p className="text-muted-foreground">
@@ -396,6 +400,10 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 			</div>
 		);
 	}
+	const allocations = [...currentHeat.Allocations].sort(sortByResult);
+	const totalResults = athletes.Rounds.flatMap((round) => [
+		...round.TotalResults,
+	]).sort(sortByResult);
 
 	return (
 		<>
@@ -404,13 +412,12 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 					{/* Heat Selection Tabs - Only show when there are multiple heats */}
 					{showHeatNumbers && heats.length > 1 && (
 						<HeatSelector
+							handleHeatChange={handleHeatChange}
 							heats={heats}
 							selectedHeat={selectedHeat}
-							handleHeatChange={handleHeatChange}
 						/>
 					)}
 					<CompetitionTable
-						data={currentHeat!.Allocations.sort(sortByResult)}
 						columns={[
 							{
 								header: "Sija",
@@ -423,8 +430,8 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 								cell: (a) => (
 									<NameAndOrg
 										name={a.Name}
-										organization={a.Organization}
 										number={a.Number}
+										organization={a.Organization}
 									/>
 								),
 							},
@@ -432,36 +439,33 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 								header: "Tulos",
 								cell: (a) => (
 									<ul className="flex gap-2">
-										<Suspense fallback={<Skeleton />}>
-											{a.Attempts
-												? a.Attempts.map((at, index) => (
-														<li
-															className={cn(
-																a.Result === at.Line1 && "bg-neutral-300/50!",
-																"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-															)}
-															key={`${at.Line1}-${index}`}
-														>
-															<span>{at.Line1}</span>
-															{at.Line2 && <span>{at.Line2}</span>}
-														</li>
-													))
-												: null}
-										</Suspense>
+										{a.Attempts
+											? a.Attempts.map((at, index) => (
+													<li
+														className={cn(
+															a.Result === at.Line1 && "bg-neutral-300/50!",
+															"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+														)}
+														key={`${at.Line1}-${index}`}
+													>
+														<span>{at.Line1}</span>
+														{at.Line2 && <span>{at.Line2}</span>}
+													</li>
+												))
+											: null}
 									</ul>
 								),
 							},
 						]}
+						data={allocations}
 					/>
+					<ResultsMobileList data={allocations} />
 					{athletes.RoundCount > 2 && (
 						<>
 							<h3 className="scroll-m-20 font-semibold text-2xl tracking-tight">
 								Kokonaistulokset
 							</h3>
 							<CompetitionTable
-								data={athletes.Rounds.map((round) =>
-									round.TotalResults.sort(sortByResult),
-								)}
 								columns={[
 									{
 										header: "Sija",
@@ -474,8 +478,8 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 										cell: (a) => (
 											<NameAndOrg
 												name={a.Name}
-												organization={a.Organization}
 												number={a.Number}
+												organization={a.Organization}
 											/>
 										),
 									},
@@ -483,33 +487,29 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 										header: "Tulos",
 										cell: (a) => (
 											<ul className="flex gap-2">
-												<Suspense fallback={<Skeleton />}>
-													{a.Attempts
-														? a.Attempts.map((at, index) => (
-																<li
-																	className={cn(
-																		allocation.Result === at.Line1 &&
-																			"bg-neutral-300/50!",
-																		"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-																	)}
-																	key={`${at.Line1}-${index}`}
-																>
-																	<span>{at.Line1}</span>
-																	{at.Line2 && <span>{at.Line2}</span>}
-																</li>
-															))
-														: null}
-												</Suspense>
+												{a.Attempts
+													? a.Attempts.map((at, index) => (
+															<li
+																className={cn(
+																	a.Result === at.Line1 && "bg-neutral-300/50!",
+																	"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+																)}
+																key={`${at.Line1}-${index}`}
+															>
+																<span>{at.Line1}</span>
+																{at.Line2 && <span>{at.Line2}</span>}
+															</li>
+														))
+													: null}
 											</ul>
 										),
 									},
 								]}
+								data={totalResults}
 							/>
+							<ResultsMobileList data={totalResults} />
 						</>
 					)}
-					<ResultsMobileList
-						data={currentHeat!.Allocations.sort(sortByResult)}
-					/>
 				</div>
 			)}
 		</>

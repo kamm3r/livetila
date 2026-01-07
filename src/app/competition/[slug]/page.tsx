@@ -1,12 +1,4 @@
-import {
-	CheckCircle,
-	ClipboardList,
-	InfoIcon,
-	Loader2Icon,
-	Trophy,
-	Users,
-} from "lucide-react";
-import { Suspense } from "react";
+import { ClipboardList, InfoIcon, Trophy, Users } from "lucide-react";
 import {
 	CompetitionLayout,
 	ParticipantLayout,
@@ -22,35 +14,14 @@ import {
 	PopoverTrigger,
 } from "~/@/components/ui/popover";
 import { Separator } from "~/@/components/ui/separator";
-import { Skeleton } from "~/@/components/ui/skeleton";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "~/@/components/ui/table";
 import {
 	Tabs,
 	TabsContent,
 	TabsList,
 	TabsTrigger,
 } from "~/@/components/ui/tabs";
-import { cn } from "~/@/lib/utils";
 import { api } from "~/trpc/server";
 
-function butterParse(a: string): number {
-	if (a === "NM" || Number.isNaN(a)) {
-		return 0;
-	} else if (a === null) {
-		return 0;
-	} else if (a === "DNS" || a === "DQ" || a === "DNF" || a === "DSQ") {
-		return -1;
-	} else {
-		return parseFloat(a);
-	}
-}
 // TODO: make the popover link not be hardcoded
 function ObsPopover({ slug }: { slug: string }) {
 	return (
