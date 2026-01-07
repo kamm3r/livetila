@@ -1,8 +1,7 @@
 "use client";
-import { Suspense } from "react";
+import { CheckCircle } from "lucide-react";
 import { useRound } from "~/@/components/round-provider";
 import { Button } from "~/@/components/ui/button";
-import { Skeleton } from "~/@/components/ui/skeleton";
 import {
 	Table,
 	TableBody,
@@ -12,204 +11,505 @@ import {
 	TableRow,
 } from "~/@/components/ui/table";
 import { cn } from "~/@/lib/utils";
+import type {
+	Allocation,
+	Competition,
+	Enrollment,
+	Heat,
+	TotalResult,
+} from "~/types/comp";
 
+type Column<T> = {
+	header: React.ReactNode;
+	className?: string;
+	cell: (row: T) => React.ReactNode;
+};
+
+type CompetitionTableProps<T> = {
+	data: T[];
+	columns: Column<T>[];
+	rowClassName?: (row: T) => string;
+};
+
+function butterParse(value: string | null): number {
+	if (!value || value === "NM") {
+		return 0;
+	}
+	if (["DNS", "DQ", "DNF", "DSQ"].includes(value)) {
+		return -1;
+	}
+
+	return Number.isNaN(Number(value)) ? 0 : Number(value);
+}
+
+function sortByResult(a: Allocation, b: Allocation) {
+	const aResult = butterParse(a.Result);
+	const bResult = butterParse(b.Result);
+	if (aResult === -1 && bResult !== -1) {
+		return 1;
+	}
+	if (bResult === -1 && aResult !== -1) {
+		return -1;
+	}
+	if (aResult === 0 && bResult !== 0) {
+		return 1;
+	}
+	if (bResult === 0 && aResult !== 0) {
+		return -1;
+	}
+	return bResult - aResult;
+}
+
+function NameAndOrg({
+	name,
+	organization,
+	number,
+}: {
+	name: string;
+	organization?: { Name: string } | null;
+	number?: string | number | null;
+}) {
+	return (
+		<div className="flex flex-col">
+			<div className="flex items-center">
+				{!!number && (
+					<span className="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
+						{number}
+					</span>
+				)}
+				<span className="font-medium">{name}</span>
+			</div>
+			<div className="mt-1 text-muted-foreground text-xs">
+				{organization?.Name ?? "-"}
+			</div>
+		</div>
+	);
+}
+
+function HeatSelector({
+	heats,
+	selectedHeat,
+	handleHeatChange,
+}: {
+	heats: Heat[];
+	selectedHeat: number;
+	handleHeatChange: (heat: number) => void;
+}) {
+	return (
+		<div className="mb-4 flex flex-wrap gap-2">
+			<div className="mb-2 w-full text-muted-foreground text-sm">
+				Valiste erä:
+			</div>
+			{heats.map((heat) => (
+				<Button
+					key={heat.Index}
+					onClick={() => handleHeatChange(heat.Index)}
+					variant={selectedHeat === heat.Index ? "default" : "outline"}
+				>
+					Erä {heat.Index}
+				</Button>
+			))}
+		</div>
+	);
+}
+
+function CompetitionTable<T extends { Id: string | number }>({
+	data,
+	columns,
+	rowClassName,
+}: CompetitionTableProps<T>) {
+	return (
+		<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
+			<TableHeader className="sticky top-0 backdrop-blur-md">
+				<TableRow>
+					{columns.map((col, i) => (
+						// biome-ignore lint/suspicious/noArrayIndexKey: fix later
+						<TableHead className={col.className} key={i}>
+							{col.header}
+						</TableHead>
+					))}
+				</TableRow>
+			</TableHeader>
+
+			<TableBody>
+				{data.map((row, i) => (
+					<TableRow
+						className={rowClassName ? rowClassName(row) : undefined}
+						key={`${row.Id}-${i}`}
+					>
+						{columns.map((col, j) => (
+							<TableCell key={`${row.Id}-${i}-${j}`}>{col.cell(row)}</TableCell>
+						))}
+					</TableRow>
+				))}
+			</TableBody>
+		</Table>
+	);
+}
+
+function BaseMobileCard({
+	highlight,
+	header,
+	meta,
+}: {
+	highlight?: boolean;
+	header: React.ReactNode;
+	meta?: React.ReactNode;
+}) {
+	return (
+		<li
+			className={cn(
+				"rounded-lg border px-4 py-4",
+				highlight && "bg-green-300/10",
+			)}
+		>
+			<div className="flex flex-col gap-2">
+				{header}
+				{meta}
+			</div>
+		</li>
+	);
+}
+
+function ParticipantsMobileList({ data }: { data: Enrollment[] }) {
+	return (
+		<ul className="flex flex-col gap-4 lg:hidden">
+			{data.map((p) => (
+				<BaseMobileCard
+					header={
+						<div>
+							<h3 className="font-semibold text-base">{p.Name}</h3>
+							<p className="text-muted-foreground text-xs">
+								{p.Organization?.Name ?? "-"}
+							</p>
+						</div>
+					}
+					highlight={p.Confirmed}
+					key={p.Id}
+					meta={
+						<div className="flex gap-3 text-xs opacity-70">
+							<span>PB {p.PB || "-"}</span>
+							<span>SB {p.SB || "-"}</span>
+						</div>
+					}
+				/>
+			))}
+		</ul>
+	);
+}
+
+function ProtocolMobileList({ data }: { data: Allocation[] }) {
+	return (
+		<ul className="flex flex-col gap-4 lg:hidden">
+			{data.map((a) => (
+				<BaseMobileCard
+					header={
+						<div>
+							<h3 className="font-semibold text-base">
+								#{a.Position} {a.Name}
+							</h3>
+							<p className="text-muted-foreground text-xs">
+								{a.Organization?.Name ?? "-"}
+							</p>
+						</div>
+					}
+					key={a.Id}
+					meta={
+						<div className="flex gap-3 text-xs opacity-70">
+							<span>PB {a.PB || "-"}</span>
+							<span>SB {a.SB || "-"}</span>
+						</div>
+					}
+				/>
+			))}
+		</ul>
+	);
+}
+
+function ResultsMobileList({ data }: { data: TotalResult[] }) {
+	return (
+		<ul className="flex flex-col gap-4 lg:hidden">
+			{data.map((a) => (
+				<BaseMobileCard
+					header={
+						<>
+							<h3 className="font-semibold text-base">
+								#{a.ResultRank} {a.Name}
+							</h3>
+							<p className="text-muted-foreground text-xs">
+								{a.Organization?.Name ?? "-"}
+							</p>
+						</>
+					}
+					key={a.Id}
+					meta={
+						a.Attempts && (
+							<ul className="flex flex-wrap gap-2 pt-1">
+								{a.Attempts.map((at, index) => (
+									<li
+										className={cn(
+											a.Result === at.Line1 && "bg-neutral-300/50!",
+											"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+										)}
+										key={`${at.Line1}-${index}`}
+									>
+										<span>{at.Line1}</span>
+										{at.Line2 && <span>{at.Line2}</span>}
+									</li>
+								))}
+							</ul>
+						)
+					}
+				/>
+			))}
+		</ul>
+	);
+}
+
+export function ParticipantLayout({ athletes }: { athletes: Competition }) {
+	return (
+		<div className="space-y-6">
+			<CompetitionTable
+				columns={[
+					{
+						header: "Varm.",
+						cell: (p) =>
+							p.Confirmed ? (
+								<div className="flex h-5 w-5 items-center justify-center">
+									<CheckCircle className="h-3 w-3 text-white" />
+								</div>
+							) : null,
+					},
+					{
+						header: "Nimi ja Seura",
+						className: "w-full",
+						cell: (p) => (
+							<NameAndOrg
+								name={p.Name}
+								number={p.Number}
+								organization={p.Organization}
+							/>
+						),
+					},
+					{
+						header: "PB",
+						cell: (p) => <span className="font-medium">{p.PB || "-"}</span>,
+					},
+					{
+						header: "SB",
+						cell: (p) => <span className="font-medium">{p.SB || "-"}</span>,
+					},
+				]}
+				data={athletes.Enrollments}
+				rowClassName={(p) =>
+					p.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : ""
+				}
+			/>
+			<ParticipantsMobileList data={athletes.Enrollments} />
+		</div>
+	);
+}
+
+// TODO: maybe combine this with the participant and protocol look at mockup that the
+// layout will stay the same on both componnent but the data will be different but result
+// is different as it show heat result and the end result
 export function CompetitionLayout() {
 	const {
 		currentHeat,
-		// selectedRound,
 		selectedHeat,
 		heats,
 		showHeatNumbers,
 		handleHeatChange,
 	} = useRound();
+
+	if (!currentHeat || heats.length === 0) {
+		return (
+			<div className="py-8 text-center">
+				<p className="text-muted-foreground">
+					Eräjakoja ei ole saatavilla vielä.
+				</p>
+			</div>
+		);
+	}
+	const allocations = [...currentHeat.Allocations];
+
 	return (
 		<>
-			{heats.length > 0 ? (
+			{heats.length > 0 && (
 				<div className="space-y-6">
 					{/* Heat Selection Tabs - Only show when there are multiple heats */}
 					{showHeatNumbers && heats.length > 1 && (
-						<div className="mb-4 flex flex-wrap gap-2">
-							<div className="mb-2 w-full text-muted-foreground text-sm">
-								Valiste erä:
-							</div>
-							{heats.map((heat) => (
-								<Button
-									key={heat.Index}
-									onClick={() => handleHeatChange(heat.Index)}
-									variant={selectedHeat === heat.Index ? "default" : "outline"}
-								>
-									Erä {heat.Index}
-								</Button>
-							))}
-						</div>
+						<HeatSelector
+							handleHeatChange={handleHeatChange}
+							heats={heats}
+							selectedHeat={selectedHeat}
+						/>
 					)}
-					<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
-						<TableHeader className="sticky top-0 backdrop-blur-md">
-							<TableRow>
-								<TableHead className="w-[100px]">Sija</TableHead>
-								<TableHead className="w-full">Nimi ja Seura</TableHead>
-								<TableHead>PB</TableHead>
-								<TableHead>SB</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							<Suspense>
-								{currentHeat?.Allocations.sort(
-									(a, b) => a.Position - b.Position,
-								).map((allocation) => (
-									<TableRow
-										className="w-full max-w-[400px]"
-										key={allocation.Id}
-									>
-										<Suspense>
-											<TableCell>{allocation.Position}</TableCell>
-											<TableCell>
-												<div className="flex flex-col">
-													<div className="flex items-center">
-														{!!allocation.Number && (
-															<span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
-																{allocation.Number}
-															</span>
-														)}
-														<span className="font-medium">
-															{allocation.Name}
-														</span>
-													</div>
-													<div className="mt-1 text-muted-foreground text-xs">
-														{allocation.Organization
-															? allocation.Organization.Name
-															: "-"}
-													</div>
-												</div>
-											</TableCell>
-											<TableCell>
-												<span className="font-medium">
-													{allocation.PB || "-"}
-												</span>
-											</TableCell>
-											<TableCell>
-												<span className="font-medium">
-													{allocation.SB || "-"}
-												</span>
-											</TableCell>
-										</Suspense>
-									</TableRow>
-								))}
-							</Suspense>
-						</TableBody>
-					</Table>
-				</div>
-			) : (
-				<div className="py-8 text-center">
-					<p className="text-muted-foreground">
-						Eräjakoja ei ole saatavilla vielä.
-					</p>
+					<CompetitionTable
+						columns={[
+							{
+								header: "Rata/Järj",
+								className: "w-[100px]",
+								cell: (a) => <span>{a.Number}</span>,
+							},
+							{
+								header: "Nimi ja Seura",
+								className: "w-full",
+								cell: (a) => (
+									<NameAndOrg
+										name={a.Name}
+										number={a.Number}
+										organization={a.Organization}
+									/>
+								),
+							},
+							{
+								header: "PB",
+								cell: (a) => <span className="font-medium">{a.PB || "-"}</span>,
+							},
+							{
+								header: "SB",
+								cell: (a) => <span className="font-medium">{a.SB || "-"}</span>,
+							},
+						]}
+						data={allocations}
+					/>
+
+					<ProtocolMobileList data={allocations} />
 				</div>
 			)}
 		</>
 	);
 }
-export function ResultLayout() {
+
+export function ResultLayout({ athletes }: { athletes: Competition }) {
 	const {
 		currentHeat,
-		// selectedRound,
 		selectedHeat,
 		heats,
 		showHeatNumbers,
 		handleHeatChange,
 	} = useRound();
+
+	if (!currentHeat || heats.length === 0) {
+		return (
+			<div className="py-8 text-center">
+				<p className="text-muted-foreground">
+					Eräjakoja ei ole saatavilla vielä.
+				</p>
+			</div>
+		);
+	}
+	const allocations = [...currentHeat.Allocations].sort(sortByResult);
+	const totalResults = athletes.Rounds.flatMap((round) => [
+		...round.TotalResults,
+	]).sort(sortByResult);
+
 	return (
 		<>
-			{heats.length > 0 ? (
+			{heats.length > 0 && (
 				<div className="space-y-6">
 					{/* Heat Selection Tabs - Only show when there are multiple heats */}
 					{showHeatNumbers && heats.length > 1 && (
-						<div className="mb-4 flex flex-wrap gap-2">
-							<div className="mb-2 w-full text-muted-foreground text-sm">
-								Valiste erä:
-							</div>
-							{heats.map((heat) => (
-								<Button
-									key={heat.Index}
-									onClick={() => handleHeatChange(heat.Index)}
-									variant={selectedHeat === heat.Index ? "default" : "outline"}
-								>
-									Erä {heat.Index}
-								</Button>
-							))}
-						</div>
+						<HeatSelector
+							handleHeatChange={handleHeatChange}
+							heats={heats}
+							selectedHeat={selectedHeat}
+						/>
 					)}
-					<Table className="relative hidden rounded-md border md:block">
-						<TableHeader className="sticky top-0 backdrop-blur-md">
-							<TableRow>
-								<TableHead className="w-[100px]">Sija</TableHead>
-								<TableHead className="w-full">Nimi ja Seura</TableHead>
-								<TableHead className="w-full">Tulos</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody className="overflow-y-auto">
-							<Suspense>
-								{currentHeat?.Allocations.sort(
-									(a, b) => a.ResultRank! - b.ResultRank!,
-								).map((allocation) => (
-									<TableRow
-										className="w-full max-w-[400px]"
-										key={allocation.Id}
-									>
-										<Suspense>
-											<TableCell>{allocation.Position}</TableCell>
-											<TableCell>
-												<div className="flex flex-col">
-													<div className="flex items-center">
-														{!!allocation.Number && (
-															<span className="mr-2 inline-block rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200">
-																{allocation.Number}
-															</span>
+					<CompetitionTable
+						columns={[
+							{
+								header: "Sija",
+								className: "w-[100px]",
+								cell: (a) => <span>{a.Position}</span>,
+							},
+							{
+								header: "Nimi ja Seura",
+								className: "w-full",
+								cell: (a) => (
+									<NameAndOrg
+										name={a.Name}
+										number={a.Number}
+										organization={a.Organization}
+									/>
+								),
+							},
+							{
+								header: "Tulos",
+								cell: (a) => (
+									<ul className="flex gap-2">
+										{a.Attempts
+											? a.Attempts.map((at, index) => (
+													<li
+														className={cn(
+															a.Result === at.Line1 && "bg-neutral-300/50!",
+															"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
 														)}
-														<span className="font-medium">
-															{allocation.Name}
-														</span>
-													</div>
-													<div className="mt-1 text-muted-foreground text-xs">
-														{allocation.Organization
-															? allocation.Organization.Name
-															: "-"}
-													</div>
-												</div>
-											</TableCell>
-											<TableCell>
-												<ul className="flex gap-2">
-													<Suspense fallback={<Skeleton />}>
-														{allocation.Attempts
-															? allocation.Attempts.map((at, index) => (
-																	<li
-																		className={cn(
-																			allocation.Result === at.Line1 &&
-																				"bg-neutral-300/50!",
-																			"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-																		)}
-																		key={`${at.Line1}-${index}`}
-																	>
-																		<span>{at.Line1}</span>
-																		{at.Line2 && <span>{at.Line2}</span>}
-																	</li>
-																))
-															: null}
-													</Suspense>
-												</ul>
-											</TableCell>
-										</Suspense>
-									</TableRow>
-								))}
-							</Suspense>
-						</TableBody>
-					</Table>
-				</div>
-			) : (
-				<div className="py-8 text-center">
-					<p className="text-muted-foreground">
-						Eräjakoja ei ole saatavilla vielä.
-					</p>
+														key={`${at.Line1}-${index}`}
+													>
+														<span>{at.Line1}</span>
+														{at.Line2 && <span>{at.Line2}</span>}
+													</li>
+												))
+											: null}
+									</ul>
+								),
+							},
+						]}
+						data={allocations}
+					/>
+					<ResultsMobileList data={allocations} />
+					{athletes.RoundCount > 2 && (
+						<>
+							<h3 className="scroll-m-20 font-semibold text-2xl tracking-tight">
+								Kokonaistulokset
+							</h3>
+							<CompetitionTable
+								columns={[
+									{
+										header: "Sija",
+										className: "w-[100px]",
+										cell: (a) => <span>{a.ResultRank}</span>,
+									},
+									{
+										header: "Nimi ja Seura",
+										className: "w-full",
+										cell: (a) => (
+											<NameAndOrg
+												name={a.Name}
+												number={a.Number}
+												organization={a.Organization}
+											/>
+										),
+									},
+									{
+										header: "Tulos",
+										cell: (a) => (
+											<ul className="flex gap-2">
+												{a.Attempts
+													? a.Attempts.map((at, index) => (
+															<li
+																className={cn(
+																	a.Result === at.Line1 && "bg-neutral-300/50!",
+																	"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+																)}
+																key={`${at.Line1}-${index}`}
+															>
+																<span>{at.Line1}</span>
+																{at.Line2 && <span>{at.Line2}</span>}
+															</li>
+														))
+													: null}
+											</ul>
+										),
+									},
+								]}
+								data={totalResults}
+							/>
+							<ResultsMobileList data={totalResults} />
+						</>
+					)}
 				</div>
 			)}
 		</>
