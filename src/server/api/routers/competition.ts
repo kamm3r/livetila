@@ -14,26 +14,30 @@ export const competitionsRouter = createTRPCRouter({
 	getAthletes: publicProcedure
 		.input(z.object({ compId: z.string() }))
 		.query(async ({ input }): Promise<Competition> => {
-			const res = await fetch(`${API_URL}/results/${input.compId}`, {
-				cache: "no-store",
-			});
-			if (!res.ok) {
-				// This will activate the closest `error.js` Error Boundary
-				throw new Error("Failed to fetch data");
+			const { data, error } = await tryCatch(
+				fetch(`${API_URL}/results/${input.compId}`, {
+					cache: "no-store",
+				}),
+			);
+			if (error || !data) {
+				console.error("Error fetching comp data:", error);
+				return {} as Competition;
 			}
-			return res.json() as Promise<Competition>;
+			return (await data.json()) as Promise<Competition>;
 		}),
 	getCompetitionDetails: publicProcedure
 		.input(z.object({ competitionDetailsId: z.string() }))
 		.query(async ({ input }): Promise<CompetitionProperties> => {
-			const res = await fetch(
-				`${API_URL}/competition/${input.competitionDetailsId}/properties`,
+			const { data, error } = await tryCatch(
+				fetch(
+					`${API_URL}/competition/${input.competitionDetailsId}/properties`,
+				),
 			);
-			if (!res.ok) {
-				// This will activate the closest `error.js` Error Boundary
-				throw new Error("Failed to fetch data");
+			if (error || !data) {
+				console.error("Error fetching comp data:", error);
+				return {} as CompetitionProperties;
 			}
-			return res.json() as Promise<CompetitionProperties>;
+			return (await data.json()) as CompetitionProperties;
 		}),
 	getCompetitions: publicProcedure.query(
 		async (): Promise<CompetitionList[]> => {

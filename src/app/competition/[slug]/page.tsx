@@ -5,6 +5,7 @@ import {
 	ResultLayout,
 } from "~/@/components/competition-layout";
 import { Embed } from "~/@/components/embed";
+import { EventSwitcher } from "~/@/components/event-switcher";
 import { Navbar } from "~/@/components/navbar";
 import { RoundProvider } from "~/@/components/round-provider";
 import { Button } from "~/@/components/ui/button";
@@ -64,15 +65,23 @@ export default async function Comp({
 	console.log("Comp params:", slug);
 	const compId = slug?.slice(0, slug.indexOf("-"));
 	console.log("Comp id:", compId);
-	const eventId = slug?.replace("-", "/");
-	const athletes = await api.competition.getAthletes({ compId: eventId });
-	// const compD = await api.competition.getEvents({ compId: Number(compId) });
+	const eventId = slug?.slice(slug.indexOf("-") + 1);
+	console.log("Event id:", eventId);
+	const athletes = await api.competition.getAthletes({
+		compId: `${compId}/${eventId}`,
+	});
+	const compD = await api.competition.getEvents({ compId: Number(compId) });
 	// console.log("Comp data:", compD);
 
 	return (
 		<RoundProvider rounds={athletes.Rounds}>
 			<Navbar />
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
+				<EventSwitcher
+					competitionId={compId}
+					currentEventId={eventId}
+					events={compD}
+				/>
 				<ObsPopover slug={slug} />
 				<Tabs className="mt-2 w-full" defaultValue="participants">
 					<TabsList className="grid h-auto w-full grid-cols-3 bg-transparent p-0">
