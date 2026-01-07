@@ -41,7 +41,7 @@ export type EventList = {
 	Gender: string;
 	Age: string;
 	Name: string;
-	Status: string;
+	Status: "Unallocated" | "Allocated" | "Progress" | "Official";
 	GroupName: string;
 	CountEnrolled: number;
 	CountConfirmed: number;

@@ -67,6 +67,9 @@ export default async function Comp({
 	console.log("Comp id:", compId);
 	const eventId = slug?.slice(slug.indexOf("-") + 1);
 	console.log("Event id:", eventId);
+	const compSTD = await api.competition.getCompetitionDetails({
+		competitionDetailsId: compId,
+	});
 	const athletes = await api.competition.getAthletes({
 		compId: `${compId}/${eventId}`,
 	});
@@ -77,12 +80,19 @@ export default async function Comp({
 		<RoundProvider rounds={athletes.Rounds}>
 			<Navbar />
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
-				<EventSwitcher
-					competitionId={compId}
-					currentEventId={eventId}
-					events={compD}
-				/>
-				<ObsPopover slug={slug} />
+				<div className="flex items-center justify-between gap-2">
+					<div className="flex flex-col items-start gap-2">
+						<h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
+							{compSTD.Competition.Name}
+						</h2>
+						<EventSwitcher
+							competitionId={compId}
+							currentEventId={eventId}
+							events={compD}
+						/>
+					</div>
+					<ObsPopover slug={slug} />
+				</div>
 				<Tabs className="mt-2 w-full" defaultValue="participants">
 					<TabsList className="grid h-auto w-full grid-cols-3 bg-transparent p-0">
 						<TabsTrigger
