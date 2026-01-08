@@ -62,11 +62,11 @@ export default async function Comp({
 	params: Promise<{ slug: string }>;
 }) {
 	const { slug } = await params;
-	console.log("Comp params:", slug);
+	// console.log("Comp params:", slug);
 	const compId = slug?.slice(0, slug.indexOf("-"));
-	console.log("Comp id:", compId);
+	// console.log("Comp id:", compId);
 	const eventId = slug?.slice(slug.indexOf("-") + 1);
-	console.log("Event id:", eventId);
+	// console.log("Event id:", eventId);
 	const compSTD = await api.competition.getCompetitionDetails({
 		competitionDetailsId: compId,
 	});
@@ -80,10 +80,10 @@ export default async function Comp({
 		<RoundProvider rounds={athletes.Rounds}>
 			<Navbar />
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
-				<div className="flex items-center justify-between gap-2">
+				<div className="flex flex-wrap items-center justify-between gap-2">
 					<div className="flex flex-col items-start gap-2">
 						<h2 className="scroll-m-20 border-b pb-2 font-semibold text-3xl tracking-tight first:mt-0">
-							{compSTD.Competition.Name}
+							{!!compSTD && compSTD.Competition.Name}
 						</h2>
 						<EventSwitcher
 							competitionId={compId}

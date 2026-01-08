@@ -79,21 +79,15 @@ export function EventSwitcher({
 			})),
 	);
 
-	const currentEventName = flattenedEvents.find(
-		(e) => e.EventId === Number(currentEventId),
-	)?.EventName;
-
-	if (!currentEventName) return null;
-
 	return (
 		<Select
 			itemToStringValue={(event) => String(event.EventId)}
 			onValueChange={(event) => {
-				router.push(`/competition/${competitionId}-${event?.EventId}`);
+				router.push(`/competition/${competitionId}-${event.EventId}`);
 			}}
 			value={flattenedEvents.find((e) => e.EventId === Number(currentEventId))}
 		>
-			<SelectTrigger className="!h-auto !items-center !py-2 !px-4 w-[400px]">
+			<SelectTrigger className="!h-auto !items-center !py-2 !px-4 w-full sm:w-[400px]">
 				<SelectValue className="w-full">
 					{(event: EventWithDate) => <EventDisplay event={event} />}
 				</SelectValue>
