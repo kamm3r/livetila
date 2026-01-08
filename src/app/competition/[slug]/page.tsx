@@ -5,6 +5,7 @@ import {
 	ResultLayout,
 } from "~/@/components/competition-layout";
 import { Embed } from "~/@/components/embed";
+import { EventSwitcher } from "~/@/components/event-switcher";
 import { Navbar } from "~/@/components/navbar";
 import { RoundProvider } from "~/@/components/round-provider";
 import { Button } from "~/@/components/ui/button";
@@ -61,21 +62,39 @@ export default async function Comp({
 	params: Promise<{ slug: string }>;
 }) {
 	const { slug } = await params;
-	console.log("Comp params:", slug);
+	// console.log("Comp params:", slug);
 	const compId = slug?.slice(0, slug.indexOf("-"));
-	console.log("Comp id:", compId);
-	const eventId = slug?.replace("-", "/");
-	const athletes = await api.competition.getAthletes({ compId: eventId });
-	// const compD = await api.competition.getEvents({ compId: Number(compId) });
+	// console.log("Comp id:", compId);
+	const eventId = slug?.slice(slug.indexOf("-") + 1);
+	// console.log("Event id:", eventId);
+	const compSTD = await api.competition.getCompetitionDetails({
+		competitionDetailsId: compId,
+	});
+	const athletes = await api.competition.getAthletes({
+		compId: `${compId}/${eventId}`,
+	});
+	const compD = await api.competition.getEvents({ compId: Number(compId) });
 	// console.log("Comp data:", compD);
 
 	return (
 		<RoundProvider rounds={athletes.Rounds}>
 			<Navbar />
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
-				<ObsPopover slug={slug} />
+				<div className="flex flex-wrap items-center justify-between gap-2">
+					<div className="flex flex-col items-start gap-2">
+						<h2 className="scroll-m-20 border-b pb-2 font-semibold text-3xl tracking-tight first:mt-0">
+							{!!compSTD && compSTD.Competition.Name}
+						</h2>
+						<EventSwitcher
+							competitionId={compId}
+							currentEventId={eventId}
+							events={compD}
+						/>
+					</div>
+					<ObsPopover slug={slug} />
+				</div>
 				<Tabs className="mt-2 w-full" defaultValue="participants">
-					<TabsList className="grid h-auto w-full grid-cols-3 bg-transparent p-0">
+					<TabsList className="mb-2 grid h-auto w-full grid-cols-3 bg-transparent p-0">
 						<TabsTrigger
 							className="rounded-none border-transparent border-b-2 py-3 text-muted-foreground hover:border-primary/70 hover:text-foreground/70 data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none"
 							value="participants"
