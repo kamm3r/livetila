@@ -82,7 +82,7 @@ export default async function Comp({
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
 				<div className="flex items-center justify-between gap-2">
 					<div className="flex flex-col items-start gap-2">
-						<h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
+						<h2 className="scroll-m-20 border-b pb-2 font-semibold text-3xl tracking-tight first:mt-0">
 							{compSTD.Competition.Name}
 						</h2>
 						<EventSwitcher
@@ -94,7 +94,7 @@ export default async function Comp({
 					<ObsPopover slug={slug} />
 				</div>
 				<Tabs className="mt-2 w-full" defaultValue="participants">
-					<TabsList className="grid h-auto w-full grid-cols-3 bg-transparent p-0">
+					<TabsList className="mb-2 grid h-auto w-full grid-cols-3 bg-transparent p-0">
 						<TabsTrigger
 							className="rounded-none border-transparent border-b-2 py-3 text-muted-foreground hover:border-primary/70 hover:text-foreground/70 data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none"
 							value="participants"
