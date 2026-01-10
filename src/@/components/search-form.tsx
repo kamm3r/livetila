@@ -53,7 +53,7 @@ export function SearchForm() {
 	const { data: competitions, isLoading: isLoadingComps } =
 		api.competition.getCompetitions.useQuery();
 	const compId = selectedComp?.Id;
-	console.log("compId", compId);
+	// console.log("compId", compId);
 	const { data: events, isLoading: isLoadingEvents } =
 		api.competition.getEvents.useQuery(
 			{ compId: compId! },
@@ -147,7 +147,7 @@ export function SearchForm() {
 		<div className="relative w-full" ref={containerRef}>
 			<Command className="overflow-visible bg-transparent" shouldFilter={false}>
 				<CommandInput
-					// className="text-base"
+					className=""
 					onBlur={() => setIsOpen(false)}
 					onChangeCapture={(event) => {
 						handleInputChange(event.currentTarget.value);

@@ -65,7 +65,7 @@ function CommandInput({
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
 	return (
 		<div className="p-1 pb-0" data-slot="command-input-wrapper">
-			<InputGroup className="h-8! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
+			<InputGroup className="h-12! rounded-lg! border-input/30 bg-input/30 shadow-none! *:data-[slot=input-group-addon]:pl-2!">
 				<CommandPrimitive.Input
 					className={cn(
 						"w-full text-base outline-hidden disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm",
@@ -75,7 +75,7 @@ function CommandInput({
 					{...props}
 				/>
 				<InputGroupAddon>
-					<SearchIcon className="size-4 shrink-0 opacity-50" />
+					<SearchIcon className="size-5 shrink-0 opacity-50" />
 				</InputGroupAddon>
 			</InputGroup>
 		</div>
