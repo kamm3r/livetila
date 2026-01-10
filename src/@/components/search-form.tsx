@@ -20,6 +20,8 @@ type EventData = {
 	Time: string;
 };
 
+// TODO: add date/time format function that takes in a date and returns a string
+
 function extractEvents(data: Events): EventData[] {
 	const results: EventData[] = [];
 	for (const dateKey of Object.keys(data)) {
@@ -191,12 +193,15 @@ export function SearchForm() {
 										>
 											<div className="flex flex-1 items-center justify-between">
 												<span className="font-medium">{comp.Name}</span>
-												<div className="flex items-center gap-1.5 text-sm">
-													<span className="text-muted-foreground">
-														{new Date(comp.Date).getDate()}.
-														{new Date(comp.Date).getMonth() + 1}.
-													</span>
-													<ChevronRight className="h-4 w-4 text-muted-foreground transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
+												<div className="flex items-center gap-4 text-muted-foreground">
+													<div className="flex items-center gap-1.5 text-sm">
+														<Calendar className="h-3.5 w-3.5" />
+														<span>
+															{new Date(comp.Date).getDate()}.
+															{new Date(comp.Date).getMonth() + 1}.
+														</span>
+													</div>
+													<ChevronRight className="h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
 												</div>
 											</div>
 										</CommandItem>
@@ -227,16 +232,19 @@ export function SearchForm() {
 										>
 											<div className="flex w-full items-center justify-between gap-4">
 												<span className="font-medium">{evt.EventName}</span>
-												<ul className="flex items-center gap-3 text-muted-foreground">
-													<li className="flex items-center gap-1.5 text-sm">
-														<Clock className="h-3 w-3" />
-														<span className="text-sm">{evt.Time}</span>
-													</li>
-													<li className="flex items-center gap-1.5 text-sm">
-														<Calendar className="h-3 w-3" />
-														<span className="text-sm">{evt.Date}</span>
-													</li>
-												</ul>
+												<div className="flex items-center gap-4 text-muted-foreground">
+													<div className="flex items-center gap-3 text-sm">
+														<div className="flex items-center gap-1.5">
+															<Clock className="h-3 w-3" />
+															<span>{evt.Time}</span>
+														</div>
+														<div className="flex items-center gap-1.5">
+															<Calendar className="h-3 w-3" />
+															<span>{evt.Date}</span>
+														</div>
+													</div>
+													<ChevronRight className="h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
+												</div>
 											</div>
 										</CommandItem>
 									))}
