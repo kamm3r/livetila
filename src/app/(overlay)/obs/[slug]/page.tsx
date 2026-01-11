@@ -1,7 +1,7 @@
 "use client";
 import { Loader2Icon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, use } from "react";
 import { AnimatedList } from "~/@/components/animated-list";
 import { cn } from "~/@/lib/utils";
 import { api } from "~/trpc/react";
@@ -18,12 +18,13 @@ function butterParse(a: string): number {
 	}
 }
 
-export default function Obs({ params }: { params: { slug: string } }) {
-	const compId = params.slug?.replace("-", "/");
-	const competitionDetailsId = params.slug?.split("-")[0] || "";
+export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
+	const { slug } = use(params);
+	const compId = slug?.replace("-", "/");
+	const competitionDetailsId = slug?.split("-")[0] || "";
 	const obsAthletes = api.competition.getAthletes.useQuery(
 		{ compId },
-		{ refetchInterval: 1000 },
+		{ refetchInterval: 1000000 },
 	);
 	const obsCompetition = api.competition.getCompetitionDetails.useQuery({
 		competitionDetailsId: competitionDetailsId,

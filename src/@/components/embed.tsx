@@ -1,5 +1,5 @@
 "use client";
-import { ClipboardCheckIcon, ClipboardCopyIcon } from "lucide-react";
+import { CheckIcon, CopyIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/@/components/ui/button";
@@ -14,16 +14,18 @@ export function Embed({ slug }: { slug: string }) {
 	};
 	return (
 		<Button
-			className="-m-2 flex gap-2 p-2!"
+			className="w-full gap-2 transition-all duration-200 hover:scale-[1.02]"
 			onClick={() => copyUrlToClipboard(`/obs/${slug}`)}
-			variant="ghost"
+			variant="secondary"
 		>
 			{copy ? (
-				<ClipboardCheckIcon className="text-neutral-100" />
+				<CheckIcon className="size-4" />
 			) : (
-				<ClipboardCopyIcon />
+				<CopyIcon className="size-4" />
 			)}
-			<span className="sr-only text-sm sm:not-sr-only">Embed url</span>
+			<span className="sr-only text-sm sm:not-sr-only">
+				{copy ? "Kopioitu!" : "Kopioi linkki"}
+			</span>
 		</Button>
 	);
 }

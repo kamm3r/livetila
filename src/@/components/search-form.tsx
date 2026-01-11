@@ -168,7 +168,7 @@ export function SearchForm() {
 				)}
 
 				{showDropdown && (
-					<div className="fade-in-0 slide-in-from-top-2 absolute top-full z-50 mt-2 w-full animate-in overflow-hidden rounded-xl border-2 border-border bg-card shadow-xl duration-200">
+					<div className="fade-in-0 slide-in-from-top-1 absolute top-full z-50 mt-2 w-full animate-in overflow-hidden rounded-xl border-2 border-border bg-card shadow-xl duration-150">
 						<CommandList className="max-h-80">
 							{showEmpty && (
 								<CommandEmpty className="fade-in-0 animate-in py-6 text-center text-muted-foreground text-sm duration-200">
@@ -181,14 +181,14 @@ export function SearchForm() {
 								<CommandGroup heading="Kilpailut">
 									{competitionResults?.slice(0, 10).map((comp, index) => (
 										<CommandItem
-											className="fade-in-0 slide-in-from-left-2 animate-in transition-all duration-150"
+											className="fade-in-0 slide-in-from-left-1 animate-in transition-all duration-120"
 											key={comp.Id}
 											onMouseDown={(event) => {
 												event.preventDefault();
 												handleCompetitionSelect(comp);
 											}}
 											onSelect={() => handleCompetitionSelect(comp)}
-											style={{ animationDelay: `${index * 30}ms` }}
+											style={{ animationDelay: `${index * 20}ms` }}
 											value={`${comp.Name}-${comp.Date}-${comp.Id}`}
 										>
 											<div className="flex flex-1 items-center justify-between">
@@ -201,7 +201,7 @@ export function SearchForm() {
 															{new Date(comp.Date).getMonth() + 1}.
 														</span>
 													</div>
-													<ChevronRight className="h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
+													<ChevronRight className="h-4 w-4 transition-transform duration-200 ease-out group-data-[selected=true]:translate-x-0.5" />
 												</div>
 											</div>
 										</CommandItem>
@@ -220,14 +220,14 @@ export function SearchForm() {
 								<CommandGroup heading="Lajit">
 									{eventResults.slice(0, 15).map((evt, index) => (
 										<CommandItem
-											className="fade-in-0 slide-in-from-left-2 animate-in transition-all duration-150"
+											className="fade-in-0 slide-in-from-left-1 animate-in transition-all duration-120"
 											key={`${evt.Id}-${evt.Date}-${evt.Time}`}
 											onMouseDown={(event) => {
 												event.preventDefault();
 												handleEventSelect(evt);
 											}}
 											onSelect={() => handleEventSelect(evt)}
-											style={{ animationDelay: `${index * 30}ms` }}
+											style={{ animationDelay: `${index * 20}ms` }}
 											value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
 										>
 											<div className="flex w-full items-center justify-between gap-4">

@@ -1,20 +1,12 @@
-import { ClipboardList, InfoIcon, Trophy, Users } from "lucide-react";
+import { ClipboardList, Trophy, Users } from "lucide-react";
 import {
 	CompetitionLayout,
 	ParticipantLayout,
 	ResultLayout,
 } from "~/@/components/competition-layout";
-import { Embed } from "~/@/components/embed";
 import { EventSwitcher } from "~/@/components/event-switcher";
-import { Navbar } from "~/@/components/navbar";
+import { ObsPopover } from "~/@/components/obs-popover";
 import { RoundProvider } from "~/@/components/round-provider";
-import { Button } from "~/@/components/ui/button";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "~/@/components/ui/popover";
-import { Separator } from "~/@/components/ui/separator";
 import {
 	Tabs,
 	TabsContent,
@@ -22,39 +14,6 @@ import {
 	TabsTrigger,
 } from "~/@/components/ui/tabs";
 import { api } from "~/trpc/server";
-
-// TODO: make the popover link not be hardcoded
-function ObsPopover({ slug }: { slug: string }) {
-	return (
-		<Popover>
-			<PopoverTrigger className="top-9 right-5 z-50">
-				<Button className="px-2" size="icon" variant="ghost">
-					<InfoIcon />
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent className="w-96">
-				<div className="flex flex-col gap-4">
-					<div className="space-y-2">
-						<h4 className="font-medium leading-none">OBS Overlay</h4>
-						<p className="text-muted-foreground text-sm">
-							jos haluut näyttää vain tietyn erän tulokset niin tee näin
-						</p>
-						<Separator className="" />
-						<div className="break-all rounded-lg border bg-popover-foreground/10 p-3 pr-12 font-mono text-gray-300 text-sm">
-							https://livetila.vercel.app/obs/{slug}
-							<span className="rounded bg-cyan-300/40 px-1 py-0.5 text-white">
-								?heat=1
-							</span>
-						</div>
-					</div>
-					<div className="flex gap-4">
-						<Embed slug={slug} />
-					</div>
-				</div>
-			</PopoverContent>
-		</Popover>
-	);
-}
 
 export default async function Comp({
 	params,
@@ -78,7 +37,6 @@ export default async function Comp({
 
 	return (
 		<RoundProvider rounds={athletes.Rounds}>
-			<Navbar />
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
 				<div className="flex flex-wrap items-center justify-between gap-2">
 					<div className="flex flex-col items-start gap-2">
