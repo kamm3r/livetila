@@ -1,9 +1,22 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import type { Round } from "~/types/comp";
+import type { Heat, Round } from "~/types/comp";
 
-export function useEventRounds(rounds: Round[]) {
+export interface EventRoundsState {
+	selectedRound: number;
+	selectedHeat: number;
+	currentRound: Round | undefined;
+	currentHeat: Heat | undefined;
+	heats: Heat[];
+	showHeatNumbers: boolean;
+	availableRounds: number[];
+	availableHeats: number[];
+	handleRoundChange: (roundIndex: number) => void;
+	handleHeatChange: (heatIndex: number) => void;
+}
+
+export function useEventRounds(rounds: Round[]): EventRoundsState {
 	const initialRoundIndex = useMemo(() => {
 		if (rounds.length === 0) {
 			return 0;
@@ -14,44 +27,44 @@ export function useEventRounds(rounds: Round[]) {
 	const [selectedRound, setSelectedRound] = useState<number>(initialRoundIndex);
 	const [selectedHeat, setSelectedHeat] = useState<number>(1);
 
-	// Get the current round
-	const currentRound = useMemo(() => {
-		if (rounds.length === 0) return undefined;
-		return rounds.find((round) => round.Index === selectedRound) ?? rounds[0];
-	}, [rounds, selectedRound]);
+	const currentRound = useMemo(
+		() => rounds.find((round) => round.Index === selectedRound) ?? rounds[0],
+		[rounds, selectedRound],
+	);
 
-	// Get heats for the current round
-	const heats = useMemo(() => {
-		return currentRound?.Heats ?? [];
-	}, [currentRound]);
+	const heats = currentRound?.Heats ?? [];
 
-	// Get the current heat
-	const currentHeat = useMemo(() => {
-		if (heats.length === 0) return undefined;
-		return heats.find((heat) => heat.Index === selectedHeat) ?? heats[0];
-	}, [heats, selectedHeat]);
+	const currentHeat = useMemo(
+		() => heats.find((heat) => heat.Index === selectedHeat) ?? heats[0],
+		[heats, selectedHeat],
+	);
 
-	// Determine if we should show heat numbers (only when there are 2 or more heats)
-	const showHeatNumbers = useMemo(() => heats.length >= 2, [heats]);
+	const showHeatNumbers = heats.length >= 2;
 
-	// Handle round change with a callback to reset heat selection
+	const availableRounds = useMemo(
+		() => rounds.map((round) => round.Index),
+		[rounds],
+	);
+
+	const availableHeats = useMemo(
+		() => heats.map((heat) => heat.Index),
+		[heats],
+	);
+
 	const handleRoundChange = useCallback(
 		(roundIndex: number) => {
-			if (!rounds.some((round) => round.Index === roundIndex)) {
+			const round = rounds.find((r) => r.Index === roundIndex);
+			if (!round) {
 				console.error(`Invalid round index: ${roundIndex}`);
 				return;
 			}
-			setSelectedRound(roundIndex);
 
-			// Find the selected round and get its first heat index if available
-			const round = rounds.find((r) => r.Index === roundIndex);
-			const firstHeatIndex = round?.Heats?.[0]?.Index ?? 1;
-			setSelectedHeat(firstHeatIndex);
+			setSelectedRound(roundIndex);
+			setSelectedHeat(round?.Heats?.[0]?.Index ?? 1);
 		},
 		[rounds],
 	);
 
-	// Handle heat change
 	const handleHeatChange = useCallback(
 		(heatIndex: number) => {
 			if (!heats.some((heat) => heat.Index === heatIndex)) {
@@ -63,16 +76,6 @@ export function useEventRounds(rounds: Round[]) {
 		[heats],
 	);
 
-	// Add a utility function to get all available round indexes
-	const availableRounds = useMemo(() => {
-		return rounds.map((round) => round.Index);
-	}, [rounds]);
-
-	// Add a utility function to get all available heat indexes for the current round
-	const availableHeats = useMemo(() => {
-		return heats.map((heat) => heat.Index);
-	}, [heats]);
-
 	return {
 		selectedRound,
 		selectedHeat,
@@ -80,10 +83,9 @@ export function useEventRounds(rounds: Round[]) {
 		currentHeat,
 		heats,
 		showHeatNumbers,
-		handleRoundChange,
-		handleHeatChange,
 		availableRounds,
 		availableHeats,
-		isLoading: rounds.length === 0,
+		handleRoundChange,
+		handleHeatChange,
 	};
 }

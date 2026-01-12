@@ -3,7 +3,7 @@ import { SearchForm } from "~/@/components/search-form";
 export default async function Home() {
 	return (
 		<>
-			<main className="flex grow flex-col items-center">
+			<main className="flex min-h-dvh flex-col items-center">
 				<section className="flex flex-1 flex-col items-center justify-start px-4 py-16 sm:py-24">
 					<div className="fade-in-0 slide-in-from-bottom-6 mx-auto max-w-3xl animate-in text-center duration-700">
 						<h1 className="text-balance font-extrabold text-4xl tracking-tight sm:text-5xl md:text-6xl">
@@ -27,7 +27,7 @@ export default async function Home() {
 					</div>
 				</section>
 			</main>
-			<footer className="border-border border-t py-8">
+			<footer className="border-border/50 border-t py-6 pb-[env(safe-area-inset-bottom)]">
 				<div className="mx-auto max-w-5xl px-4 text-center">
 					<p className="text-muted-foreground text-sm">
 						Livetila - Kilpailutulokset striimeihin

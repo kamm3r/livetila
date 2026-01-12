@@ -1,27 +1,20 @@
 "use client";
 import { createContext, type ReactNode, useContext } from "react";
-import { useEventRounds } from "~/@/hooks/use-event-rounds";
-import type { Heat, Round } from "~/types/comp";
+import {
+	type EventRoundsState,
+	useEventRounds,
+} from "~/@/hooks/use-event-rounds";
+import type { Round } from "~/types/comp";
 
-interface EventContextType {
-	selectedRound: number;
-	selectedHeat: number;
-	currentRound: Round | undefined;
-	currentHeat: Heat | undefined;
-	heats: Heat[];
-	showHeatNumbers: boolean;
-	handleRoundChange: (roundIndex: number) => void;
-	handleHeatChange: (heatIndex: number) => void;
-}
+const RoundContext = createContext<EventRoundsState | undefined>(undefined);
+RoundContext.displayName = "RoundContext";
 
-const RoundContext = createContext<EventContextType | undefined>(undefined);
-
-interface EventProviderProps {
+interface RoundProviderProps {
 	children: ReactNode;
 	rounds: Round[];
 }
 
-export function RoundProvider({ children, rounds }: EventProviderProps) {
+export function RoundProvider({ children, rounds }: RoundProviderProps) {
 	const roundsState = useEventRounds(rounds);
 
 	return (

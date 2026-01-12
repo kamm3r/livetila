@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import * as React from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Kbd } from "~/@/components/ui/kbd";
 import {
 	Tooltip,
@@ -9,41 +9,52 @@ import {
 	TooltipTrigger,
 } from "~/@/components/ui/tooltip";
 
+function useKeyboardShortcut(
+	key: string,
+	callback: () => void,
+	enabled = true,
+) {
+	useEffect(() => {
+		if (!enabled) return;
+
+		function handleKeyDown(e: KeyboardEvent) {
+			if (e.metaKey || e.ctrlKey) return;
+			if (e.key.toLowerCase() !== key.toLowerCase()) return;
+
+			const target = e.target;
+			if (
+				target instanceof HTMLElement &&
+				(target.isContentEditable ||
+					target instanceof HTMLInputElement ||
+					target instanceof HTMLTextAreaElement ||
+					target instanceof HTMLSelectElement)
+			) {
+				return;
+			}
+
+			e.preventDefault();
+			callback();
+		}
+
+		document.addEventListener("keydown", handleKeyDown);
+		return () => document.removeEventListener("keydown", handleKeyDown);
+	}, [key, callback, enabled]);
+}
+
 export function ModeSwitcher() {
 	const { setTheme, resolvedTheme } = useTheme();
-	const [mounted, setMounted] = React.useState(false);
+	const [mounted, setMounted] = useState(false);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		setMounted(true);
 	}, []);
 
-	const toggleTheme = React.useCallback(() => {
+	const toggleTheme = useCallback(() => {
 		if (!mounted) return;
 		setTheme(resolvedTheme === "dark" ? "light" : "dark");
 	}, [mounted, resolvedTheme, setTheme]);
 
-	React.useEffect(() => {
-		if (!mounted) return;
-
-		const down = (e: KeyboardEvent) => {
-			if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey) {
-				if (
-					(e.target instanceof HTMLElement && e.target.isContentEditable) ||
-					e.target instanceof HTMLInputElement ||
-					e.target instanceof HTMLTextAreaElement ||
-					e.target instanceof HTMLSelectElement
-				) {
-					return;
-				}
-
-				e.preventDefault();
-				toggleTheme();
-			}
-		};
-
-		document.addEventListener("keydown", down);
-		return () => document.removeEventListener("keydown", down);
-	}, [mounted, toggleTheme]);
+	useKeyboardShortcut("d", toggleTheme, mounted);
 
 	if (!mounted) {
 		return null;
@@ -55,6 +66,7 @@ export function ModeSwitcher() {
 				<div className="group/toggle flex size-8 items-center justify-center">
 					<svg
 						aria-hidden="true"
+						aria-label="Toggle theme"
 						className="size-4.5"
 						fill="none"
 						focusable="false"
