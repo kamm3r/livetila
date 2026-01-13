@@ -1,4 +1,5 @@
 "use client";
+
 import { Calendar, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "~/@/components/ui/badge";
@@ -14,6 +15,12 @@ import type { EventList, Events } from "~/types/comp";
 interface EventWithDate extends EventList {
 	date: string;
 }
+function formatTime(date: string): string {
+	return new Intl.DateTimeFormat("en-GB", {
+		hour: "2-digit",
+		minute: "2-digit",
+	}).format(new Date(date));
+}
 
 function EventDisplay({ event }: { event: EventWithDate }) {
 	const eventStatusLabel: Record<EventList["Status"], string> = {
@@ -22,10 +29,7 @@ function EventDisplay({ event }: { event: EventWithDate }) {
 		Progress: "Käynnissä",
 		Official: "Tulokset valmiit",
 	};
-	const time = new Intl.DateTimeFormat("en-GB", {
-		hour: "2-digit",
-		minute: "2-digit",
-	}).format(new Date(event.BeginDateTimeWithTZ));
+	const time = formatTime(event.BeginDateTimeWithTZ);
 	return (
 		<div className="flex w-full items-center justify-between gap-2">
 			<div className="flex flex-col gap-2">
@@ -78,14 +82,17 @@ export function EventSwitcher({
 				date,
 			})),
 	);
+	const currentEvent = flattenedEvents.find(
+		(e) => e.EventId === Number(currentEventId),
+	);
 
 	return (
 		<Select
 			itemToStringValue={(event) => String(event.EventId)}
 			onValueChange={(event) => {
-				router.push(`/competition/${competitionId}-${event.EventId}`);
+				router.push(`/competition/${competitionId}-${event!.EventId}`);
 			}}
-			value={flattenedEvents.find((e) => e.EventId === Number(currentEventId))}
+			value={currentEvent}
 		>
 			<SelectTrigger className="!h-auto !items-center !py-2 !px-4 w-full sm:w-[400px]">
 				<SelectValue className="w-full">
@@ -96,7 +103,7 @@ export function EventSwitcher({
 			<SelectContent>
 				{flattenedEvents.map((event) => (
 					<SelectItem
-						key={`${event.BeginDateTimeWithTZ}-${event.EventId}-${event.EventName}`}
+						key={`${event.BeginDateTimeWithTZ}-${event.EventId}`}
 						value={event}
 					>
 						<EventDisplay event={event} />

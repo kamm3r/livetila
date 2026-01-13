@@ -10,6 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "~/@/components/ui/table";
+import { sortByResult } from "~/@/lib/results";
 import { cn } from "~/@/lib/utils";
 import type {
 	Allocation,
@@ -25,40 +26,13 @@ type Column<T> = {
 	cell: (row: T) => React.ReactNode;
 };
 
-type CompetitionTableProps<T> = {
+type BaseTableProps<T> = {
 	data: T[];
 	columns: Column<T>[];
 	rowClassName?: (row: T) => string;
 };
 
-function butterParse(value: string | null): number {
-	if (!value || value === "NM") {
-		return 0;
-	}
-	if (["DNS", "DQ", "DNF", "DSQ"].includes(value)) {
-		return -1;
-	}
-
-	return Number.isNaN(Number(value)) ? 0 : Number(value);
-}
-
-function sortByResult(a: Allocation, b: Allocation) {
-	const aResult = butterParse(a.Result);
-	const bResult = butterParse(b.Result);
-	if (aResult === -1 && bResult !== -1) {
-		return 1;
-	}
-	if (bResult === -1 && aResult !== -1) {
-		return -1;
-	}
-	if (aResult === 0 && bResult !== 0) {
-		return 1;
-	}
-	if (bResult === 0 && aResult !== 0) {
-		return -1;
-	}
-	return bResult - aResult;
-}
+type AthleteRow = Enrollment | Allocation | TotalResult;
 
 function NameAndOrg({
 	name,
@@ -113,11 +87,38 @@ function HeatSelector({
 	);
 }
 
-function CompetitionTable<T extends { Id: string | number }>({
+function AttemptsList({
+	attempts,
+	bestResult,
+}: {
+	attempts: Array<{ Line1: string; Line2?: string }> | undefined;
+	bestResult?: string | null;
+}) {
+	if (!attempts) return null;
+
+	return (
+		<ul className="flex gap-2">
+			{attempts.map((attempt, index) => (
+				<li
+					className={cn(
+						"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
+						bestResult === attempt.Line1 && "bg-neutral-300/50!",
+					)}
+					key={`${attempt.Line1}-${index}`}
+				>
+					<span>{attempt.Line1}</span>
+					{attempt.Line2 && <span>{attempt.Line2}</span>}
+				</li>
+			))}
+		</ul>
+	);
+}
+
+function BaseTable<T extends { Id: string | number }>({
 	data,
 	columns,
 	rowClassName,
-}: CompetitionTableProps<T>) {
+}: BaseTableProps<T>) {
 	return (
 		<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
 			<TableHeader className="sticky top-0 backdrop-blur-md">
@@ -149,12 +150,14 @@ function CompetitionTable<T extends { Id: string | number }>({
 
 function BaseMobileCard({
 	highlight,
-	header,
+	title,
+	subtitle,
 	meta,
 }: {
 	highlight?: boolean;
-	header: React.ReactNode;
-	meta?: React.ReactNode;
+	title: string;
+	subtitle?: string;
+	meta?: React.ReactNode; //TODO: better name
 }) {
 	return (
 		<li
@@ -164,156 +167,128 @@ function BaseMobileCard({
 			)}
 		>
 			<div className="flex flex-col gap-2">
-				{header}
+				<div>
+					<h3 className="font-semibold text-base">{title}</h3>
+					<p className="text-muted-foreground text-xs">{subtitle ?? "-"}</p>
+				</div>
 				{meta}
 			</div>
 		</li>
 	);
 }
 
-function ParticipantsMobileList({ data }: { data: Enrollment[] }) {
+function PersonalBestsMeta({
+	pb,
+	sb,
+}: {
+	pb?: string | null;
+	sb?: string | null;
+}) {
+	return (
+		<div className="flex gap-3 text-xs opacity-70">
+			<span>PB {pb || "-"}</span>
+			<span>SB {sb || "-"}</span>
+		</div>
+	);
+}
+
+interface MobileListProps<T extends AthleteRow> {
+	data: T[];
+	getTitle: (item: T) => string;
+	renderMeta?: (item: T) => React.ReactNode;
+	isHighlighted?: (item: T) => boolean;
+}
+
+function MobileList<T extends AthleteRow>({
+	data,
+	getTitle,
+	renderMeta,
+	isHighlighted,
+}: MobileListProps<T>) {
 	return (
 		<ul className="flex flex-col gap-4 lg:hidden">
-			{data.map((p) => (
+			{data.map((item) => (
 				<BaseMobileCard
-					header={
-						<div>
-							<h3 className="font-semibold text-base">{p.Name}</h3>
-							<p className="text-muted-foreground text-xs">
-								{p.Organization?.Name ?? "-"}
-							</p>
-						</div>
-					}
-					highlight={p.Confirmed}
-					key={p.Id}
-					meta={
-						<div className="flex gap-3 text-xs opacity-70">
-							<span>PB {p.PB || "-"}</span>
-							<span>SB {p.SB || "-"}</span>
-						</div>
-					}
+					highlight={isHighlighted?.(item)}
+					key={item.Id}
+					meta={renderMeta?.(item)}
+					subtitle={item.Organization?.Name}
+					title={getTitle(item)}
 				/>
 			))}
 		</ul>
 	);
 }
 
-function ProtocolMobileList({ data }: { data: Allocation[] }) {
-	return (
-		<ul className="flex flex-col gap-4 lg:hidden">
-			{data.map((a) => (
-				<BaseMobileCard
-					header={
-						<div>
-							<h3 className="font-semibold text-base">
-								#{a.Position} {a.Name}
-							</h3>
-							<p className="text-muted-foreground text-xs">
-								{a.Organization?.Name ?? "-"}
-							</p>
-						</div>
-					}
-					key={a.Id}
-					meta={
-						<div className="flex gap-3 text-xs opacity-70">
-							<span>PB {a.PB || "-"}</span>
-							<span>SB {a.SB || "-"}</span>
-						</div>
-					}
-				/>
-			))}
-		</ul>
-	);
-}
+const nameAndOrgColumn = <T extends AthleteRow>(
+	showNumber = false,
+): Column<T> => ({
+	header: "Nimi ja Seura",
+	className: "w-full",
+	cell: (row) => (
+		<NameAndOrg
+			name={row.Name}
+			number={showNumber && "Number" in row ? row.Number : undefined}
+			organization={row.Organization}
+		/>
+	),
+});
 
-function ResultsMobileList({ data }: { data: TotalResult[] }) {
+const pbColumn = <T extends { PB?: string | null }>(): Column<T> => ({
+	header: "PB",
+	cell: (row) => <span className="font-medium">{row.PB || "-"}</span>,
+});
+
+const sbColumn = <T extends { SB?: string | null }>(): Column<T> => ({
+	header: "SB",
+	cell: (row) => <span className="font-medium">{row.SB || "-"}</span>,
+});
+
+function EmptyState() {
 	return (
-		<ul className="flex flex-col gap-4 lg:hidden">
-			{data.map((a) => (
-				<BaseMobileCard
-					header={
-						<>
-							<h3 className="font-semibold text-base">
-								#{a.ResultRank} {a.Name}
-							</h3>
-							<p className="text-muted-foreground text-xs">
-								{a.Organization?.Name ?? "-"}
-							</p>
-						</>
-					}
-					key={a.Id}
-					meta={
-						a.Attempts && (
-							<ul className="flex flex-wrap gap-2 pt-1">
-								{a.Attempts.map((at, index) => (
-									<li
-										className={cn(
-											a.Result === at.Line1 && "bg-neutral-300/50!",
-											"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-										)}
-										key={`${at.Line1}-${index}`}
-									>
-										<span>{at.Line1}</span>
-										{at.Line2 && <span>{at.Line2}</span>}
-									</li>
-								))}
-							</ul>
-						)
-					}
-				/>
-			))}
-		</ul>
+		<div className="py-8 text-center">
+			<p className="text-muted-foreground">
+				Eräjakoja ei ole saatavilla vielä.
+			</p>
+		</div>
 	);
 }
 
 export function ParticipantLayout({ athletes }: { athletes: Competition }) {
+	const enrollments = athletes.Enrollments;
 	return (
 		<div className="space-y-6">
-			<CompetitionTable
+			<BaseTable
 				columns={[
 					{
 						header: "Varm.",
 						cell: (p) =>
 							p.Confirmed ? (
-								<div className="flex h-5 w-5 items-center justify-center">
-									<CheckCircle className="h-3 w-3 text-white" />
+								<div className="flex size-5 items-center justify-center">
+									<CheckCircle className="size-3 text-white" />
 								</div>
 							) : null,
 					},
-					{
-						header: "Nimi ja Seura",
-						className: "w-full",
-						cell: (p) => (
-							<NameAndOrg
-								name={p.Name}
-								number={p.Number}
-								organization={p.Organization}
-							/>
-						),
-					},
-					{
-						header: "PB",
-						cell: (p) => <span className="font-medium">{p.PB || "-"}</span>,
-					},
-					{
-						header: "SB",
-						cell: (p) => <span className="font-medium">{p.SB || "-"}</span>,
-					},
+					nameAndOrgColumn<Enrollment>(true),
+					pbColumn<Enrollment>(),
+					sbColumn<Enrollment>(),
 				]}
-				data={athletes.Enrollments}
+				data={enrollments}
 				rowClassName={(p) =>
 					p.Confirmed ? "bg-green-300/10 hover:bg-green-300/15" : ""
 				}
 			/>
-			<ParticipantsMobileList data={athletes.Enrollments} />
+			<MobileList
+				data={enrollments}
+				getTitle={(p) => p.Name}
+				isHighlighted={(p) => p.Confirmed}
+				renderMeta={(p) => <PersonalBestsMeta pb={p.PB} sb={p.SB} />}
+			/>
 		</div>
 	);
 }
 
-// TODO: maybe combine this with the participant and protocol look at mockup that the
-// layout will stay the same on both componnent but the data will be different but result
-// is different as it show heat result and the end result
-export function CompetitionLayout() {
+export function ProtocolLayout({ isTrack }: { isTrack: boolean }) {
 	const {
 		currentHeat,
 		selectedHeat,
@@ -323,62 +298,38 @@ export function CompetitionLayout() {
 	} = useRound();
 
 	if (!currentHeat || heats.length === 0) {
-		return (
-			<div className="py-8 text-center">
-				<p className="text-muted-foreground">
-					Eräjakoja ei ole saatavilla vielä.
-				</p>
-			</div>
-		);
+		return <EmptyState />;
 	}
 	const allocations = [...currentHeat.Allocations];
 
 	return (
-		<>
-			{heats.length > 0 && (
-				<div className="space-y-6">
-					{/* Heat Selection Tabs - Only show when there are multiple heats */}
-					{showHeatNumbers && heats.length > 1 && (
-						<HeatSelector
-							handleHeatChange={handleHeatChange}
-							heats={heats}
-							selectedHeat={selectedHeat}
-						/>
-					)}
-					<CompetitionTable
-						columns={[
-							{
-								header: "Rata/Järj",
-								className: "w-[100px]",
-								cell: (a) => <span>{a.Number}</span>,
-							},
-							{
-								header: "Nimi ja Seura",
-								className: "w-full",
-								cell: (a) => (
-									<NameAndOrg
-										name={a.Name}
-										number={a.Number}
-										organization={a.Organization}
-									/>
-								),
-							},
-							{
-								header: "PB",
-								cell: (a) => <span className="font-medium">{a.PB || "-"}</span>,
-							},
-							{
-								header: "SB",
-								cell: (a) => <span className="font-medium">{a.SB || "-"}</span>,
-							},
-						]}
-						data={allocations}
-					/>
-
-					<ProtocolMobileList data={allocations} />
-				</div>
+		<div className="space-y-6">
+			{showHeatNumbers && (
+				<HeatSelector
+					handleHeatChange={handleHeatChange}
+					heats={heats}
+					selectedHeat={selectedHeat}
+				/>
 			)}
-		</>
+			<BaseTable
+				columns={[
+					{
+						header: isTrack ? "Rata" : "Järjestys",
+						className: "w-[100px]",
+						cell: (a) => <span>{a.Position}</span>,
+					},
+					nameAndOrgColumn<Allocation>(true),
+					pbColumn<Allocation>(),
+					sbColumn<Allocation>(),
+				]}
+				data={allocations}
+			/>
+			<MobileList
+				data={allocations}
+				getTitle={(a) => `#${a.Position} ${a.Name}`}
+				renderMeta={(a) => <PersonalBestsMeta pb={a.PB} sb={a.SB} />}
+			/>
+		</div>
 	);
 }
 
@@ -392,126 +343,60 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 	} = useRound();
 
 	if (!currentHeat || heats.length === 0) {
-		return (
-			<div className="py-8 text-center">
-				<p className="text-muted-foreground">
-					Eräjakoja ei ole saatavilla vielä.
-				</p>
-			</div>
-		);
+		return <EmptyState />;
 	}
 	const allocations = [...currentHeat.Allocations].sort(sortByResult);
-	const totalResults = athletes.Rounds.flatMap((round) => [
-		...round.TotalResults,
-	]).sort(sortByResult);
+	const totalResults = athletes.Rounds.flatMap(
+		(round) => round.TotalResults,
+	).sort(sortByResult);
+
+	const resultsColumns = (
+		isHeatView: boolean,
+	): Column<Allocation | TotalResult>[] => [
+		{
+			header: "Sija",
+			className: "w-[100px]",
+			cell: (a) => <span>{isHeatView ? a.HeatRank : a.ResultRank}</span>,
+		},
+		nameAndOrgColumn(true),
+		{
+			header: "Tulos",
+			cell: (a) => <AttemptsList attempts={a.Attempts} bestResult={a.Result} />,
+		},
+	];
 
 	return (
-		<>
-			{heats.length > 0 && (
-				<div className="space-y-6">
-					{/* Heat Selection Tabs - Only show when there are multiple heats */}
-					{showHeatNumbers && heats.length > 1 && (
-						<HeatSelector
-							handleHeatChange={handleHeatChange}
-							heats={heats}
-							selectedHeat={selectedHeat}
-						/>
-					)}
-					<CompetitionTable
-						columns={[
-							{
-								header: "Sija",
-								className: "w-[100px]",
-								cell: (a) => <span>{a.Position}</span>,
-							},
-							{
-								header: "Nimi ja Seura",
-								className: "w-full",
-								cell: (a) => (
-									<NameAndOrg
-										name={a.Name}
-										number={a.Number}
-										organization={a.Organization}
-									/>
-								),
-							},
-							{
-								header: "Tulos",
-								cell: (a) => (
-									<ul className="flex gap-2">
-										{a.Attempts
-											? a.Attempts.map((at, index) => (
-													<li
-														className={cn(
-															a.Result === at.Line1 && "bg-neutral-300/50!",
-															"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-														)}
-														key={`${at.Line1}-${index}`}
-													>
-														<span>{at.Line1}</span>
-														{at.Line2 && <span>{at.Line2}</span>}
-													</li>
-												))
-											: null}
-									</ul>
-								),
-							},
-						]}
-						data={allocations}
-					/>
-					<ResultsMobileList data={allocations} />
-					{athletes.RoundCount > 2 && (
-						<>
-							<h3 className="scroll-m-20 font-semibold text-2xl tracking-tight">
-								Kokonaistulokset
-							</h3>
-							<CompetitionTable
-								columns={[
-									{
-										header: "Sija",
-										className: "w-[100px]",
-										cell: (a) => <span>{a.ResultRank}</span>,
-									},
-									{
-										header: "Nimi ja Seura",
-										className: "w-full",
-										cell: (a) => (
-											<NameAndOrg
-												name={a.Name}
-												number={a.Number}
-												organization={a.Organization}
-											/>
-										),
-									},
-									{
-										header: "Tulos",
-										cell: (a) => (
-											<ul className="flex gap-2">
-												{a.Attempts
-													? a.Attempts.map((at, index) => (
-															<li
-																className={cn(
-																	a.Result === at.Line1 && "bg-neutral-300/50!",
-																	"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-																)}
-																key={`${at.Line1}-${index}`}
-															>
-																<span>{at.Line1}</span>
-																{at.Line2 && <span>{at.Line2}</span>}
-															</li>
-														))
-													: null}
-											</ul>
-										),
-									},
-								]}
-								data={totalResults}
-							/>
-							<ResultsMobileList data={totalResults} />
-						</>
-					)}
-				</div>
+		<div className="space-y-6">
+			{showHeatNumbers && heats.length > 1 && (
+				<HeatSelector
+					handleHeatChange={handleHeatChange}
+					heats={heats}
+					selectedHeat={selectedHeat}
+				/>
 			)}
-		</>
+			<BaseTable columns={resultsColumns(true)} data={allocations} />
+			<MobileList
+				data={allocations}
+				getTitle={(a) => `${a.HeatRank} ${a.Name}`}
+				renderMeta={(a) => (
+					<AttemptsList attempts={a.Attempts} bestResult={a.Result} />
+				)}
+			/>
+			{heats.length > 1 && (
+				<>
+					<h3 className="scroll-m-20 font-semibold text-2xl tracking-tight">
+						Kokonaistulokset
+					</h3>
+					<BaseTable columns={resultsColumns(false)} data={totalResults} />
+					<MobileList
+						data={totalResults}
+						getTitle={(a) => `${a.ResultRank} ${a.Name}`}
+						renderMeta={(a) => (
+							<AttemptsList attempts={a.Attempts} bestResult={a.Result} />
+						)}
+					/>
+				</>
+			)}
+		</div>
 	);
 }

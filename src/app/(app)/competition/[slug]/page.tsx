@@ -1,7 +1,7 @@
 import { ClipboardList, Trophy, Users } from "lucide-react";
 import {
-	CompetitionLayout,
 	ParticipantLayout,
+	ProtocolLayout,
 	ResultLayout,
 } from "~/@/components/competition-layout";
 import { EventSwitcher } from "~/@/components/event-switcher";
@@ -35,6 +35,12 @@ export default async function Comp({
 	const compD = await api.competition.getEvents({ compId: Number(compId) });
 	// console.log("Comp data:", compD);
 
+	const selectedEvent = Object.values(compD)
+		.flat()
+		.find((event) => event.EventId === Number(eventId));
+
+	const isTrack = selectedEvent?.Category === "Track";
+	console.log("isTrack", isTrack);
 	return (
 		<RoundProvider rounds={athletes.Rounds}>
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
@@ -54,34 +60,34 @@ export default async function Comp({
 				<Tabs className="mt-2 w-full" defaultValue="participants">
 					<TabsList className="mb-2 grid h-auto w-full grid-cols-3 bg-transparent p-0">
 						<TabsTrigger
-							className="rounded-none border-transparent border-b-2 py-3 text-muted-foreground hover:border-primary/70 hover:text-foreground/70 data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none"
+							className="group data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
 							value="participants"
 						>
 							<div className="flex items-center justify-center gap-2">
-								<span className="flex h-5 w-5 items-center justify-center rounded-full border">
-									<Users className="h-3 w-3" />
+								<span className="flex size-5 items-center justify-center rounded-full border group-data-active:border-primary dark:group-data-active:border-primary">
+									<Users className="size-3" />
 								</span>
 								<span className="hidden sm:block">Ilmoittautuneet</span>
 							</div>
 						</TabsTrigger>
 						<TabsTrigger
-							className="rounded-none border-transparent border-b-2 py-3 text-muted-foreground hover:border-primary/70 hover:text-foreground/70 data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none"
+							className="group data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
 							value="protocol"
 						>
 							<div className="flex items-center justify-center gap-2">
-								<span className="flex h-5 w-5 items-center justify-center rounded-full border">
-									<ClipboardList className="h-3 w-3" />
+								<span className="flex size-5 items-center justify-center rounded-full border group-data-active:border-primary dark:group-data-active:border-primary">
+									<ClipboardList className="size-3" />
 								</span>
 								<span className="hidden sm:block">Pöytäkirjat</span>
 							</div>
 						</TabsTrigger>
 						<TabsTrigger
-							className="rounded-none border-transparent border-b-2 py-3 text-muted-foreground hover:border-primary/70 hover:text-foreground/70 data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-none"
+							className="group data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
 							value="results"
 						>
 							<div className="flex items-center justify-center gap-2">
-								<span className="flex h-5 w-5 items-center justify-center rounded-full border">
-									<Trophy className="h-3 w-3" />
+								<span className="flex size-5 items-center justify-center rounded-full border group-data-active:border-primary dark:group-data-active:border-primary">
+									<Trophy className="size-3" />
 								</span>
 								<span className="hidden sm:block">Tulokset</span>
 							</div>
@@ -97,7 +103,7 @@ export default async function Comp({
 						className="fade-in-50 animate-in duration-300"
 						value="protocol"
 					>
-						<CompetitionLayout />
+						<ProtocolLayout isTrack={isTrack} />
 					</TabsContent>
 					<TabsContent
 						className="fade-in-50 animate-in space-y-5 duration-300"
