@@ -101,8 +101,9 @@ function AttemptsList({
 			{attempts.map((attempt, index) => (
 				<li
 					className={cn(
-						"-my-1 flex flex-col rounded bg-neutral-600/50 px-2 py-1 text-sm",
-						bestResult === attempt.Line1 && "bg-neutral-300/50!",
+						"-my-1 flex flex-col rounded bg-muted-foreground/20 px-2 py-1 text-sm",
+						bestResult === attempt.Line1 &&
+							"border-primary/20! bg-primary/10! text-primary",
 					)}
 					key={`${attempt.Line1}-${index}`}
 				>
