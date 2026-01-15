@@ -1,13 +1,16 @@
 "use client";
+
 import { InfoIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Embed } from "~/@/components/embed";
 import {
 	Popover,
 	PopoverContent,
+	PopoverDescription,
+	PopoverHeader,
+	PopoverTitle,
 	PopoverTrigger,
 } from "~/@/components/ui/popover";
-import { Separator } from "~/@/components/ui/separator";
 
 export function ObsPopover({ slug }: { slug: string }) {
 	const [origin, setOrigin] = useState<string | null>(null);
@@ -23,23 +26,19 @@ export function ObsPopover({ slug }: { slug: string }) {
 					OBS Overlay
 				</div>
 			</PopoverTrigger>
-			<PopoverContent
-				align="end"
-				className="fade-in-0 zoom-in-95 slide-in-from-top-2 w-96 animate-in"
-			>
+			<PopoverContent align="end" className="w-96">
+				<PopoverHeader>
+					<PopoverTitle>OBS Overlay</PopoverTitle>
+					<PopoverDescription>
+						jos haluut näyttää vain tietyn erän tulokset niin tee näin
+					</PopoverDescription>
+				</PopoverHeader>
 				<div className="flex flex-col gap-4">
-					<div className="flex flex-col gap-2">
-						<h4 className="font-medium leading-none">OBS Overlay</h4>
-						<p className="text-muted-foreground text-sm">
-							jos haluut näyttää vain tietyn erän tulokset niin tee näin
-						</p>
-						<Separator />
-						<div className="break-all rounded-lg border bg-muted/90 p-3 font-mono text-sm">
-							{`${origin}`}/obs/{slug}
-							<span className="rounded bg-primary/20 px-1 py-0.5 text-primary">
-								?heat=1
-							</span>
-						</div>
+					<div className="break-all rounded-lg border bg-muted/90 p-3 font-mono text-sm">
+						{`${origin}`}/obs/{slug}
+						<span className="rounded bg-primary/20 px-1 py-0.5 text-primary">
+							?heat=1
+						</span>
 					</div>
 					<Embed slug={slug} />
 				</div>

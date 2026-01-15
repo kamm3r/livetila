@@ -58,37 +58,31 @@ export default async function Comp({
 					<ObsPopover slug={slug} />
 				</div>
 				<Tabs className="mt-2 w-full" defaultValue="participants">
-					<TabsList className="mb-2 grid h-auto w-full grid-cols-3 bg-transparent p-0">
+					<TabsList className="mb-2 grid h-auto w-full grid-cols-3">
 						<TabsTrigger
-							className="group data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
+							className="data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
 							value="participants"
 						>
 							<div className="flex items-center justify-center gap-2">
-								<span className="flex size-5 items-center justify-center rounded-full border group-data-active:border-primary dark:group-data-active:border-primary">
-									<Users className="size-3" />
-								</span>
+								<Users className="size-4" />
 								<span className="hidden sm:block">Ilmoittautuneet</span>
 							</div>
 						</TabsTrigger>
 						<TabsTrigger
-							className="group data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
+							className="data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
 							value="protocol"
 						>
 							<div className="flex items-center justify-center gap-2">
-								<span className="flex size-5 items-center justify-center rounded-full border group-data-active:border-primary dark:group-data-active:border-primary">
-									<ClipboardList className="size-3" />
-								</span>
+								<ClipboardList className="size-4" />
 								<span className="hidden sm:block">Pöytäkirjat</span>
 							</div>
 						</TabsTrigger>
 						<TabsTrigger
-							className="group data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
+							className="data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
 							value="results"
 						>
 							<div className="flex items-center justify-center gap-2">
-								<span className="flex size-5 items-center justify-center rounded-full border group-data-active:border-primary dark:group-data-active:border-primary">
-									<Trophy className="size-3" />
-								</span>
+								<Trophy className="size-4" />
 								<span className="hidden sm:block">Tulokset</span>
 							</div>
 						</TabsTrigger>
