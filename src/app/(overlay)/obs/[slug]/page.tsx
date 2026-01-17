@@ -34,13 +34,11 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 	const obsAthletes = api.competition.getAthletes.useQuery({
 		compId: `${compId}/${eventId}`,
 	});
-	console.log("OBS ATHLETES", obsAthletes.data);
-
 	const obsCompetition = api.competition.getCompetitionDetails.useQuery({
 		competitionDetailsId: compId,
 	});
 	const obsEvents = api.competition.getEvents.useQuery({
-		compId: Number(compId),
+		compId: compId,
 	});
 
 	// Subscribe to real-time updates
@@ -68,12 +66,18 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 	const searchParams = useSearchParams();
 	const selectedHeat = searchParams.get("heat");
 	const athleteData = liveData ?? obsAthletes.data;
-	const filteredHeats = athleteData?.Rounds[0]?.Heats.filter((_heat, index) => {
-		if (selectedHeat) {
-			return index + 1 === parseInt(selectedHeat, 10); // Show only selected heat
-		}
-		return true; // Show all heats if no heat is selected
-	});
+	const filteredHeats = athleteData?.Rounds?.[0]?.Heats.filter(
+		(_heat, index) => {
+			if (selectedHeat) {
+				return index + 1 === parseInt(selectedHeat, 10); // Show only selected heat
+			}
+			return true; // Show all heats if no heat is selected
+		},
+	);
+
+	const allocations = filteredHeats?.flatMap((h) =>
+		h.Allocations.sort(sortByResult),
+	);
 
 	return (
 		<Suspense fallback={<Loader2Icon className="animate-spin" />}>
@@ -89,44 +93,42 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 						<h4 className="px-2 uppercase">Tulos</h4>
 					</div>
 					<AnimatedList>
-						{filteredHeats?.map((h) =>
-							h.Allocations.sort(sortByResult).map((a) => (
-								<li
-									className="flex flex-wrap justify-between border-black/50 border-t-2"
-									key={a.Id}
-								>
-									<div className="flex flex-[1_1_100%] justify-between px-4 py-1">
-										{a.Name}
-										<span className="tabular-nums">{a.Result}</span>
-									</div>
-									{!isTrack && (
-										<ul
-											className={cn(
-												"ml-1 flex-[1_1_100%] bg-gray-300 text-black",
-												a.Id ? "flex" : "hidden",
-											)}
-										>
-											{a.Attempts === null ? (
-												<p className="opacity-0">no</p>
-											) : (
-												normalizeAttempts(a.Attempts)?.map((at, index) => (
-													<li
-														className={cn(
-															a.Result === at.Line1 && "bg-cyan-300/50!",
-															"flex min-w-[16.7%] flex-col px-1 py-2 even:bg-gray-200",
-														)}
-														key={`${at.Line1}-${index}`}
-													>
-														<span>{at.Line1}</span>
-														{at.Line2 && <span>{at.Line2}</span>}
-													</li>
-												))
-											)}
-										</ul>
-									)}
-								</li>
-							)),
-						)}
+						{allocations?.map((a) => (
+							<li
+								className="flex flex-wrap justify-between border-black/50 border-t-2"
+								key={a.Id}
+							>
+								<div className="flex flex-[1_1_100%] justify-between px-4 py-1">
+									{a.Name}
+									<span className="tabular-nums">{a.Result}</span>
+								</div>
+								{!isTrack && (
+									<ul
+										className={cn(
+											"ml-1 flex-[1_1_100%] bg-gray-300 text-black",
+											a.Id ? "flex" : "hidden",
+										)}
+									>
+										{a.Attempts === null ? (
+											<p className="opacity-0">no</p>
+										) : (
+											normalizeAttempts(a.Attempts)?.map((at, index) => (
+												<li
+													className={cn(
+														a.Result === at.Line1 && "bg-cyan-300/50!",
+														"flex min-w-[16.7%] flex-col px-1 py-2 even:bg-gray-200",
+													)}
+													key={`${at.Line1}-${index}`}
+												>
+													<span>{at.Line1}</span>
+													{at.Line2 && <span>{at.Line2}</span>}
+												</li>
+											))
+										)}
+									</ul>
+								)}
+							</li>
+						))}
 					</AnimatedList>
 				</div>
 				<h1 className="mt-1 inline-flex bg-black/90 p-1 text-cyan-300 uppercase">

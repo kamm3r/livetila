@@ -32,7 +32,7 @@ export default async function Comp({
 	const athletes = await api.competition.getAthletes({
 		compId: `${compId}/${eventId}`,
 	});
-	const compD = await api.competition.getEvents({ compId: Number(compId) });
+	const compD = await api.competition.getEvents({ compId: compId });
 	// console.log("Comp data:", compD);
 
 	const selectedEvent = Object.values(compD)
@@ -40,7 +40,6 @@ export default async function Comp({
 		.find((event) => event.EventId === Number(eventId));
 
 	const isTrack = selectedEvent?.Category === "Track";
-	console.log("isTrack", isTrack);
 	return (
 		<RoundProvider rounds={athletes.Rounds}>
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
@@ -97,7 +96,7 @@ export default async function Comp({
 						className="fade-in-50 animate-in duration-300"
 						value="protocol"
 					>
-						<ProtocolLayout isTrack={isTrack} />
+						<ProtocolLayout isTrack={isTrack ?? false} />
 					</TabsContent>
 					<TabsContent
 						className="fade-in-50 animate-in space-y-5 duration-300"
