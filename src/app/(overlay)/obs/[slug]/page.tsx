@@ -2,12 +2,11 @@
 
 import { Loader2Icon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { Suspense, use, useState } from "react";
+import { Suspense, use } from "react";
 import { AnimatedList } from "~/@/components/animated-list";
 import { sortByResult } from "~/@/lib/results";
 import { cn } from "~/@/lib/utils";
 import { api } from "~/trpc/react";
-import type { Competition } from "~/types/comp";
 
 type Attempt = {
 	Line1: string;
@@ -27,35 +26,24 @@ function normalizeAttempts(attempts: Attempt[] | null | undefined): Attempt[] {
 
 export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 	const { slug } = use(params);
-	const [lastUpdate, setLastUpdate] = useState(0);
-	const [liveData, setLiveData] = useState<Competition | null>(null);
 	const compId = slug?.slice(0, slug.indexOf("-"));
 	const eventId = slug?.slice(slug.indexOf("-") + 1);
-	const obsAthletes = api.competition.getAthletes.useQuery({
-		compId: `${compId}/${eventId}`,
-	});
+	const obsAthletes = api.competition.getAthletes.useQuery(
+		{
+			compId: `${compId}/${eventId}`,
+		},
+		{
+			refetchInterval: 1000,
+			refetchIntervalInBackground: false,
+			staleTime: 0,
+		},
+	);
 	const obsCompetition = api.competition.getCompetitionDetails.useQuery({
 		competitionDetailsId: compId,
 	});
 	const obsEvents = api.competition.getEvents.useQuery({
 		compId: compId,
 	});
-
-	// Subscribe to real-time updates
-	api.competition.onResultsUpdate.useSubscription(
-		{ compId, eventId },
-		{
-			enabled: !!compId && !!eventId,
-			onData: (data) => {
-				console.log("[CLIENT] Received update:", data);
-				setLiveData(data);
-				setLastUpdate(Date.now());
-			},
-			onError: (err) => {
-				console.error("[CLIENT] Subscription error:", err);
-			},
-		},
-	);
 
 	const selectedEvent = Object.values(obsEvents.data || {})
 		.flat()
@@ -65,7 +53,7 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 
 	const searchParams = useSearchParams();
 	const selectedHeat = searchParams.get("heat");
-	const athleteData = liveData ?? obsAthletes.data;
+	const athleteData = obsAthletes.data;
 	const filteredHeats = athleteData?.Rounds?.[0]?.Heats.filter(
 		(_heat, index) => {
 			if (selectedHeat) {
@@ -135,11 +123,6 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 					{obsCompetition.data?.Competition.Name}
 				</h1>
 			</div>
-			{lastUpdate > 0 && (
-				<div className="px-2 text-blue-300 text-xl">
-					Last update: {new Date(lastUpdate).toLocaleTimeString()}
-				</div>
-			)}
 		</Suspense>
 	);
 }

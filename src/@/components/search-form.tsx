@@ -58,7 +58,7 @@ export function SearchForm() {
 	// console.log("compId", compId);
 	const { data: events, isLoading: isLoadingEvents } =
 		api.competition.getEvents.useQuery(
-			{ compId: compId! },
+			{ compId: compId!.toString() },
 			{
 				enabled: !!compId,
 			},
@@ -133,7 +133,7 @@ export function SearchForm() {
 		return () => document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
 
-	const showCompetitions = !selectedComp && competitionResults?.length > 0;
+	const showCompetitions = !selectedComp && competitionResults!.length > 0;
 	const showEvents = selectedComp && eventResults.length > 0;
 	const showLoading = isLoadingComps || isLoadingEvents;
 	const showEmpty =
