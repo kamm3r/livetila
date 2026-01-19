@@ -12,6 +12,7 @@ import {
 } from "~/@/components/ui/table";
 import { sortByResult } from "~/@/lib/results";
 import { cn } from "~/@/lib/utils";
+import { api } from "~/trpc/react";
 import type {
 	Allocation,
 	Competition,
@@ -72,7 +73,7 @@ function HeatSelector({
 	return (
 		<div className="mb-4 flex flex-wrap gap-2">
 			<div className="mb-2 w-full text-muted-foreground text-sm">
-				Valiste erä:
+				Valitse erä:
 			</div>
 			{heats.map((heat) => (
 				<Button
@@ -334,7 +335,21 @@ export function ProtocolLayout({ isTrack }: { isTrack: boolean }) {
 	);
 }
 
-export function ResultLayout({ athletes }: { athletes: Competition }) {
+export function ResultLayout({
+	compId,
+	isProgress,
+}: {
+	compId: string;
+	isProgress: boolean;
+}) {
+	const comp_athletes = api.competition.getAthletes.useQuery(
+		{ compId },
+		{
+			refetchInterval: isProgress ? 1000 : false,
+			refetchIntervalInBackground: false,
+			staleTime: 0,
+		},
+	);
 	const {
 		currentHeat,
 		selectedHeat,
@@ -347,7 +362,7 @@ export function ResultLayout({ athletes }: { athletes: Competition }) {
 		return <EmptyState />;
 	}
 	const allocations = [...currentHeat.Allocations].sort(sortByResult);
-	const totalResults = athletes.Rounds.flatMap(
+	const totalResults = comp_athletes.data?.Rounds.flatMap(
 		(round) => round.TotalResults,
 	).sort(sortByResult);
 

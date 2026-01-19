@@ -28,19 +28,6 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 	const { slug } = use(params);
 	const compId = slug?.slice(0, slug.indexOf("-"));
 	const eventId = slug?.slice(slug.indexOf("-") + 1);
-	const obsAthletes = api.competition.getAthletes.useQuery(
-		{
-			compId: `${compId}/${eventId}`,
-		},
-		{
-			refetchInterval: 1000,
-			refetchIntervalInBackground: false,
-			staleTime: 0,
-		},
-	);
-	const obsCompetition = api.competition.getCompetitionDetails.useQuery({
-		competitionDetailsId: compId,
-	});
 	const obsEvents = api.competition.getEvents.useQuery({
 		compId: compId,
 	});
@@ -48,6 +35,21 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 	const selectedEvent = Object.values(obsEvents.data || {})
 		.flat()
 		.find((event) => event.EventId === Number(eventId));
+
+	// TODO: if comp is finished disable refetching
+	const obsAthletes = api.competition.getAthletes.useQuery(
+		{
+			compId: `${compId}/${eventId}`,
+		},
+		{
+			refetchInterval: selectedEvent?.Status === "Progress" ? 1000 : false,
+			refetchIntervalInBackground: false,
+			staleTime: 0,
+		},
+	);
+	const obsCompetition = api.competition.getCompetitionDetails.useQuery({
+		competitionDetailsId: compId,
+	});
 
 	const isTrack = selectedEvent?.Category === "Track";
 
@@ -63,9 +65,9 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 		},
 	);
 
-	const allocations = filteredHeats?.flatMap((h) =>
-		h.Allocations.sort(sortByResult),
-	);
+	const allocations = !selectedHeat
+		? athleteData?.Rounds[0]?.TotalResults.sort(sortByResult)
+		: filteredHeats?.flatMap((h) => h.Allocations.sort(sortByResult));
 
 	return (
 		<Suspense fallback={<Loader2Icon className="animate-spin" />}>

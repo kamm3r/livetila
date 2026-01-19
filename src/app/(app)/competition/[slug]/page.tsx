@@ -21,29 +21,24 @@ export default async function Comp({
 	params: Promise<{ slug: string }>;
 }) {
 	const { slug } = await params;
-	// console.log("Comp params:", slug);
 	const compId = slug?.slice(0, slug.indexOf("-"));
-	// console.log("Comp id:", compId);
 	const eventId = slug?.slice(slug.indexOf("-") + 1);
-	// console.log("Event id:", eventId);
+	const compD = await api.competition.getEvents({ compId: compId });
+	const selectedEvent = Object.values(compD)
+		.flat()
+		.find((event) => event.EventId === Number(eventId));
 	const compSTD = await api.competition.getCompetitionDetails({
 		competitionDetailsId: compId,
 	});
 	const athletes = await api.competition.getAthletes({
 		compId: `${compId}/${eventId}`,
 	});
-	const compD = await api.competition.getEvents({ compId: compId });
-	// console.log("Comp data:", compD);
-
-	const selectedEvent = Object.values(compD)
-		.flat()
-		.find((event) => event.EventId === Number(eventId));
 
 	const isTrack = selectedEvent?.Category === "Track";
 	return (
 		<RoundProvider rounds={athletes.Rounds}>
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
-				<div className="flex flex-wrap items-center justify-between gap-2">
+				<div className="flex flex-wrap items-end justify-between gap-2">
 					<div className="flex flex-col items-start gap-2">
 						<h2 className="scroll-m-20 border-b pb-2 font-semibold text-3xl tracking-tight first:mt-0">
 							{!!compSTD && compSTD.Competition.Name}
@@ -102,7 +97,10 @@ export default async function Comp({
 						className="fade-in-50 animate-in space-y-5 duration-300"
 						value="results"
 					>
-						<ResultLayout athletes={athletes} />
+						<ResultLayout
+							compId={`${compId}/${eventId}`}
+							isProgress={selectedEvent?.Status === "Progress"}
+						/>
 					</TabsContent>
 				</Tabs>
 			</main>
