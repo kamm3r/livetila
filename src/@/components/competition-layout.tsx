@@ -318,7 +318,7 @@ export function ProtocolLayout({ isTrack }: { isTrack: boolean }) {
 					{
 						header: isTrack ? "Rata" : "Järjestys",
 						className: "w-[100px]",
-						cell: (a) => <span>{a.Position}</span>,
+						cell: (a) => <span>{!a.Number ? "" : a.Number}</span>,
 					},
 					nameAndOrgColumn<Allocation>(true),
 					pbColumn<Allocation>(),
@@ -328,7 +328,7 @@ export function ProtocolLayout({ isTrack }: { isTrack: boolean }) {
 			/>
 			<MobileList
 				data={allocations}
-				getTitle={(a) => `#${a.Position} ${a.Name}`}
+				getTitle={(a) => `${!a.Number ? "" : a.Number} ${a.Name}`}
 				renderMeta={(a) => <PersonalBestsMeta pb={a.PB} sb={a.SB} />}
 			/>
 		</div>
@@ -352,6 +352,7 @@ export function ResultLayout({
 	);
 	const {
 		currentHeat,
+		currentRound,
 		selectedHeat,
 		heats,
 		showHeatNumbers,
@@ -361,10 +362,8 @@ export function ResultLayout({
 	if (!currentHeat || heats.length === 0) {
 		return <EmptyState />;
 	}
-	const allocations = [...currentHeat.Allocations].sort(sortByResult);
-	const totalResults = comp_athletes.data?.Rounds.flatMap(
-		(round) => round.TotalResults,
-	).sort(sortByResult);
+	const allocations = [...currentHeat.Allocations].sort(sortByResult).sort((a,b)=> a.ResultRank - b.ResultRank);
+	const totalResults = currentRound?.TotalResults?.slice().sort(sortByResult)
 
 	const resultsColumns = (
 		isHeatView: boolean,
@@ -393,7 +392,7 @@ export function ResultLayout({
 			<BaseTable columns={resultsColumns(true)} data={allocations} />
 			<MobileList
 				data={allocations}
-				getTitle={(a) => `${a.HeatRank} ${a.Name}`}
+				getTitle={(a) => `${!a.HeatRank ? "" : a.ResultRank} ${a.Name}`}
 				renderMeta={(a) => (
 					<AttemptsList attempts={a.Attempts} bestResult={a.Result} />
 				)}
@@ -406,7 +405,7 @@ export function ResultLayout({
 					<BaseTable columns={resultsColumns(false)} data={totalResults} />
 					<MobileList
 						data={totalResults}
-						getTitle={(a) => `${a.ResultRank} ${a.Name}`}
+						getTitle={(a) => `${!a.HeatRank ? "" : a.ResultRank} ${a.Name}`}
 						renderMeta={(a) => (
 							<AttemptsList attempts={a.Attempts} bestResult={a.Result} />
 						)}

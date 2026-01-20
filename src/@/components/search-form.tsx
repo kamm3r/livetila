@@ -55,7 +55,6 @@ export function SearchForm() {
 	const { data: competitions, isLoading: isLoadingComps } =
 		api.competition.getCompetitions.useQuery();
 	const compId = selectedComp?.Id;
-	// console.log("compId", compId);
 	const { data: events, isLoading: isLoadingEvents } =
 		api.competition.getEvents.useQuery(
 			{ compId: compId?.toString() },
@@ -64,15 +63,13 @@ export function SearchForm() {
 			},
 		);
 
-	// Competition filtering (only when no comp selected)
 	const competitionResults =
 		selectedComp || !query.trim()
-			? competitions
+			? competitions?.sort((a, b)=> b.Date.localeCompare(a.Date))
 			: competitions?.filter((comp) =>
 					comp.Name.toLowerCase().includes(query.toLowerCase()),
 				);
 
-	// Event filtering (only when comp IS selected)
 	const eventQuery =
 		selectedComp && query.includes("/")
 			? (query.split("/").pop()?.trim() ?? "")

@@ -33,7 +33,7 @@ function EventDisplay({ event }: { event: EventWithDate }) {
 	return (
 		<div className="flex w-full items-center justify-between gap-2">
 			<div className="flex flex-col gap-2">
-				<span>{event.EventName}</span>
+				<span>{event.EventName} {event.Name}</span>
 				<Badge
 					variant={
 						event.Status === "Unallocated"
@@ -103,7 +103,7 @@ export function EventSwitcher({
 			<SelectContent>
 				{flattenedEvents.map((event) => (
 					<SelectItem
-						key={`${event.BeginDateTimeWithTZ}-${event.EventId}`}
+						key={`${event.BeginDateTimeWithTZ}-${event.EventId}-${event.Name}`}
 						value={event}
 					>
 						<EventDisplay event={event} />

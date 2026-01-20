@@ -7,6 +7,7 @@ import {
 import { EventSwitcher } from "~/@/components/event-switcher";
 import { ObsPopover } from "~/@/components/obs-popover";
 import { RoundProvider } from "~/@/components/round-provider";
+import { RoundSwitcher } from "~/@/components/round-switcher";
 import {
 	Tabs,
 	TabsContent,
@@ -23,11 +24,11 @@ export default async function Comp({
 	const { slug } = await params;
 	const compId = slug?.slice(0, slug.indexOf("-"));
 	const eventId = slug?.slice(slug.indexOf("-") + 1);
-	const compD = await api.competition.getEvents({ compId: compId });
-	const selectedEvent = Object.values(compD)
+	const compEvents = await api.competition.getEvents({ compId: compId });
+	const selectedEvent = Object.values(compEvents)
 		.flat()
 		.find((event) => event.EventId === Number(eventId));
-	const compSTD = await api.competition.getCompetitionDetails({
+	const compDetails = await api.competition.getCompetitionDetails({
 		competitionDetailsId: compId,
 	});
 	const athletes = await api.competition.getAthletes({
@@ -41,14 +42,15 @@ export default async function Comp({
 				<div className="flex flex-wrap items-end justify-between gap-2">
 					<div className="flex flex-col items-start gap-2">
 						<h2 className="scroll-m-20 border-b pb-2 font-semibold text-3xl tracking-tight first:mt-0">
-							{!!compSTD && compSTD.Competition.Name}
+							{!!compDetails && compDetails.Competition.Name}
 						</h2>
 						<EventSwitcher
 							competitionId={compId}
 							currentEventId={eventId}
-							events={compD}
+							events={compEvents}
 						/>
 					</div>
+					<RoundSwitcher />
 					<ObsPopover slug={slug} />
 				</div>
 				<Tabs className="mt-2 w-full" defaultValue="participants">

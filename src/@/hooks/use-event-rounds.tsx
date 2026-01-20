@@ -9,6 +9,7 @@ export interface EventRoundsState {
 	currentRound: Round | undefined;
 	currentHeat: Heat | undefined;
 	heats: Heat[];
+	rounds: Round[];
 	showHeatNumbers: boolean;
 	availableRounds: number[];
 	availableHeats: number[];
@@ -82,6 +83,7 @@ export function useEventRounds(rounds: Round[]): EventRoundsState {
 		currentRound,
 		currentHeat,
 		heats,
+		rounds,
 		showHeatNumbers,
 		availableRounds,
 		availableHeats,
