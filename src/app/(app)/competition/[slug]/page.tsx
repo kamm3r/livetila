@@ -37,7 +37,7 @@ export default async function Comp({
 
 	const isTrack = selectedEvent?.Category === "Track";
 	return (
-		<RoundProvider rounds={athletes.Rounds}>
+		<RoundProvider key={eventId} rounds={athletes.Rounds}>
 			<main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
 				<div className="flex flex-wrap items-end justify-between gap-2">
 					<div className="flex flex-col items-start gap-2">

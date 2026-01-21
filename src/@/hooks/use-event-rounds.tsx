@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Heat, Round } from "~/types/comp";
 
 export interface EventRoundsState {
@@ -17,7 +18,38 @@ export interface EventRoundsState {
 	handleHeatChange: (heatIndex: number) => void;
 }
 
+type RoundParam = "qualify" | "final";
+
+function roundParamToIndex(rounds: Round[], param: string | null) {
+	if (!param) return null;
+
+	return rounds.find((r) => {
+		if (param === "final") return r.RoundTypeCategory === "Final";
+		if (param === "qualify") return r.RoundTypeCategory === "Qualify";
+		return false;
+	})?.Index;
+}
+
+function roundIndexToParam(round: Round): RoundParam | null {
+	switch (round.RoundTypeCategory) {
+		case "Final":
+			return "final";
+		case "Qualify":
+			return "qualify";
+		default:
+			return null;
+	}
+}
+
 export function useEventRounds(rounds: Round[]): EventRoundsState {
+		const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+
+	const roundFromUrl = roundParamToIndex(
+		rounds,
+		searchParams.get("round"),
+	);
 	const initialRoundIndex = useMemo(() => {
 		if (rounds.length === 0) {
 			return 0;
@@ -27,6 +59,16 @@ export function useEventRounds(rounds: Round[]): EventRoundsState {
 
 	const [selectedRound, setSelectedRound] = useState<number>(initialRoundIndex);
 	const [selectedHeat, setSelectedHeat] = useState<number>(1);
+
+	useEffect(() => {
+		if (roundFromUrl != null && roundFromUrl !== selectedRound) {
+			setSelectedRound(roundFromUrl);
+			setSelectedHeat(
+				rounds.find((r) => r.Index === roundFromUrl)?.Heats?.[0]?.Index ??
+					1,
+			);
+		}
+	}, [roundFromUrl, rounds, selectedRound]);
 
 	const currentRound = useMemo(
 		() => rounds.find((round) => round.Index === selectedRound) ?? rounds[0],
@@ -55,23 +97,30 @@ export function useEventRounds(rounds: Round[]): EventRoundsState {
 	const handleRoundChange = useCallback(
 		(roundIndex: number) => {
 			const round = rounds.find((r) => r.Index === roundIndex);
-			if (!round) {
-				console.error(`Invalid round index: ${roundIndex}`);
-				return;
+				if (!round) return;
+
+			const param = roundIndexToParam(round);
+			const params = new URLSearchParams(searchParams.toString());
+
+			if (param) {
+				params.set("round", param);
+			} else {
+				params.delete("round");
 			}
+
+			router.replace(`${pathname}?${params.toString()}`, {
+				scroll: false,
+			});
 
 			setSelectedRound(roundIndex);
 			setSelectedHeat(round?.Heats?.[0]?.Index ?? 1);
 		},
-		[rounds],
+		[rounds, pathname, router, searchParams],
 	);
 
 	const handleHeatChange = useCallback(
 		(heatIndex: number) => {
-			if (!heats.some((heat) => heat.Index === heatIndex)) {
-				console.error(`Invalid heat index: ${heatIndex}`);
-				return;
-			}
+			if (!heats.some((heat) => heat.Index === heatIndex)) return
 			setSelectedHeat(heatIndex);
 		},
 		[heats],

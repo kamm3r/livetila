@@ -1,7 +1,7 @@
 "use client";
 
 import { Calendar, Clock } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "~/@/components/ui/badge";
 import {
 	Select,
@@ -75,22 +75,24 @@ export function EventSwitcher({
 	currentEventId: string;
 }) {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const flattenedEvents: EventWithDate[] = Object.entries(events).flatMap(
 		([date, eventList]) =>
 			eventList.map((event) => ({
 				...event,
 				date,
 			})),
-	);
-	const currentEvent = flattenedEvents.find(
-		(e) => e.EventId === Number(currentEventId),
-	);
-
-	return (
-		<Select
-			itemToStringValue={(event) => String(event.EventId)}
+		);
+		const currentEvent = flattenedEvents.find(
+			(e) => e.EventId === Number(currentEventId),
+		);
+		
+		return (
+			<Select
+			itemToStringValue={(event) => `${event.EventId}-${event.Name}`}
 			onValueChange={(event) => {
-				router.push(`/competition/${competitionId}-${event!.EventId}`);
+				const params = new URLSearchParams(searchParams.toString());
+				router.push(`/competition/${competitionId}-${event!.EventId}?${params.toString()}`);
 			}}
 			value={currentEvent}
 		>
