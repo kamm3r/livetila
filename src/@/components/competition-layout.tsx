@@ -362,8 +362,10 @@ export function ResultLayout({
 	if (!currentHeat || heats.length === 0) {
 		return <EmptyState />;
 	}
-	const allocations = [...currentHeat.Allocations].sort(sortByResult).sort((a,b)=> a.ResultRank - b.ResultRank);
-	const totalResults = currentRound?.TotalResults?.slice().sort(sortByResult)
+	const eventCategory = comp_athletes.data?.EventCategory!
+	console.log(eventCategory)
+	const allocations = [...currentHeat.Allocations].sort((a,b)=>sortByResult(a, b, eventCategory))
+	const totalResults = currentRound?.TotalResults?.slice().sort((a, b) => sortByResult(a, b, eventCategory))
 
 	const resultsColumns = (
 		isHeatView: boolean,

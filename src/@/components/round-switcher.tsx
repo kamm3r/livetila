@@ -1,8 +1,8 @@
 "use client";
 
-import { Tabs, TabsList, TabsTrigger } from "~/@/components/ui/tabs";
 import { useRound } from "~/@/components/round-provider";
 import type { Round } from "~/types/comp";
+import { Button } from "~/@/components/ui/button";
 
 function roundLabel(round: Round) {
 	switch (round.RoundTypeCategory) {
@@ -27,22 +27,16 @@ export function RoundSwitcher() {
 	}
 
 	return (
-		<Tabs
-			value={String(selectedRound)}
-			onValueChange={(value) => handleRoundChange(Number(value))}
-			className="w-full"
-		>
-			<TabsList className="grid w-full grid-cols-2">
-				{rounds.map((round) => (
-					<TabsTrigger
-						key={round.Index}
-						value={String(round.Index)}
-						className="data-active:bg-primary/30 data-active:text-primary"
-					>
-						{roundLabel(round)}
-					</TabsTrigger>
-				))}
-			</TabsList>
-		</Tabs>
+		<div className="flex gap-2">
+			{rounds.map((round) => (
+				<Button
+					key={round.Index}
+					onClick={()=>handleRoundChange(round.Index)}
+					variant={selectedRound === round.Index ? "default" : "outline"}
+				>
+					{roundLabel(round)}
+				</Button>
+			))}
+		</div>
 	);
 }
