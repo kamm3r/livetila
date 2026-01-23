@@ -34,7 +34,7 @@ export type Events = {
 export type EventList = {
   Id: number;
   BeginDateTimeWithTZ: string;
-  Category: string;
+  Category: "Track" | "Field";
   SubCategory: string;
   EventId: number;
   EventName: string;
