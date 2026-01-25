@@ -16,9 +16,7 @@ interface EventWithDate extends EventList {
   date: string;
 }
 
-type RoundCase = "Qualify" | "Final";
-
-function eventNameToRoundCase(name: string): RoundCase | undefined {
+function eventNameToRoundCase(name: string) {
   switch (name) {
     case "Alkuerät":
       return "Qualify";
@@ -28,6 +26,18 @@ function eventNameToRoundCase(name: string): RoundCase | undefined {
       return undefined;
   }
 }
+
+function roundParamToEventName(round: string | null) {
+  switch (round) {
+    case "Qualify":
+      return "Alkuerät";
+    case "Final":
+      return "Loppukilpailu";
+    default:
+      return null;
+  }
+}
+
 function hasMultipleRoundsForEvent(events: EventWithDate[], eventName: string) {
   const rounds = new Set(
     events
@@ -109,9 +119,13 @@ export function EventSwitcher({
         date,
       })),
   );
-  const currentEvent = flattenedEvents.find(
-    (e) => e.EventId === Number(currentEventId),
-  );
+  const roundParam = searchParams.get("round");
+  const roundName = roundParamToEventName(roundParam);
+  const currentEvent = flattenedEvents.find((e) => {
+    if (e.EventId === Number(currentEventId)) return false;
+    if (roundName) return e.Name === roundName;
+    return true;
+  });
 
   return (
     <Select

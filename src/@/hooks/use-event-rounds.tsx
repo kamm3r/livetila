@@ -18,14 +18,14 @@ export interface EventRoundsState {
   handleHeatChange: (heatIndex: number) => void;
 }
 
-type RoundParam = "qualify" | "final";
+type RoundParam = "Qualify" | "Final";
 
 function roundParamToIndex(rounds: Round[], param: string | null) {
   if (!param) return null;
 
   return rounds.find((r) => {
-    if (param === "final") return r.RoundTypeCategory === "Final";
-    if (param === "qualify") return r.RoundTypeCategory === "Qualify";
+    if (param === "Final") return r.RoundTypeCategory === "Final";
+    if (param === "Qualify") return r.RoundTypeCategory === "Qualify";
     return false;
   })?.Index;
 }
@@ -33,9 +33,9 @@ function roundParamToIndex(rounds: Round[], param: string | null) {
 function roundIndexToParam(round: Round): RoundParam | null {
   switch (round.RoundTypeCategory) {
     case "Final":
-      return "final";
+      return "Final";
     case "Qualify":
-      return "qualify";
+      return "Qualify";
     default:
       return null;
   }
