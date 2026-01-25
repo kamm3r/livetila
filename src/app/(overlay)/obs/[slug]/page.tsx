@@ -36,7 +36,6 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
     .flat()
     .find((event) => event.EventId === Number(eventId));
 
-  // TODO: if comp is finished disable refetching
   const obsAthletes = api.competition.getAthletes.useQuery(
     {
       compId: `${compId}/${eventId}`,
@@ -44,7 +43,7 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
     {
       refetchInterval: selectedEvent?.Status === "Progress" ? 1000 : false,
       refetchIntervalInBackground: false,
-      staleTime: 0,
+      staleTime: selectedEvent?.Status === "Progress" ? 0 : 30_000,
     },
   );
   const obsCompetition = api.competition.getCompetitionDetails.useQuery({
@@ -55,33 +54,50 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
 
   const searchParams = useSearchParams();
   const selectedHeat = searchParams.get("heat");
+  const selectedRound = searchParams.get("round");
   const athleteData = obsAthletes.data;
-  const filteredHeats = athleteData?.Rounds?.[0]?.Heats.filter(
-    (_heat, index) => {
-      if (selectedHeat) {
-        return index + 1 === parseInt(selectedHeat, 10); // Show only selected heat
-      }
-      return true; // Show all heats if no heat is selected
-    },
-  );
+  const roundIndex = selectedRound ? Number.parseInt(selectedRound, 10) - 1 : 0;
+  const rounds = athleteData?.Rounds[roundIndex];
+  const heats = rounds?.Heats ?? [];
+  const selectedHeatIndex = selectedHeat
+    ? Number.parseInt(selectedHeat, 10) - 1
+    : null;
+
+  const heatExists =
+    selectedHeatIndex !== null &&
+    selectedHeatIndex >= 0 &&
+    selectedHeatIndex < heats.length;
+
+  const activeHeats =
+    selectedHeatIndex === null
+      ? heats
+      : heatExists
+        ? [heats[selectedHeatIndex]]
+        : [];
 
   const allocations = !selectedHeat
-    ? athleteData?.Rounds[0]?.TotalResults.sort((a, b) =>
+    ? rounds?.TotalResults.slice().sort((a, b) =>
         sortByResult(a, b, eventCategory || "Field"),
       )
-    : filteredHeats?.flatMap((h) =>
-        h.Allocations.sort((a, b) =>
-          sortByResult(a, b, eventCategory || "Field"),
-        ),
-      );
+    : activeHeats
+        ?.flatMap((h) => h?.Allocations ?? [])
+        .slice()
+        .sort((a, b) => sortByResult(a, b, eventCategory || "Field"));
 
   return (
     <Suspense fallback={<Loader2Icon className="animate-spin" />}>
+      {!rounds && (
+        <p className="px-2 py-1 text-yellow-600 text-xl">Round not available</p>
+      )}
+
+      {rounds && selectedHeat && !heatExists && (
+        <p className="px-2 py-1 text-yellow-600 text-xl">
+          Heat {selectedHeat} does not exist
+        </p>
+      )}
       <div className="max-w-xs text-gray-50">
         <div className="w-full max-w-xs border-cyan-300 border-t-2 bg-black/90">
-          <h2 className="px-2 text-cyan-300 uppercase">
-            {athleteData?.Rounds[0]?.Name}
-          </h2>
+          <h2 className="px-2 text-cyan-300 uppercase">{rounds?.Name}</h2>
           <div className="flex justify-between">
             <h3 className="bg-cyan-300 px-2 text-black uppercase">
               {athleteData?.Name}
@@ -106,13 +122,15 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
                     )}
                   >
                     {a.Attempts === null ? (
-                      <p className="opacity-0">no</p>
+                      <p aria-hidden className="invisible">
+                        no
+                      </p>
                     ) : (
                       normalizeAttempts(a.Attempts)?.map((at, index) => (
                         <li
                           className={cn(
-                            a.Result === at.Line1 && "bg-cyan-300/50!",
                             "flex min-w-[16.7%] flex-col px-1 py-2 even:bg-gray-200",
+                            a.Result === at.Line1 && "bg-cyan-300/50!",
                           )}
                           key={`${at.Line1}-${index}`}
                         >
