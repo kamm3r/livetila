@@ -18,8 +18,6 @@ export interface EventRoundsState {
   handleHeatChange: (heatIndex: number) => void;
 }
 
-type RoundParam = "Qualify" | "Final";
-
 function roundParamToIndex(rounds: Round[], param: string | null) {
   if (!param) return null;
 
@@ -30,15 +28,8 @@ function roundParamToIndex(rounds: Round[], param: string | null) {
   })?.Index;
 }
 
-function roundIndexToParam(round: Round): RoundParam | null {
-  switch (round.RoundTypeCategory) {
-    case "Final":
-      return "Final";
-    case "Qualify":
-      return "Qualify";
-    default:
-      return null;
-  }
+function roundIndexToParam(round: Round) {
+  return round.RoundTypeCategory;
 }
 
 export function useEventRounds(rounds: Round[]): EventRoundsState {
