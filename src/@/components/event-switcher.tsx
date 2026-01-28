@@ -16,37 +16,50 @@ interface EventWithDate extends EventList {
   date: string;
 }
 
-function eventNameToRoundCase(name: string) {
-  switch (name) {
-    case "Alkuerät":
-      return "Qualify";
-    case "Loppukilpailu":
-      return "Final";
-    default:
-      return undefined;
+const roundMapping = {
+  Qualify: "Alkuerät",
+  Final: "Loppukilpailu",
+} as const;
+type RoundKey = keyof typeof roundMapping;
+type RoundValue = (typeof roundMapping)[RoundKey];
+
+const statusVariants: Record<EventList["Status"], string> = {
+  Unallocated: "unallocated",
+  Allocated: "allocated",
+  Progress: "progress",
+  Official: "official",
+};
+
+const eventStatusLabel: Record<EventList["Status"], string> = {
+  Unallocated: "Eräjaot puuttuvat",
+  Allocated: "Eräjaot tehty",
+  Progress: "Käynnissä",
+  Official: "Tulokset valmiit",
+};
+
+const eventNameToRoundCase = (name: string): RoundKey | undefined =>
+  Object.entries(roundMapping).find(([, v]) => v === name)?.[0] as
+    | RoundKey
+    | undefined;
+
+const roundParamToEventName = (round: string | null): RoundValue | null =>
+  round && round in roundMapping ? roundMapping[round as RoundKey] : null;
+
+function hasMultipleRoundsForEvent(
+  events: EventWithDate[],
+  eventName: string,
+): boolean {
+  const rounds = new Set<string>();
+  for (const event of events) {
+    if (event.EventName === eventName) {
+      const round = eventNameToRoundCase(event.Name);
+      if (round) {
+        rounds.add(round);
+        if (rounds.size > 1) return true; // Early exit
+      }
+    }
   }
-}
-
-function roundParamToEventName(round: string | null) {
-  switch (round) {
-    case "Qualify":
-      return "Alkuerät";
-    case "Final":
-      return "Loppukilpailu";
-    default:
-      return null;
-  }
-}
-
-function hasMultipleRoundsForEvent(events: EventWithDate[], eventName: string) {
-  const rounds = new Set(
-    events
-      .filter((e) => e.EventName === eventName)
-      .map((e) => eventNameToRoundCase(e.Name))
-      .filter(Boolean),
-  );
-
-  return rounds.size > 1;
+  return false;
 }
 
 function formatTime(date: string): string {
@@ -57,12 +70,6 @@ function formatTime(date: string): string {
 }
 
 function EventDisplay({ event }: { event: EventWithDate }) {
-  const eventStatusLabel: Record<EventList["Status"], string> = {
-    Unallocated: "Eräjaot puuttuvat",
-    Allocated: "Eräjaot tehty",
-    Progress: "Käynnissä",
-    Official: "Tulokset valmiit",
-  };
   const time = formatTime(event.BeginDateTimeWithTZ);
   return (
     <div className="flex w-full items-center justify-between gap-2">
@@ -70,19 +77,7 @@ function EventDisplay({ event }: { event: EventWithDate }) {
         <span>
           {event.EventName} {event.Name}
         </span>
-        <Badge
-          variant={
-            event.Status === "Unallocated"
-              ? "unallocated"
-              : event.Status === "Allocated"
-                ? "allocated"
-                : event.Status === "Progress"
-                  ? "progress"
-                  : event.Status === "Official"
-                    ? "official"
-                    : "default"
-          }
-        >
+        <Badge variant={statusVariants[event.Status] ?? "default"}>
           {eventStatusLabel[event.Status]}
         </Badge>
       </div>
@@ -90,11 +85,11 @@ function EventDisplay({ event }: { event: EventWithDate }) {
       <div className="flex min-w-[90px] flex-col items-end gap-2 text-muted-foreground text-xs">
         <span className="flex items-center gap-1">
           {time}
-          <Clock className="h-3 w-3" />
+          <Clock className="size-3" />
         </span>
         <span className="flex items-center gap-1">
           {event.date}
-          <Calendar className="h-3 w-3" />
+          <Calendar className="size-3" />
         </span>
       </div>
     </div>
@@ -121,33 +116,34 @@ export function EventSwitcher({
   );
   const roundParam = searchParams.get("round");
   const roundName = roundParamToEventName(roundParam);
-  const currentEvent = flattenedEvents.find((e) => {
-    if (e.EventId === Number(currentEventId)) return false;
-    if (roundName) return e.Name === roundName;
-    return true;
-  });
+  const currentEvent = flattenedEvents.find(
+    (e) =>
+      e.EventId === Number(currentEventId) &&
+      (!roundName || e.Name === roundName),
+  );
+  function handleEventSelection(value: EventWithDate | null) {
+    if (!value) return;
+    const params = new URLSearchParams(searchParams.toString());
+    const roundCase = eventNameToRoundCase(value.Name);
+    const hasMultipleRounds = hasMultipleRoundsForEvent(
+      flattenedEvents,
+      value.EventName,
+    );
+
+    if (hasMultipleRounds && roundCase) {
+      params.set("round", roundCase);
+    } else {
+      params.delete("round");
+    }
+    router.push(
+      `/competition/${competitionId}-${value.EventId}?${params.toString()}`,
+    );
+  }
 
   return (
     <Select
-      itemToStringValue={(event) => `${event.EventId}-${event.Name}`}
-      onValueChange={(event) => {
-        const params = new URLSearchParams(searchParams.toString());
-        const roundCase = eventNameToRoundCase(event!.Name);
-        const hasMultipleRounds = hasMultipleRoundsForEvent(
-          flattenedEvents,
-          event!.EventName,
-        );
-
-        if (hasMultipleRounds && roundCase) {
-          params.set("round", roundCase);
-        } else {
-          params.delete("round");
-        }
-        router.push(
-          `/competition/${competitionId}-${event!.EventId}?${params.toString()}`,
-        );
-      }}
-      value={currentEvent}
+      onValueChange={handleEventSelection}
+      value={currentEvent?.EventId ? currentEvent : undefined}
     >
       <SelectTrigger className="!h-auto !items-center !py-2 !px-4 w-full sm:w-[400px]">
         <SelectValue className="w-full">
