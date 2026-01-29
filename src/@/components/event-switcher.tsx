@@ -23,7 +23,10 @@ const roundMapping = {
 type RoundKey = keyof typeof roundMapping;
 type RoundValue = (typeof roundMapping)[RoundKey];
 
-const statusVariants: Record<EventList["Status"], string> = {
+const statusVariants: Record<
+  EventList["Status"],
+  "unallocated" | "allocated" | "progress" | "official" | "default"
+> = {
   Unallocated: "unallocated",
   Allocated: "allocated",
   Progress: "progress",
@@ -63,7 +66,7 @@ function hasMultipleRoundsForEvent(
 }
 
 function formatTime(date: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("fi-FI", {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(date));
