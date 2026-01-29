@@ -9,18 +9,18 @@ export function Embed({ slug }: { slug: string }) {
   const searchParams = useSearchParams();
   const round = searchParams.get("round");
   const [copy, setCopy] = useState(false);
-  const copyUrlToClipboard = (path: string) => {
-    setCopy(true);
+  function copyUrlToClipboard() {
     void navigator.clipboard.writeText(
-      `${window.location.origin}${path}?${!round ? "" : "round=1"}&${round === "Final" ? "" : "heat=1"}`,
+      `${window.location.origin}/obs/${slug}?${!round ? "" : "round=1&"}${round === "Final" ? "" : "heat=1"}`,
     );
-    setTimeout(() => setCopy(false), 1000);
+    setCopy(true);
     toast.info("Linkki kopioitu leikepöydälle");
-  };
+    setTimeout(() => setCopy(false), 1000);
+  }
   return (
     <Button
       className="w-full gap-2 transition-all duration-200 hover:scale-[1.02]"
-      onClick={() => copyUrlToClipboard(`/obs/${slug}`)}
+      onClick={copyUrlToClipboard}
       variant="secondary"
     >
       {copy ? (
