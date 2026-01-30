@@ -23,10 +23,10 @@ export function ObsPopover({ slug }: { slug: string }) {
       <PopoverTrigger className="top-9 right-5 z-50">
         <div className="group/button inline-flex h-8 shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap in-data-[slot=button-group]:rounded-md rounded-[min(var(--radius-md),10px)] border border-border bg-background bg-clip-padding px-2.5 font-medium text-sm shadow-xs outline-none transition-all duration-200 hover:scale-105 hover:border-primary/50 hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-expanded:bg-muted aria-expanded:text-foreground aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 dark:border-input dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 dark:hover:bg-input/50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0">
           <InfoIcon className="h-4 w-4" />
-          OBS Overlay
+          <span className="sr-only sm:not-sr-only">OBS Overlay</span>
         </div>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-96">
+      <PopoverContent align="end" className="w-full max-w-96">
         <PopoverHeader>
           <PopoverTitle>OBS Overlay</PopoverTitle>
           <PopoverDescription>

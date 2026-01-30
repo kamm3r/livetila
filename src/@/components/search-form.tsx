@@ -16,6 +16,7 @@ import type { CompetitionList, Events } from "~/types/comp";
 type EventData = {
   Id: number;
   EventName: string;
+  Name: string;
   Date: string;
   Time: string;
 };
@@ -35,6 +36,7 @@ function extractEvents(data: Events): EventData[] {
       results.push({
         Id: event.EventId,
         EventName: event.EventName,
+        Name: event.Name,
         Date: `${day}.${month}.`,
         Time: `${hours}:${minutes}`,
       });
@@ -228,7 +230,12 @@ export function SearchForm() {
                       value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
                     >
                       <div className="flex w-full items-center justify-between gap-4">
-                        <span className="font-medium">{evt.EventName}</span>
+                        <span className="font-medium">
+                          {evt.EventName}{" "}
+                          <span className="text-muted-foreground">
+                            {evt.Name}
+                          </span>
+                        </span>
                         <div className="flex items-center gap-4 text-muted-foreground">
                           <div className="flex items-center gap-3 text-sm">
                             <div className="flex items-center gap-1.5">

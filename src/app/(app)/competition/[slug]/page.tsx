@@ -50,8 +50,10 @@ export default async function Comp({
               events={compEvents}
             />
           </div>
-          <RoundSwitcher />
-          <ObsPopover slug={slug} />
+          <div className="flex lg:flex-col justify-between flex-1 items-end gap-2">
+            <ObsPopover slug={slug} />
+            <RoundSwitcher />
+          </div>
         </div>
         <Tabs className="mt-2 w-full" defaultValue="participants">
           <TabsList className="mb-2 grid h-auto w-full grid-cols-3">
