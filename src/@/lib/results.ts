@@ -37,13 +37,13 @@ export function formatTrackResult(value: string | null): string | null {
 
 export function parseResult(
   value: string | null,
-  eventCategory: "Track" | "Field",
+  eventCategory: "Track" | "Field" | "Relay",
 ): number {
   if (!value || value === "NM") return 0;
   if (INVALID_RESULTS.includes(value as (typeof INVALID_RESULTS)[number])) {
     return -1;
   }
-  if (eventCategory === "Track") {
+  if (eventCategory === "Track" || eventCategory === "Relay") {
     const finishTime = parseFinishTimeToMs(value);
     if (finishTime === null) return 0;
     return finishTime;
@@ -55,7 +55,7 @@ export function parseResult(
 export function sortByResult<T extends { Result: string | null }>(
   a: T,
   b: T,
-  eventCategory: "Track" | "Field",
+  eventCategory: "Track" | "Field" | "Relay",
 ): number {
   const aResult = parseResult(a.Result, eventCategory);
   const bResult = parseResult(b.Result, eventCategory);

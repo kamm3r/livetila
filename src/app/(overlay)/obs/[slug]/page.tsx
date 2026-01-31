@@ -43,9 +43,21 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
   const searchParams = useSearchParams();
   const selectedHeat = searchParams.get("heat");
   const selectedRound = searchParams.get("round");
-  const obsEvents = api.competition.getEvents.useQuery({
-    compId: compId || "",
-  });
+  const obsEvents = api.competition.getEvents.useQuery(
+    {
+      compId: compId || "",
+    },
+    {
+      refetchInterval: (q) => {
+        const selected = Object.values(q.state.data ?? {})
+          .flat()
+          .find((e) => e.EventId === Number(eventId));
+
+        return selected?.Status === "Progress" ? 1000 : 10_000;
+      },
+      refetchIntervalInBackground: false,
+    },
+  );
   const obsCompetition = api.competition.getCompetitionDetails.useQuery({
     competitionDetailsId: compId || "",
   });
@@ -60,6 +72,7 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
     },
     {
       enabled: !!compId && !!eventId,
+      // TODO: the status changes only when first loading the page or get re-focused
       refetchInterval: selectedEvent?.Status === "Progress" ? 1000 : false,
       refetchIntervalInBackground: false,
       staleTime: selectedEvent?.Status === "Progress" ? 0 : 30_000,
@@ -67,7 +80,7 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
   );
 
   const eventCategory = selectedEvent?.Category;
-  const isTrack = eventCategory === "Track";
+  const isTrack = eventCategory === "Track" || eventCategory === "Relay";
   const athleteData = obsAthletes.data;
 
   const roundIndex = (Number(selectedRound) || 1) - 1;
@@ -145,7 +158,7 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
                     {a.Name}
                     <span className="tabular-nums">{a.Result}</span>
                   </div>
-                  {!isTrack && a.Id && (
+                  {!isTrack && (
                     <ul className="flex ml-1 flex-[1_1_100%] bg-gray-300 text-black">
                       {a.Attempts === null ? (
                         <li aria-hidden className="invisible">

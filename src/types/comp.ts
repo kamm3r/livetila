@@ -34,7 +34,7 @@ export type Events = {
 export type EventList = {
   Id: number;
   BeginDateTimeWithTZ: string;
-  Category: "Track" | "Field";
+  Category: "Track" | "Field" | "Relay";
   SubCategory: string;
   EventId: number;
   EventName: string;
@@ -50,7 +50,7 @@ export type EventList = {
 
 export type Competition = {
   Enrollments: Enrollment[];
-  EventCategory: "Track" | "Field";
+  EventCategory: "Track" | "Field" | "Relay";
   EventSubCategory: string;
   IsCombinedEvent: boolean;
   RootName: string;
