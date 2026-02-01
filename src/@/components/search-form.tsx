@@ -119,18 +119,18 @@ export function SearchForm() {
     }
   }
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  // useEffect(() => {
+  //   function handleClickOutside(event: MouseEvent) {
+  //     if (
+  //       containerRef.current &&
+  //       !containerRef.current.contains(event.target as Node)
+  //     ) {
+  //       setIsOpen(false);
+  //     }
+  //   }
+  //   document.addEventListener("mousedown", handleClickOutside);
+  //   return () => document.removeEventListener("mousedown", handleClickOutside);
+  // }, []);
 
   const showCompetitions = !selectedComp && competitionResults?.length > 0;
   const showEvents = selectedComp && eventResults.length > 0;
@@ -145,7 +145,10 @@ export function SearchForm() {
     isOpen && (showCompetitions || showEvents || showLoading || showEmpty);
 
   return (
-    <div className="relative w-full" ref={containerRef}>
+    <div
+      className="relative w-full"
+      // ref={containerRef}
+    >
       <Command className="overflow-visible bg-transparent" shouldFilter={false}>
         <CommandInput
           className=""
@@ -159,7 +162,7 @@ export function SearchForm() {
               ? `Hae lajeja kilpailusta ${selectedComp.Name}...`
               : "Hae kilpailuja nimellä..."
           }
-          ref={inputRef}
+          // ref={inputRef}
           value={query}
         />
         {showLoading && (

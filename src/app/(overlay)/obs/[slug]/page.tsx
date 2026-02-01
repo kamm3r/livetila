@@ -53,7 +53,7 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
           .flat()
           .find((e) => e.EventId === Number(eventId));
 
-        return selected?.Status === "Progress" ? 1000 : 10_000;
+        return selected?.Status === "Progress" ? 1000 : 30_000;
       },
       refetchIntervalInBackground: false,
     },
@@ -72,7 +72,6 @@ export default function Obs({ params }: { params: Promise<{ slug: string }> }) {
     },
     {
       enabled: !!compId && !!eventId,
-      // TODO: the status changes only when first loading the page or get re-focused
       refetchInterval: selectedEvent?.Status === "Progress" ? 1000 : false,
       refetchIntervalInBackground: false,
       staleTime: selectedEvent?.Status === "Progress" ? 0 : 30_000,
