@@ -75,15 +75,17 @@ function HeatSelector({
       <div className="mb-2 w-full text-muted-foreground text-sm">
         Valitse erä:
       </div>
-      {heats.map((heat) => (
-        <Button
-          key={heat.Index}
-          onClick={() => handleHeatChange(heat.Index)}
-          variant={selectedHeat === heat.Index ? "default" : "outline"}
-        >
-          Erä {heat.Index}
-        </Button>
-      ))}
+      {heats
+        .sort((a, b) => a.Index - b.Index)
+        .map((heat) => (
+          <Button
+            key={heat.Index}
+            onClick={() => handleHeatChange(heat.Index)}
+            variant={selectedHeat === heat.Index ? "default" : "outline"}
+          >
+            Erä {heat.Index}
+          </Button>
+        ))}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 import { Calendar, ChevronRight, Clock, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Command,
   CommandEmpty,
@@ -20,8 +20,6 @@ type EventData = {
   Date: string;
   Time: string;
 };
-
-// TODO: add date/time format function that takes in a date and returns a string
 
 function extractEvents(data: Events): EventData[] {
   const results: EventData[] = [];
@@ -52,16 +50,14 @@ export function SearchForm() {
     null,
   );
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: competitions, isLoading: isLoadingComps } =
     api.competition.getCompetitions.useQuery();
-  const compId = selectedComp?.Id;
   const { data: events, isLoading: isLoadingEvents } =
     api.competition.getEvents.useQuery(
-      { compId: compId?.toString() || "" },
+      { compId: selectedComp?.Id.toString() ?? "" },
       {
-        enabled: !!compId,
+        enabled: !!selectedComp,
       },
     );
 
@@ -91,26 +87,15 @@ export function SearchForm() {
   function handleInputChange(value: string) {
     setIsOpen(true);
     setQuery(value);
-
-    // Reset scope if "/" is removed
     if (selectedComp && !value.includes("/")) {
       setSelectedComp(null);
       setQuery("");
     }
   }
 
-  // old code that used url for comp and event state
-  //  const params = new URLSearchParams(searchParams);
-  //     if (term) {
-  //       params.set("query", term);
-  //     } else {
-  //       params.delete("query");
-  //     }
-
   function handleCompetitionSelect(comp: CompetitionList) {
     setSelectedComp(comp);
     setQuery(`${comp.Name} / `);
-    setTimeout(() => inputRef.current?.focus(), 0);
   }
 
   function handleEventSelect(event: EventData) {
@@ -119,21 +104,21 @@ export function SearchForm() {
     }
   }
 
-  // useEffect(() => {
-  //   function handleClickOutside(event: MouseEvent) {
-  //     if (
-  //       containerRef.current &&
-  //       !containerRef.current.contains(event.target as Node)
-  //     ) {
-  //       setIsOpen(false);
-  //     }
-  //   }
-  //   document.addEventListener("mousedown", handleClickOutside);
-  //   return () => document.removeEventListener("mousedown", handleClickOutside);
-  // }, []);
+  function handleBlur() {
+    blurTimeoutRef.current = setTimeout(() => setIsOpen(false), 150);
+  }
 
-  const showCompetitions = !selectedComp && competitionResults?.length > 0;
-  const showEvents = selectedComp && eventResults.length > 0;
+  function handleFocus() {
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+    }
+    setIsOpen(true);
+  }
+
+  const showCompetitions =
+    !selectedComp && (competitionResults?.length ?? 0) > 0;
+  const showEvents =
+    selectedComp && eventResults.length > 0 && !isLoadingEvents;
   const showLoading = isLoadingComps || isLoadingEvents;
   const showEmpty =
     isOpen &&
@@ -145,24 +130,20 @@ export function SearchForm() {
     isOpen && (showCompetitions || showEvents || showLoading || showEmpty);
 
   return (
-    <div
-      className="relative w-full"
-      // ref={containerRef}
-    >
+    <div className="relative w-full">
       <Command className="overflow-visible bg-transparent" shouldFilter={false}>
         <CommandInput
           className=""
-          onBlur={() => setIsOpen(false)}
-          onChangeCapture={(event) => {
-            handleInputChange(event.currentTarget.value);
-          }}
-          onFocus={() => setIsOpen(true)}
+          onBlur={handleBlur}
+          onChangeCapture={(event) =>
+            handleInputChange(event.currentTarget.value)
+          }
+          onFocus={handleFocus}
           placeholder={
             selectedComp
               ? `Hae lajeja kilpailusta ${selectedComp.Name}...`
               : "Hae kilpailuja nimellä..."
           }
-          // ref={inputRef}
           value={query}
         />
         {showLoading && (
@@ -185,10 +166,7 @@ export function SearchForm() {
                     <CommandItem
                       className="fade-in-0 slide-in-from-left-1 animate-in transition-all duration-120"
                       key={comp.Id}
-                      onMouseDown={(event) => {
-                        event.preventDefault();
-                        handleCompetitionSelect(comp);
-                      }}
+                      onMouseDown={(event) => event.preventDefault()}
                       onSelect={() => handleCompetitionSelect(comp)}
                       style={{ animationDelay: `${index * 20}ms` }}
                       value={`${comp.Name}-${comp.Date}-${comp.Id}`}
