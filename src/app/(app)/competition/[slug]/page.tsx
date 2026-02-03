@@ -22,14 +22,13 @@ export default async function Comp({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const compId = slug?.slice(0, slug.indexOf("-"));
-  const eventId = slug?.slice(slug.indexOf("-") + 1);
-  const compEvents = await api.competition.getEvents({ compId: compId });
+  const [compId, eventId] = slug.split("-", 2);
+  const compEvents = await api.competition.getEvents({ compId: compId || "" });
   const selectedEvent = Object.values(compEvents)
     .flat()
     .find((event) => event.EventId === Number(eventId));
   const compDetails = await api.competition.getCompetitionDetails({
-    competitionDetailsId: compId,
+    competitionDetailsId: compId || "",
   });
   const athletes = await api.competition.getAthletes({
     compId: `${compId}/${eventId}`,
@@ -45,8 +44,8 @@ export default async function Comp({
               {!!compDetails && compDetails.Competition.Name}
             </h2>
             <EventSwitcher
-              competitionId={compId}
-              currentEventId={eventId}
+              competitionId={compId || ""}
+              currentEventId={eventId || ""}
               events={compEvents}
             />
           </div>

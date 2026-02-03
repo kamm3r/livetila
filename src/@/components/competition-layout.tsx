@@ -61,31 +61,29 @@ function NameAndOrg({
   );
 }
 
-function HeatSelector({
-  heats,
-  selectedHeat,
-  handleHeatChange,
-}: {
-  heats: Heat[];
-  selectedHeat: number;
-  handleHeatChange: (heat: number) => void;
-}) {
+function HeatSelector({ children }: { children: React.ReactNode }) {
+  const { heats, selectedHeat, showHeatNumbers, handleHeatChange } = useRound();
   return (
-    <div className="mb-4 flex flex-wrap gap-2">
-      <div className="mb-2 w-full text-muted-foreground text-sm">
-        Valitse erä:
-      </div>
-      {heats
-        .sort((a, b) => a.Index - b.Index)
-        .map((heat) => (
-          <Button
-            key={heat.Index}
-            onClick={() => handleHeatChange(heat.Index)}
-            variant={selectedHeat === heat.Index ? "default" : "outline"}
-          >
-            Erä {heat.Index}
-          </Button>
-        ))}
+    <div className="space-y-6">
+      {showHeatNumbers && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          <div className="mb-2 w-full text-muted-foreground text-sm">
+            Valitse erä:
+          </div>
+          {heats
+            .sort((a, b) => a.Index - b.Index)
+            .map((heat) => (
+              <Button
+                key={heat.Index}
+                onClick={() => handleHeatChange(heat.Index)}
+                variant={selectedHeat === heat.Index ? "default" : "outline"}
+              >
+                Erä {heat.Index}
+              </Button>
+            ))}
+        </div>
+      )}
+      {children}
     </div>
   );
 }
@@ -293,13 +291,7 @@ export function ParticipantLayout({ athletes }: { athletes: Competition }) {
 }
 
 export function ProtocolLayout({ isTrack }: { isTrack: boolean }) {
-  const {
-    currentHeat,
-    selectedHeat,
-    heats,
-    showHeatNumbers,
-    handleHeatChange,
-  } = useRound();
+  const { currentHeat, heats } = useRound();
 
   if (!currentHeat || heats.length === 0) {
     return <EmptyState />;
@@ -307,14 +299,7 @@ export function ProtocolLayout({ isTrack }: { isTrack: boolean }) {
   const allocations = [...currentHeat.Allocations];
 
   return (
-    <div className="space-y-6">
-      {showHeatNumbers && (
-        <HeatSelector
-          handleHeatChange={handleHeatChange}
-          heats={heats}
-          selectedHeat={selectedHeat}
-        />
-      )}
+    <HeatSelector>
       <BaseTable
         columns={[
           {
@@ -333,7 +318,7 @@ export function ProtocolLayout({ isTrack }: { isTrack: boolean }) {
         getTitle={(a) => `${!a.Number ? "" : a.Number} ${a.Name}`}
         renderMeta={(a) => <PersonalBestsMeta pb={a.PB} sb={a.SB} />}
       />
-    </div>
+    </HeatSelector>
   );
 }
 
@@ -352,24 +337,23 @@ export function ResultLayout({
       staleTime: 0,
     },
   );
-  const {
-    currentHeat,
-    currentRound,
-    selectedHeat,
-    heats,
-    showHeatNumbers,
-    handleHeatChange,
-  } = useRound();
+  const { selectedHeat, selectedRound } = useRound();
+
+  const rounds = comp_athletes.data?.Rounds ?? [];
+  const currentRound = rounds[selectedRound];
+  const heats = currentRound?.Heats ?? [];
+  const currentHeat = heats[selectedHeat - 1];
 
   if (!currentHeat || heats.length === 0) {
     return <EmptyState />;
   }
-  const eventCategory = comp_athletes.data?.EventCategory;
+
+  const eventCategory = comp_athletes.data?.EventCategory ?? "Field";
   const allocations = [...currentHeat.Allocations].sort((a, b) =>
-    sortByResult(a, b, eventCategory || "Field"),
+    sortByResult(a, b, eventCategory),
   );
   const totalResults = currentRound?.TotalResults?.slice().sort((a, b) =>
-    sortByResult(a, b, eventCategory || "Field"),
+    sortByResult(a, b, eventCategory),
   );
 
   const resultsColumns = (
@@ -388,14 +372,7 @@ export function ResultLayout({
   ];
 
   return (
-    <div className="space-y-6">
-      {showHeatNumbers && heats.length > 1 && (
-        <HeatSelector
-          handleHeatChange={handleHeatChange}
-          heats={heats}
-          selectedHeat={selectedHeat}
-        />
-      )}
+    <HeatSelector>
       <BaseTable columns={resultsColumns(true)} data={allocations} />
       <MobileList
         data={allocations}
@@ -422,6 +399,6 @@ export function ResultLayout({
           />
         </>
       )}
-    </div>
+    </HeatSelector>
   );
 }
