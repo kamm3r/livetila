@@ -19,33 +19,23 @@ export interface EventRoundsState {
 }
 
 function roundParamToIndex(rounds: Round[], param: string | null) {
-  if (!param) return null;
-
-  return rounds.find((r) => {
-    if (param === "Final") return r.RoundTypeCategory === "Final";
-    if (param === "Qualify") return r.RoundTypeCategory === "Qualify";
-    return false;
-  })?.Index;
+  if (!param || rounds.length === 0) return null;
+  return rounds.find((r) => r.RoundTypeCategory === param)?.Index ?? null;
 }
 
-function roundIndexToParam(round: Round) {
-  return round.RoundTypeCategory;
+function getDefaultRoundIndex(rounds: Round[]) {
+  return rounds.at(-1)?.Index ?? 0;
 }
 
 export function useEventRounds(rounds: Round[]): EventRoundsState {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  const roundFromUrl = roundParamToIndex(rounds, searchParams.get("round"));
-  const initialRoundIndex = useMemo(() => {
-    if (rounds.length === 0) {
-      return 0;
-    }
-    return rounds[rounds.length - 1]?.Index ?? 0;
-  }, [rounds]);
-
-  const [selectedRound, setSelectedRound] = useState<number>(initialRoundIndex);
+  const roundParam = searchParams.get("round");
+  const roundFromUrl = roundParamToIndex(rounds, roundParam);
+  const [selectedRound, setSelectedRound] = useState<number>(
+    () => roundFromUrl ?? getDefaultRoundIndex(rounds),
+  );
   const [selectedHeat, setSelectedHeat] = useState<number>(1);
 
   useEffect(() => {
@@ -57,61 +47,53 @@ export function useEventRounds(rounds: Round[]): EventRoundsState {
     }
   }, [roundFromUrl, rounds, selectedRound]);
 
-  const currentRound = useMemo(
-    () => rounds.find((round) => round.Index === selectedRound) ?? rounds[0],
-    [rounds, selectedRound],
-  );
+  useEffect(() => {
+    if (rounds.length > 0 && selectedRound === 0 && roundFromUrl == null) {
+      const defaultIndex = getDefaultRoundIndex(rounds);
+      setSelectedRound(defaultIndex);
+      setSelectedHeat(
+        rounds.find((r) => r.Index === defaultIndex)?.Heats?.[0]?.Index ?? 1,
+      );
+    }
+  }, [rounds, selectedRound, roundFromUrl]);
+
+  const currentRound =
+    rounds.find((round) => round.Index === selectedRound) ?? rounds[0];
 
   const heats = currentRound?.Heats ?? [];
 
-  const currentHeat = useMemo(
-    () => heats.find((heat) => heat.Index === selectedHeat) ?? heats[0],
-    [heats, selectedHeat],
-  );
+  const currentHeat =
+    heats.find((heat) => heat.Index === selectedHeat) ?? heats[0];
 
   const showHeatNumbers = heats.length >= 2;
 
-  const availableRounds = useMemo(
-    () => rounds.map((round) => round.Index),
-    [rounds],
-  );
+  const availableRounds = rounds.map((round) => round.Index);
 
-  const availableHeats = useMemo(
-    () => heats.map((heat) => heat.Index),
-    [heats],
-  );
+  const availableHeats = heats.map((heat) => heat.Index);
 
-  const handleRoundChange = useCallback(
-    (roundIndex: number) => {
-      const round = rounds.find((r) => r.Index === roundIndex);
-      if (!round) return;
+  function handleRoundChange(roundIndex: number) {
+    const round = rounds.find((r) => r.Index === roundIndex);
+    if (!round) return;
 
-      const param = roundIndexToParam(round);
-      const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams.toString());
+    const param = round.RoundTypeCategory;
 
-      if (param) {
-        params.set("round", param);
-      } else {
-        params.delete("round");
-      }
+    if (param) {
+      params.set("round", param);
+    } else {
+      params.delete("round");
+    }
 
-      router.replace(`${pathname}?${params.toString()}`, {
-        scroll: false,
-      });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    setSelectedRound(roundIndex);
+    setSelectedHeat(round?.Heats?.[0]?.Index ?? 1);
+  }
 
-      setSelectedRound(roundIndex);
-      setSelectedHeat(round?.Heats?.[0]?.Index ?? 1);
-    },
-    [rounds, pathname, router, searchParams],
-  );
-
-  const handleHeatChange = useCallback(
-    (heatIndex: number) => {
-      if (!heats.some((heat) => heat.Index === heatIndex)) return;
+  function handleHeatChange(heatIndex: number) {
+    if (heats.some((heat) => heat.Index === heatIndex)) {
       setSelectedHeat(heatIndex);
-    },
-    [heats],
-  );
+    }
+  }
 
   return {
     selectedRound,

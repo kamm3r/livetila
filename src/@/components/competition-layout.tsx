@@ -1,7 +1,9 @@
 "use client";
 import { CheckCircle } from "lucide-react";
+import type React from "react";
 import { useRound } from "~/@/components/round-provider";
 import { Button } from "~/@/components/ui/button";
+import { Skeleton } from "~/@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -157,7 +159,7 @@ function BaseMobileCard({
   meta,
 }: {
   highlight?: boolean;
-  title: string;
+  title: React.ReactNode;
   subtitle?: string;
   meta?: React.ReactNode; //TODO: better name
 }) {
@@ -196,7 +198,7 @@ function PersonalBestsMeta({
 
 interface MobileListProps<T extends AthleteRow> {
   data: T[];
-  getTitle: (item: T) => string;
+  getTitle: (item: T) => React.ReactNode;
   renderMeta?: (item: T) => React.ReactNode;
   isHighlighted?: (item: T) => boolean;
 }
@@ -245,6 +247,46 @@ const sbColumn = <T extends { SB?: string | null }>(): Column<T> => ({
   header: "SB",
   cell: (row) => <span className="font-medium">{row.SB || "-"}</span>,
 });
+
+function LoadingState() {
+  const skeletonData = Array.from({ length: 6 }, (_, i) => ({ Id: i }));
+
+  const skeletonColumns: Column<{ Id: number }>[] = [
+    {
+      header: <Skeleton className="h-4 w-6" />,
+      className: "w-[100px]",
+      cell: () => <Skeleton className="h-4 w-6" />,
+    },
+    {
+      header: <Skeleton className="h-4 w-32" />,
+      className: "w-full",
+      cell: () => (
+        <div className="flex flex-col gap-1">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+      ),
+    },
+    {
+      header: <Skeleton className="ml-auto h-4 w-12" />,
+      cell: () => <Skeleton className="ml-auto h-4 w-12" />,
+    },
+  ];
+  return (
+    <>
+      <BaseTable columns={skeletonColumns} data={skeletonData} />
+      <ul className="flex flex-col gap-4 lg:hidden">
+        {skeletonData.map((_, i) => (
+          <BaseMobileCard
+            key={i}
+            title={<Skeleton className="h-4 w-32" />}
+            meta={<Skeleton className="h-4 w-16" />}
+          />
+        ))}
+      </ul>
+    </>
+  );
+}
 
 function EmptyState() {
   return (
@@ -339,10 +381,14 @@ export function ResultLayout({
   );
   const { selectedHeat, selectedRound } = useRound();
 
+  if (comp_athletes.isLoading) {
+    return <LoadingState />;
+  }
+
   const rounds = comp_athletes.data?.Rounds ?? [];
-  const currentRound = rounds[selectedRound];
+  const currentRound = rounds.find((r) => r.Index === selectedRound);
   const heats = currentRound?.Heats ?? [];
-  const currentHeat = heats[selectedHeat - 1];
+  const currentHeat = heats.find((h) => h.Index === selectedHeat);
 
   if (!currentHeat || heats.length === 0) {
     return <EmptyState />;
