@@ -1,4 +1,5 @@
 import { ClipboardList, Trophy, Users } from "lucide-react";
+import { notFound } from "next/navigation";
 import {
   ParticipantLayout,
   ProtocolLayout,
@@ -22,18 +23,20 @@ export default async function Comp({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const compId = slug?.slice(0, slug.indexOf("-"));
-  const eventId = slug?.slice(slug.indexOf("-") + 1);
-  const compEvents = await api.competition.getEvents({ compId: compId });
-  const selectedEvent = Object.values(compEvents)
-    .flat()
-    .find((event) => event.EventId === Number(eventId));
-  const compDetails = await api.competition.getCompetitionDetails({
-    competitionDetailsId: compId,
-  });
-  const athletes = await api.competition.getAthletes({
-    compId: `${compId}/${eventId}`,
-  });
+  const [compId, eventId] = slug.split("-", 2);
+  if (!compId || !eventId) {
+    notFound();
+  }
+  const [compEvents, compDetails, athletes] = await Promise.all([
+    api.competition.getEvents({ compId }),
+    api.competition.getCompetitionDetails({ competitionDetailsId: compId }),
+    api.competition.getAthletes({ compId: `${compId}/${eventId}` }),
+  ]);
+  const selectedEvent = compEvents
+    ? Object.values(compEvents)
+        .flat()
+        .find((event) => event.EventId === Number(eventId))
+    : undefined;
 
   const isTrack = selectedEvent?.Category === "Track";
   return (
