@@ -44,6 +44,27 @@ function extractEvents(data: Events): EventData[] {
   return results;
 }
 
+const listVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.04,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: -6 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.25,
+      ease: [0.22, 1, 0.36, 1], // Apple-like cubic bezier
+    },
+  },
+};
+
 export function SearchForm() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -133,143 +154,164 @@ export function SearchForm() {
   return (
     <div className="relative w-full">
       <Command className="overflow-visible bg-transparent" shouldFilter={false}>
-        <CommandInput
-          className=""
-          onBlur={handleBlur}
-          onChangeCapture={(event) =>
-            handleInputChange(event.currentTarget.value)
-          }
-          onFocus={handleFocus}
-          placeholder={
-            selectedComp
-              ? `Hae lajeja kilpailusta ${selectedComp.Name}...`
-              : "Hae kilpailuja nimellä..."
-          }
-          value={query}
-        />
-        {showLoading && (
-          <Loader2 className="absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />
-        )}
-        <AnimatePresence mode="wait">
-          {showDropdown && (
-            <motion.div
-              initial={{ y: -32, opacity: 0, filter: "blur(4px)" }}
-              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-              transition={{ type: "spring", duration: 0.4, bounce: 0 }}
-              className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-xl border-2 border-border bg-card shadow-xl"
-            >
-              <CommandList className="max-h-80">
-                <AnimatePresence>
-                  {showEmpty && (
-                    <motion.div
-                      initial={{ opacity: 0, x: -25 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 25 }}
-                      transition={{
-                        type: "spring",
-                        duration: 0.4,
-                        bounce: 0,
-                      }}
-                    >
-                      <CommandEmpty className="py-6 text-center text-muted-foreground text-sm">
-                        {selectedComp
-                          ? "Ei lajeja löytynyt"
-                          : "Ei kilpailuja löytynyt"}
-                      </CommandEmpty>
-                    </motion.div>
-                  )}
-                  {showCompetitions && (
-                    <CommandGroup heading="Kilpailut">
-                      {competitionResults?.slice(0, 10).map((comp, index) => (
-                        <motion.div
-                          key={comp.Id}
-                          initial={{ opacity: 0, x: -25 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 25 }}
-                          transition={{
-                            type: "spring",
-                            duration: 0.4,
-                            bounce: 0,
-                          }}
-                        >
-                          <CommandItem
-                            className=""
-                            key={comp.Id}
-                            onMouseDown={(event) => event.preventDefault()}
-                            onSelect={() => handleCompetitionSelect(comp)}
-                            style={{ animationDelay: `${index * 20}ms` }}
-                            value={`${comp.Name}-${comp.Date}-${comp.Id}`}
-                          >
-                            <div className="flex flex-1 items-center justify-between">
-                              <span className="font-medium">{comp.Name}</span>
-                              <div className="flex items-center gap-4 text-muted-foreground">
-                                <div className="flex items-center gap-1.5 text-sm">
-                                  <Calendar className="h-3.5 w-3.5" />
-                                  <span>
-                                    {new Date(comp.Date).getDate()}.
-                                    {new Date(comp.Date).getMonth() + 1}.
-                                  </span>
-                                </div>
-                                <ChevronRight className="h-4 w-4 transition-transform duration-200 ease-out group-data-[selected=true]:translate-x-0.5" />
-                              </div>
-                            </div>
-                          </CommandItem>
-                        </motion.div>
-                      ))}
-                    </CommandGroup>
-                  )}
-                  {isLoadingEvents && (
-                    <div className="fade-in-0 animate-in px-4 py-6 text-center duration-200">
-                      <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-                      <p className="mt-2 text-muted-foreground text-sm">
-                        Ladataan lajeja...
-                      </p>
-                    </div>
-                  )}
-                  {showEvents && (
-                    <CommandGroup heading="Lajit">
-                      {eventResults.slice(0, 15).map((evt, index) => (
-                        <CommandItem
-                          className=""
-                          key={`${evt.Id}-${evt.Date}-${evt.Time}`}
-                          onMouseDown={(event) => {
-                            event.preventDefault();
-                            handleEventSelect(evt);
-                          }}
-                          onSelect={() => handleEventSelect(evt)}
-                          style={{ animationDelay: `${index * 20}ms` }}
-                          value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
-                        >
-                          <div className="flex w-full items-center justify-between gap-4">
-                            <span className="font-medium">
-                              {evt.EventName}{" "}
-                              <span className="text-muted-foreground">
-                                {evt.Name}
-                              </span>
-                            </span>
-                            <div className="flex items-center gap-4 text-muted-foreground">
-                              <div className="flex items-center gap-3 text-sm">
-                                <div className="flex items-center gap-1.5">
-                                  <Clock className="h-3 w-3" />
-                                  <span>{evt.Time}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <Calendar className="h-3 w-3" />
-                                  <span>{evt.Date}</span>
-                                </div>
-                              </div>
-                              <ChevronRight className="h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
-                            </div>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
-                </AnimatePresence>
-              </CommandList>
-            </motion.div>
+        <motion.div
+          layout
+          transition={{
+            type: "spring",
+            stiffness: 170,
+            damping: 26,
+            mass: 1,
+          }}
+          animate={{
+            borderRadius: showDropdown ? 18 : 14,
+            boxShadow: showDropdown
+              ? "0px 12px 40px rgba(0,0,0,0.12)"
+              : "0px 0px 0px rgba(0,0,0,0)",
+          }}
+          className="relative border-2 border-border bg-card p-1"
+        >
+          <CommandInput
+            className=""
+            onBlur={handleBlur}
+            onChangeCapture={(event) =>
+              handleInputChange(event.currentTarget.value)
+            }
+            onFocus={handleFocus}
+            placeholder={
+              selectedComp
+                ? `Hae lajeja kilpailusta ${selectedComp.Name}...`
+                : "Hae kilpailuja nimellä..."
+            }
+            value={query}
+          />
+          {showLoading && (
+            <Loader2 className="absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />
           )}
-        </AnimatePresence>
+          <AnimatePresence mode="wait">
+            {showDropdown && (
+              <motion.div
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ opacity: { duration: 0.2 } }}
+                className="overflow-hidden"
+                // className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-xl border-2 border-border bg-card shadow-xl"
+              >
+                <motion.div
+                  variants={listVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <CommandList className="max-h-80">
+                    <AnimatePresence>
+                      {showEmpty && (
+                        <motion.div variants={itemVariants} layout>
+                          <CommandEmpty className="py-6 text-center text-muted-foreground text-sm">
+                            {selectedComp
+                              ? "Ei lajeja löytynyt"
+                              : "Ei kilpailuja löytynyt"}
+                          </CommandEmpty>
+                        </motion.div>
+                      )}
+                      {showCompetitions && (
+                        <CommandGroup heading="Kilpailut">
+                          {competitionResults
+                            ?.slice(0, 10)
+                            .map((comp, index) => (
+                              <motion.div
+                                key={comp.Id}
+                                variants={itemVariants}
+                                layout
+                              >
+                                <CommandItem
+                                  className=""
+                                  key={comp.Id}
+                                  onMouseDown={(event) =>
+                                    event.preventDefault()
+                                  }
+                                  onSelect={() => handleCompetitionSelect(comp)}
+                                  value={`${comp.Name}-${comp.Date}-${comp.Id}`}
+                                >
+                                  <div className="flex flex-1 items-center justify-between">
+                                    <span className="font-medium">
+                                      {comp.Name}
+                                    </span>
+                                    <div className="flex items-center gap-4 text-muted-foreground">
+                                      <div className="flex items-center gap-1.5 text-sm">
+                                        <Calendar className="h-3.5 w-3.5" />
+                                        <span>
+                                          {new Date(comp.Date).getDate()}.
+                                          {new Date(comp.Date).getMonth() + 1}.
+                                        </span>
+                                      </div>
+                                      <ChevronRight className="h-4 w-4 transition-transform duration-200 ease-out group-data-[selected=true]:translate-x-0.5" />
+                                    </div>
+                                  </div>
+                                </CommandItem>
+                              </motion.div>
+                            ))}
+                        </CommandGroup>
+                      )}
+                      {isLoadingEvents && (
+                        <div className="fade-in-0 animate-in px-4 py-6 text-center duration-200">
+                          <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+                          <p className="mt-2 text-muted-foreground text-sm">
+                            Ladataan lajeja...
+                          </p>
+                        </div>
+                      )}
+                      {showEvents && (
+                        <CommandGroup heading="Lajit">
+                          {eventResults.slice(0, 15).map((evt, index) => (
+                            <motion.div
+                              key={`${evt.Id}-${evt.Date}-${evt.Time}`}
+                              variants={itemVariants}
+                              layout
+                            >
+                              <CommandItem
+                                className=""
+                                key={`${evt.Id}-${evt.Date}-${evt.Time}`}
+                                onMouseDown={(event) => {
+                                  event.preventDefault();
+                                  handleEventSelect(evt);
+                                }}
+                                onSelect={() => handleEventSelect(evt)}
+                                value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
+                              >
+                                <div className="flex w-full items-center justify-between gap-4">
+                                  <span className="font-medium">
+                                    {evt.EventName}{" "}
+                                    <span className="text-muted-foreground">
+                                      {evt.Name}
+                                    </span>
+                                  </span>
+                                  <div className="flex items-center gap-4 text-muted-foreground">
+                                    <div className="flex items-center gap-3 text-sm">
+                                      <div className="flex items-center gap-1.5">
+                                        <Clock className="h-3 w-3" />
+                                        <span>{evt.Time}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1.5">
+                                        <Calendar className="h-3 w-3" />
+                                        <span>{evt.Date}</span>
+                                      </div>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
+                                  </div>
+                                </div>
+                              </CommandItem>
+                            </motion.div>
+                          ))}
+                        </CommandGroup>
+                      )}
+                    </AnimatePresence>
+                  </CommandList>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </Command>
     </div>
   );
