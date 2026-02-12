@@ -1,4 +1,5 @@
 "use client";
+
 import { Calendar, ChevronRight, Clock, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
@@ -27,7 +28,6 @@ function extractEvents(data: Events): EventData[] {
   for (const dateKey of Object.keys(data)) {
     data[dateKey as keyof Events].forEach((event) => {
       const compDate = new Date(event.BeginDateTimeWithTZ);
-      // const year = compDate.getFullYear(); // this is in case it's needed
       const month = String(compDate.getMonth() + 1).padStart(2, "0");
       const day = String(compDate.getDate()).padStart(2, "0");
       const hours = String(compDate.getHours()).padStart(2, "0");
@@ -44,23 +44,18 @@ function extractEvents(data: Events): EventData[] {
   return results;
 }
 
+const smoothSpring = {
+  type: "spring",
+  stiffness: 170,
+  damping: 26,
+  mass: 1,
+};
+
 const listVariants = {
   hidden: {},
   visible: {
     transition: {
       staggerChildren: 0.04,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: -6 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.25,
-      ease: [0.22, 1, 0.36, 1], // Apple-like cubic bezier
     },
   },
 };
@@ -73,14 +68,13 @@ export function SearchForm() {
   );
   const [isOpen, setIsOpen] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const { data: competitions, isLoading: isLoadingComps } =
     api.competition.getCompetitions.useQuery();
   const { data: events, isLoading: isLoadingEvents } =
     api.competition.getEvents.useQuery(
       { compId: selectedComp?.Id.toString() ?? "" },
-      {
-        enabled: !!selectedComp,
-      },
+      { enabled: !!selectedComp },
     );
 
   const competitionResults =
@@ -155,157 +149,165 @@ export function SearchForm() {
     <div className="relative w-full">
       <Command className="overflow-visible bg-transparent" shouldFilter={false}>
         <motion.div
-          layout
-          transition={{
-            type: "spring",
-            stiffness: 170,
-            damping: 26,
-            mass: 1,
-          }}
+          layout="size"
+          transition={smoothSpring}
           animate={{
             borderRadius: showDropdown ? 18 : 14,
             boxShadow: showDropdown
               ? "0px 12px 40px rgba(0,0,0,0.12)"
               : "0px 0px 0px rgba(0,0,0,0)",
           }}
-          className="relative border-2 border-border bg-card p-1"
+          className="relative border-2 border-border bg-card"
         >
-          <CommandInput
-            className=""
-            onBlur={handleBlur}
-            onChangeCapture={(event) =>
-              handleInputChange(event.currentTarget.value)
-            }
-            onFocus={handleFocus}
-            placeholder={
-              selectedComp
-                ? `Hae lajeja kilpailusta ${selectedComp.Name}...`
-                : "Hae kilpailuja nimellä..."
-            }
-            value={query}
-          />
-          {showLoading && (
-            <Loader2 className="absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />
-          )}
-          <AnimatePresence mode="wait">
+          {/* Input Section */}
+          <div className="relative z-10">
+            <CommandInput
+              className="border-0 focus:ring-0 focus:outline-none"
+              onBlur={handleBlur}
+              onChangeCapture={(event) =>
+                handleInputChange(event.currentTarget.value)
+              }
+              onFocus={handleFocus}
+              placeholder={
+                selectedComp
+                  ? `Hae lajeja kilpailusta ${selectedComp.Name}...`
+                  : "Hae kilpailuja nimellä..."
+              }
+              value={query}
+            />
+            {showLoading && (
+              <Loader2 className="absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />
+            )}
+          </div>
+
+          {/* Divider */}
+          <AnimatePresence>
             {showDropdown && (
               <motion.div
-                layout
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ opacity: { duration: 0.2 } }}
+                transition={{ duration: 0.2 }}
+                className="mx-3 border-b border-border"
+              />
+            )}
+          </AnimatePresence>
+
+          {/* List Section */}
+          <AnimatePresence mode="wait">
+            {showDropdown && (
+              <motion.div
+                key={selectedComp ? "events-list" : "competitions-list"}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
                 className="overflow-hidden"
-                // className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-xl border-2 border-border bg-card shadow-xl"
               >
                 <motion.div
                   variants={listVariants}
                   initial="hidden"
                   animate="visible"
+                  className="p-1 pt-0"
                 >
-                  <CommandList className="max-h-80">
-                    <AnimatePresence>
-                      {showEmpty && (
-                        <motion.div variants={itemVariants} layout>
-                          <CommandEmpty className="py-6 text-center text-muted-foreground text-sm">
-                            {selectedComp
-                              ? "Ei lajeja löytynyt"
-                              : "Ei kilpailuja löytynyt"}
-                          </CommandEmpty>
-                        </motion.div>
-                      )}
-                      {showCompetitions && (
-                        <CommandGroup heading="Kilpailut">
-                          {competitionResults
-                            ?.slice(0, 10)
-                            .map((comp, index) => (
-                              <motion.div
-                                key={comp.Id}
-                                variants={itemVariants}
-                                layout
-                              >
-                                <CommandItem
-                                  className=""
-                                  key={comp.Id}
-                                  onMouseDown={(event) =>
-                                    event.preventDefault()
-                                  }
-                                  onSelect={() => handleCompetitionSelect(comp)}
-                                  value={`${comp.Name}-${comp.Date}-${comp.Id}`}
-                                >
-                                  <div className="flex flex-1 items-center justify-between">
-                                    <span className="font-medium">
-                                      {comp.Name}
-                                    </span>
-                                    <div className="flex items-center gap-4 text-muted-foreground">
-                                      <div className="flex items-center gap-1.5 text-sm">
-                                        <Calendar className="h-3.5 w-3.5" />
-                                        <span>
-                                          {new Date(comp.Date).getDate()}.
-                                          {new Date(comp.Date).getMonth() + 1}.
-                                        </span>
-                                      </div>
-                                      <ChevronRight className="h-4 w-4 transition-transform duration-200 ease-out group-data-[selected=true]:translate-x-0.5" />
-                                    </div>
-                                  </div>
-                                </CommandItem>
-                              </motion.div>
-                            ))}
-                        </CommandGroup>
-                      )}
-                      {isLoadingEvents && (
-                        <div className="fade-in-0 animate-in px-4 py-6 text-center duration-200">
-                          <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
-                          <p className="mt-2 text-muted-foreground text-sm">
-                            Ladataan lajeja...
-                          </p>
-                        </div>
-                      )}
-                      {showEvents && (
-                        <CommandGroup heading="Lajit">
-                          {eventResults.slice(0, 15).map((evt, index) => (
-                            <motion.div
-                              key={`${evt.Id}-${evt.Date}-${evt.Time}`}
-                              variants={itemVariants}
-                              layout
+                  {/* 
+                    FIX: Added overflow-y-auto to handle scrolling natively.
+                    Removed layout from items below to prevent height animation bugs.
+                  */}
+                  <CommandList className="max-h-80 overflow-y-auto">
+                    {showEmpty && (
+                      <motion.div>
+                        <CommandEmpty className="py-6 text-center text-muted-foreground text-sm">
+                          {selectedComp
+                            ? "Ei lajeja löytynyt"
+                            : "Ei kilpailuja löytynyt"}
+                        </CommandEmpty>
+                      </motion.div>
+                    )}
+
+                    {showCompetitions && (
+                      <CommandGroup heading="Kilpailut">
+                        {competitionResults?.slice(0, 10).map((comp) => (
+                          <motion.div
+                            key={comp.Id}
+
+                            // FIX: Removed 'layout' prop here
+                          >
+                            <CommandItem
+                              onMouseDown={(event) => event.preventDefault()}
+                              onSelect={() => handleCompetitionSelect(comp)}
+                              value={`${comp.Name}-${comp.Date}-${comp.Id}`}
                             >
-                              <CommandItem
-                                className=""
-                                key={`${evt.Id}-${evt.Date}-${evt.Time}`}
-                                onMouseDown={(event) => {
-                                  event.preventDefault();
-                                  handleEventSelect(evt);
-                                }}
-                                onSelect={() => handleEventSelect(evt)}
-                                value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
-                              >
-                                <div className="flex w-full items-center justify-between gap-4">
-                                  <span className="font-medium">
-                                    {evt.EventName}{" "}
-                                    <span className="text-muted-foreground">
-                                      {evt.Name}
+                              <div className="flex flex-1 items-center justify-between">
+                                <span className="font-medium">{comp.Name}</span>
+                                <div className="flex items-center gap-4 text-muted-foreground">
+                                  <div className="flex items-center gap-1.5 text-sm">
+                                    <Calendar className="h-3.5 w-3.5" />
+                                    <span>
+                                      {new Date(comp.Date).getDate()}.{" "}
+                                      {new Date(comp.Date).getMonth() + 1}.
                                     </span>
-                                  </span>
-                                  <div className="flex items-center gap-4 text-muted-foreground">
-                                    <div className="flex items-center gap-3 text-sm">
-                                      <div className="flex items-center gap-1.5">
-                                        <Clock className="h-3 w-3" />
-                                        <span>{evt.Time}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1.5">
-                                        <Calendar className="h-3 w-3" />
-                                        <span>{evt.Date}</span>
-                                      </div>
-                                    </div>
-                                    <ChevronRight className="h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
                                   </div>
+                                  <ChevronRight className="h-4 w-4 transition-transform duration-200 ease-out group-data-[selected=true]:translate-x-0.5" />
                                 </div>
-                              </CommandItem>
-                            </motion.div>
-                          ))}
-                        </CommandGroup>
-                      )}
-                    </AnimatePresence>
+                              </div>
+                            </CommandItem>
+                          </motion.div>
+                        ))}
+                      </CommandGroup>
+                    )}
+
+                    {isLoadingEvents && (
+                      <motion.div className="px-4 py-6 text-center">
+                        <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
+                        <p className="mt-2 text-muted-foreground text-sm">
+                          Ladataan lajeja...
+                        </p>
+                      </motion.div>
+                    )}
+
+                    {showEvents && (
+                      <CommandGroup heading="Lajit">
+                        {eventResults.slice(0, 15).map((evt) => (
+                          <motion.div
+                            key={`${evt.Id}-${evt.Date}-${evt.Time}`}
+
+                            // FIX: Removed 'layout' prop here
+                          >
+                            <CommandItem
+                              onMouseDown={(event) => {
+                                event.preventDefault();
+                                handleEventSelect(evt);
+                              }}
+                              onSelect={() => handleEventSelect(evt)}
+                              value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
+                            >
+                              <div className="flex w-full items-center justify-between gap-4">
+                                <span className="font-medium">
+                                  {evt.EventName}{" "}
+                                  <span className="text-muted-foreground">
+                                    {evt.Name}
+                                  </span>
+                                </span>
+                                <div className="flex items-center gap-4 text-muted-foreground">
+                                  <div className="flex items-center gap-3 text-sm">
+                                    <div className="flex items-center gap-1.5">
+                                      <Clock className="h-3 w-3" />
+                                      <span>{evt.Time}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>{evt.Date}</span>
+                                    </div>
+                                  </div>
+                                  <ChevronRight className="h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
+                                </div>
+                              </div>
+                            </CommandItem>
+                          </motion.div>
+                        ))}
+                      </CommandGroup>
+                    )}
                   </CommandList>
                 </motion.div>
               </motion.div>
