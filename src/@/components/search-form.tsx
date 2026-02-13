@@ -44,20 +44,12 @@ function extractEvents(data: Events): EventData[] {
   return results;
 }
 
+// Spring config for the container morph
 const smoothSpring = {
   type: "spring",
   stiffness: 170,
   damping: 26,
   mass: 1,
-};
-
-const listVariants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.04,
-    },
-  },
 };
 
 export function SearchForm() {
@@ -149,7 +141,7 @@ export function SearchForm() {
     <div className="relative w-full">
       <Command className="overflow-visible bg-transparent" shouldFilter={false}>
         <motion.div
-          layout="size"
+          layout="position"
           transition={smoothSpring}
           animate={{
             borderRadius: showDropdown ? 18 : 14,
@@ -204,112 +196,95 @@ export function SearchForm() {
                 transition={{ duration: 0.15 }}
                 className="overflow-hidden"
               >
-                <motion.div
-                  variants={listVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="p-1 pt-0"
-                >
+                <div className="p-1 pt-0">
                   {/* 
-                    FIX: Added overflow-y-auto to handle scrolling natively.
-                    Removed layout from items below to prevent height animation bugs.
+                    Removed motion variants from items to fix UI layout issues.
+                    Items now render naturally without animation interference.
                   */}
                   <CommandList className="max-h-80 overflow-y-auto">
                     {showEmpty && (
-                      <motion.div>
-                        <CommandEmpty className="py-6 text-center text-muted-foreground text-sm">
-                          {selectedComp
-                            ? "Ei lajeja löytynyt"
-                            : "Ei kilpailuja löytynyt"}
-                        </CommandEmpty>
-                      </motion.div>
+                      <CommandEmpty className="py-6 text-center text-muted-foreground text-sm">
+                        {selectedComp
+                          ? "Ei lajeja löytynyt"
+                          : "Ei kilpailuja löytynyt"}
+                      </CommandEmpty>
                     )}
 
                     {showCompetitions && (
                       <CommandGroup heading="Kilpailut">
                         {competitionResults?.slice(0, 10).map((comp) => (
-                          <motion.div
+                          <CommandItem
                             key={comp.Id}
-
-                            // FIX: Removed 'layout' prop here
+                            onMouseDown={(event) => event.preventDefault()}
+                            onSelect={() => handleCompetitionSelect(comp)}
+                            value={`${comp.Name}-${comp.Date}-${comp.Id}`}
                           >
-                            <CommandItem
-                              onMouseDown={(event) => event.preventDefault()}
-                              onSelect={() => handleCompetitionSelect(comp)}
-                              value={`${comp.Name}-${comp.Date}-${comp.Id}`}
-                            >
-                              <div className="flex flex-1 items-center justify-between">
-                                <span className="font-medium">{comp.Name}</span>
-                                <div className="flex items-center gap-4 text-muted-foreground">
-                                  <div className="flex items-center gap-1.5 text-sm">
-                                    <Calendar className="h-3.5 w-3.5" />
-                                    <span>
-                                      {new Date(comp.Date).getDate()}.{" "}
-                                      {new Date(comp.Date).getMonth() + 1}.
-                                    </span>
-                                  </div>
-                                  <ChevronRight className="h-4 w-4 transition-transform duration-200 ease-out group-data-[selected=true]:translate-x-0.5" />
+                            <div className="flex flex-1 items-center justify-between">
+                              <span className="font-medium">{comp.Name}</span>
+                              <div className="flex items-center gap-4 text-muted-foreground">
+                                <div className="flex items-center gap-1.5 text-sm">
+                                  <Calendar className="h-3.5 w-3.5" />
+                                  <span>
+                                    {new Date(comp.Date).getDate()}.{" "}
+                                    {new Date(comp.Date).getMonth() + 1}.
+                                  </span>
                                 </div>
+                                <ChevronRight className="h-4 w-4 transition-transform duration-200 ease-out group-data-[selected=true]:translate-x-0.5" />
                               </div>
-                            </CommandItem>
-                          </motion.div>
+                            </div>
+                          </CommandItem>
                         ))}
                       </CommandGroup>
                     )}
 
                     {isLoadingEvents && (
-                      <motion.div className="px-4 py-6 text-center">
+                      <div className="px-4 py-6 text-center">
                         <Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
                         <p className="mt-2 text-muted-foreground text-sm">
                           Ladataan lajeja...
                         </p>
-                      </motion.div>
+                      </div>
                     )}
 
                     {showEvents && (
                       <CommandGroup heading="Lajit">
                         {eventResults.slice(0, 15).map((evt) => (
-                          <motion.div
+                          <CommandItem
                             key={`${evt.Id}-${evt.Date}-${evt.Time}`}
-
-                            // FIX: Removed 'layout' prop here
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              handleEventSelect(evt);
+                            }}
+                            onSelect={() => handleEventSelect(evt)}
+                            value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
                           >
-                            <CommandItem
-                              onMouseDown={(event) => {
-                                event.preventDefault();
-                                handleEventSelect(evt);
-                              }}
-                              onSelect={() => handleEventSelect(evt)}
-                              value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
-                            >
-                              <div className="flex w-full items-center justify-between gap-4">
-                                <span className="font-medium">
-                                  {evt.EventName}{" "}
-                                  <span className="text-muted-foreground">
-                                    {evt.Name}
-                                  </span>
+                            <div className="flex w-full items-center justify-between gap-4">
+                              <span className="font-medium">
+                                {evt.EventName}{" "}
+                                <span className="text-muted-foreground">
+                                  {evt.Name}
                                 </span>
-                                <div className="flex items-center gap-4 text-muted-foreground">
-                                  <div className="flex items-center gap-3 text-sm">
-                                    <div className="flex items-center gap-1.5">
-                                      <Clock className="h-3 w-3" />
-                                      <span>{evt.Time}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                      <Calendar className="h-3 w-3" />
-                                      <span>{evt.Date}</span>
-                                    </div>
+                              </span>
+                              <div className="flex items-center gap-4 text-muted-foreground">
+                                <div className="flex items-center gap-3 text-sm">
+                                  <div className="flex items-center gap-1.5">
+                                    <Clock className="h-3 w-3" />
+                                    <span>{evt.Time}</span>
                                   </div>
-                                  <ChevronRight className="h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
+                                  <div className="flex items-center gap-1.5">
+                                    <Calendar className="h-3 w-3" />
+                                    <span>{evt.Date}</span>
+                                  </div>
                                 </div>
+                                <ChevronRight className="h-4 w-4 transition-transform duration-150 group-data-[selected=true]:translate-x-0.5" />
                               </div>
-                            </CommandItem>
-                          </motion.div>
+                            </div>
+                          </CommandItem>
                         ))}
                       </CommandGroup>
                     )}
                   </CommandList>
-                </motion.div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
