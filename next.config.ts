@@ -7,9 +7,6 @@ import "./src/env";
 
 const config: NextConfig = {
 	// reactCompiler: true,
-	typescript: {
-		ignoreBuildErrors: true,
-	},
 };
 
 export default config;
