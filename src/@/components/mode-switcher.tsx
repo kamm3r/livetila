@@ -8,38 +8,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "~/@/components/ui/tooltip";
-
-function useKeyboardShortcut(
-	key: string,
-	callback: () => void,
-	enabled = true,
-) {
-	useEffect(() => {
-		if (!enabled) return;
-
-		function handleKeyDown(e: KeyboardEvent) {
-			if (e.metaKey || e.ctrlKey) return;
-			if (e.key.toLowerCase() !== key.toLowerCase()) return;
-
-			const target = e.target;
-			if (
-				target instanceof HTMLElement &&
-				(target.isContentEditable ||
-					target instanceof HTMLInputElement ||
-					target instanceof HTMLTextAreaElement ||
-					target instanceof HTMLSelectElement)
-			) {
-				return;
-			}
-
-			e.preventDefault();
-			callback();
-		}
-
-		document.addEventListener("keydown", handleKeyDown);
-		return () => document.removeEventListener("keydown", handleKeyDown);
-	}, [key, callback, enabled]);
-}
+import { useKeyboardShortcut } from "~/@/hooks/use-keyboard-shortcut";
 
 export function ModeSwitcher() {
 	const { setTheme, resolvedTheme } = useTheme();
