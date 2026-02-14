@@ -6,10 +6,7 @@ import type { NextConfig } from "next";
 import "./src/env";
 
 const config: NextConfig = {
-	reactCompiler: true,
-	typescript: {
-		ignoreBuildErrors: true,
-	},
+	// reactCompiler: true,
 };
 
 export default config;

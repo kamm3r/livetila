@@ -1,11 +1,4 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-
-export const metadata: Metadata = {
-	title: "Page not found",
-	description: "page not found 404",
-	icons: [{ rel: "icon", url: "/favicon.ico" }],
-};
 
 export default function NotFound() {
 	return (
