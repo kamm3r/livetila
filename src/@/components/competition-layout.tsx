@@ -71,6 +71,7 @@ function HeatSelector({ children }: { children: React.ReactNode }) {
 						.sort((a, b) => a.Index - b.Index)
 						.map((heat) => (
 							<Button
+								className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 								key={heat.Index}
 								onClick={() => actions.handleHeatChange(heat.Index)}
 								variant={
@@ -290,7 +291,7 @@ function EmptyState() {
 	return (
 		<div className="py-8 text-center">
 			<p className="text-muted-foreground">
-				Eräjakoja ei ole saatavilla vielä.
+				Eräjakoja ei ole saatavilla vielä…
 			</p>
 		</div>
 	);
@@ -302,7 +303,7 @@ const participantColumns: Column<Enrollment>[] = [
 		cell: (p) =>
 			p.Confirmed ? (
 				<div className="flex size-5 items-center justify-center">
-					<CheckCircle className="size-3 text-white" />
+					<CheckCircle aria-hidden="true" className="size-3 text-white" />
 				</div>
 			) : null,
 	},

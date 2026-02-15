@@ -37,7 +37,7 @@ export function ObsPopover({ slug }: { slug: string }) {
 					/>
 				}
 			>
-				<InfoIcon className="h-4 w-4" />
+				<InfoIcon aria-hidden="true" className="h-4 w-4" />
 				<span className="sr-only sm:not-sr-only">OBS Overlay</span>
 			</PopoverTrigger>
 			<AnimatePresence>

@@ -151,7 +151,7 @@ export function EventSwitcher({
 			onValueChange={handleEventSelection}
 			value={currentEvent?.EventId ? currentEvent : undefined}
 		>
-			<SelectTrigger className="!h-auto !items-center !py-2 !px-4 w-full sm:w-[400px]">
+			<SelectTrigger className="!h-auto !items-center !py-2 !px-4 w-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-[400px]">
 				<SelectValue className="w-full">
 					{(event: EventWithDate) => <EventDisplay event={event} />}
 				</SelectValue>
