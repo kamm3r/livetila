@@ -6,7 +6,8 @@ import type { NextConfig } from "next";
 import "./src/env";
 
 const config: NextConfig = {
-	// reactCompiler: true,
+	// if this enabled motion animations don't work
+	// reactCompiler: true, 
 };
 
 export default config;

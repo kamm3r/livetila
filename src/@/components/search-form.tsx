@@ -44,7 +44,6 @@ function extractEvents(data: Events): EventData[] {
 	return results;
 }
 
-// Spring config for the container morph
 const smoothSpring = {
 	type: "spring" as const,
 	stiffness: 170,
@@ -139,7 +138,11 @@ export function SearchForm() {
 
 	return (
 		<div className="relative w-full">
-			<Command className="overflow-visible bg-transparent" shouldFilter={false}>
+			<Command
+				className="overflow-visible bg-transparent"
+				role="search"
+				shouldFilter={false}
+			>
 				<motion.div
 					animate={{
 						borderRadius: showDropdown ? 18 : 14,
@@ -171,8 +174,6 @@ export function SearchForm() {
 							<Loader2 className="absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />
 						)}
 					</div>
-
-					{/* Divider */}
 					<AnimatePresence>
 						{showDropdown && (
 							<motion.div
@@ -184,8 +185,6 @@ export function SearchForm() {
 							/>
 						)}
 					</AnimatePresence>
-
-					{/* List Section */}
 					<AnimatePresence mode="wait">
 						{showDropdown && (
 							<motion.div
@@ -197,10 +196,6 @@ export function SearchForm() {
 								transition={{ duration: 0.15 }}
 							>
 								<div className="p-1 pt-0">
-									{/* 
-                    Removed motion variants from items to fix UI layout issues.
-                    Items now render naturally without animation interference.
-                  */}
 									<CommandList className="max-h-80 overflow-y-auto">
 										{showEmpty && (
 											<CommandEmpty className="py-6 text-center text-muted-foreground text-sm">
@@ -241,7 +236,7 @@ export function SearchForm() {
 											<div className="px-4 py-6 text-center">
 												<Loader2 className="mx-auto h-6 w-6 animate-spin text-muted-foreground" />
 												<p className="mt-2 text-muted-foreground text-sm">
-													Ladataan lajeja...
+													Ladataan lajeja…
 												</p>
 											</div>
 										)}
