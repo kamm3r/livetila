@@ -1,4 +1,4 @@
-const INVALID_RESULTS = ["DNS", "DQ", "DNF", "DSQ"] as const;
+const INVALID_RESULTS = ["DNS", "DQ", "DNF", "DSQ", "NH", "NM"] as const;
 
 // Hoisted RegExp patterns (js-hoist-regexp)
 const SPRINT_RE = /^(\d+),(\d{2})$/;
@@ -44,7 +44,7 @@ export function parseResult(
 	value: string | null,
 	eventCategory: "Track" | "Field" | "Relay",
 ): number {
-	if (!value || value === "NM") return 0;
+	if (!value) return 0;
 	if (INVALID_RESULTS.includes(value as (typeof INVALID_RESULTS)[number])) {
 		return -1;
 	}
