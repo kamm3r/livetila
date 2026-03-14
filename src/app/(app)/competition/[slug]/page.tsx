@@ -177,7 +177,7 @@ export default async function Comp({
 
   return (
     <main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
-      <div className="flex flex-wrap items-end justify-between gap-2">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col items-start gap-2">
           <h2 className="scroll-m-20 border-b pb-2 font-semibold text-3xl tracking-tight first:mt-0">
             {compDetails ? compDetails.Competition.Name : null}
@@ -190,10 +190,13 @@ export default async function Comp({
         </div>
         <Suspense
           fallback={
-            <div className="flex flex-1 flex-col gap-2">
-              <Skeleton className="h-8 w-28 self-end" />
-              <Skeleton className="h-10 w-full" />
+            <div className="flex w-full flex-col gap-2">
+              <div className="flex justify-between">
+                <Skeleton className="h-8 w-28" />
+                <Skeleton className="h-10 w-48" />
+              </div>
               <div className="mt-2 space-y-3">
+                <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-14 w-full" />
                 <Skeleton className="h-14 w-full" />
                 <Skeleton className="h-14 w-full" />
