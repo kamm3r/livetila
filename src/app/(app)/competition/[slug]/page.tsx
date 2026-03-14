@@ -9,10 +9,8 @@ import {
   ResultLayout,
   ResultProvider,
 } from "~/@/components/competition-layout";
-import {
-  EventSwitcher,
-  type EventWithDate,
-} from "~/@/components/event-switcher";
+import { EventSwitcher } from "~/@/components/event-switcher";
+import { flattenEvents, type EventWithDate } from "~/@/lib/events";
 import { RoundProvider } from "~/@/components/round-provider";
 import { RoundSwitcher } from "~/@/components/round-switcher";
 import { Skeleton } from "~/@/components/ui/skeleton";
@@ -175,14 +173,6 @@ export default async function Comp({
     api.competition.getCompetitionDetails({ competitionDetailsId: compId }),
   ]);
 
-  function flattenEvents(events: Events): EventWithDate[] {
-    return Object.entries(events).flatMap(([date, eventList]) =>
-      eventList.map((event) => ({
-        ...event,
-        date,
-      })),
-    );
-  }
   const compEvents = flattenEvents(compEventsRaw);
 
   return (

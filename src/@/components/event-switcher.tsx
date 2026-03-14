@@ -10,20 +10,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/@/components/ui/select";
-import type { EventList, Events } from "~/types/comp";
-
-export interface EventWithDate extends EventList {
-	date: string;
-}
-
-export function flattenEvents(events: Events): EventWithDate[] {
-	return Object.entries(events).flatMap(([date, eventList]) =>
-		eventList.map((event) => ({
-			...event,
-			date,
-		})),
-	);
-}
+import { flattenEvents, type EventWithDate } from "~/@/lib/events";
 
 const roundMapping = {
 	Qualify: "Alkuerät",
@@ -74,11 +61,14 @@ function hasMultipleRoundsForEvent(
 	return false;
 }
 
+// Cache the formatter to avoid creating a new instance on every call
+const timeFormatter = new Intl.DateTimeFormat("fi-FI", {
+	hour: "2-digit",
+	minute: "2-digit",
+});
+
 function formatTime(date: string): string {
-	return new Intl.DateTimeFormat("fi-FI", {
-		hour: "2-digit",
-		minute: "2-digit",
-	}).format(new Date(date));
+	return timeFormatter.format(new Date(date));
 }
 
 function EventDisplay({ event }: { event: EventWithDate }) {

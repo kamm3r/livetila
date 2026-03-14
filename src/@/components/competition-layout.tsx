@@ -1,7 +1,7 @@
 "use client";
 import { CheckCircle } from "lucide-react";
 import type React from "react";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode, use, useMemo } from "react";
 import { useRound } from "~/@/components/round-provider";
 import { Button } from "~/@/components/ui/button";
 import { Skeleton } from "~/@/components/ui/skeleton";
@@ -455,17 +455,23 @@ export function ResultProvider({
 	const currentHeat = heats.find((h) => h.Index === state.selectedHeat);
 	const eventCategory = comp_athletes.data?.EventCategory ?? "Field";
 
-	const allocations =
-		currentHeat && heats.length > 0
-			? [...currentHeat.Allocations].sort((a, b) =>
-					sortByResult(a, b, eventCategory),
-				)
-			: [];
+	const allocations = useMemo(
+		() =>
+			currentHeat && heats.length > 0
+				? [...currentHeat.Allocations].sort((a, b) =>
+						sortByResult(a, b, eventCategory),
+					)
+				: [],
+		[currentHeat, heats.length, eventCategory],
+	);
 
-	const totalResults =
-		currentRound?.TotalResults?.slice().sort((a, b) =>
-			sortByResult(a, b, eventCategory),
-		) ?? [];
+	const totalResults = useMemo(
+		() =>
+			currentRound?.TotalResults?.slice().sort((a, b) =>
+				sortByResult(a, b, eventCategory),
+			) ?? [],
+		[currentRound, eventCategory],
+	);
 
 	return (
 		<ResultContext

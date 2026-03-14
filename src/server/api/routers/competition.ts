@@ -28,6 +28,15 @@ export const competitionsRouter = createTRPCRouter({
 					message: "Failed to fetch athlete data",
 				});
 			}
+
+			if (!data.ok) {
+				console.error("API returned error status:", data.status);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch athlete data",
+				});
+			}
+
 			return (await data.json()) as Competition;
 		}),
 	getCompetitionDetails: publicProcedure
@@ -45,6 +54,15 @@ export const competitionsRouter = createTRPCRouter({
 					message: "Failed to fetch competition details",
 				});
 			}
+
+			if (!data.ok) {
+				console.error("API returned error status:", data.status);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch competition details",
+				});
+			}
+
 			return (await data.json()) as CompetitionProperties;
 		}),
 	getCompetitions: publicProcedure.query(
@@ -58,6 +76,15 @@ export const competitionsRouter = createTRPCRouter({
 					message: "Failed to fetch competitions",
 				});
 			}
+
+			if (!data.ok) {
+				console.error("API returned error status:", data.status);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch competitions",
+				});
+			}
+
 			return (await data.json()) as CompetitionList[];
 		},
 	),
@@ -74,6 +101,15 @@ export const competitionsRouter = createTRPCRouter({
 					message: "Failed to fetch events",
 				});
 			}
+
+			if (!data.ok) {
+				console.error("API returned error status:", data.status);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch events",
+				});
+			}
+
 			return (await data.json()) as Events;
 		}),
 });
