@@ -85,7 +85,7 @@ function EventDisplay({ event }: { event: EventWithDate }) {
 			</div>
 
 			<div className="flex min-w-[90px] flex-col items-end gap-2 text-muted-foreground text-xs">
-				<span className="flex items-center gap-1">
+				<span className="flex items-center gap-1" suppressHydrationWarning>
 					{time}
 					<Clock className="size-3" />
 				</span>
