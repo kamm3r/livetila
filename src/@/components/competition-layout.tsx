@@ -434,21 +434,6 @@ export function ResultProvider({
 	);
 	const { state } = useRound();
 
-	if (comp_athletes.isLoading) {
-		return (
-			<ResultContext
-				value={{
-					isLoading: true,
-					allocations: [],
-					totalResults: [],
-					hasMultipleHeats: false,
-				}}
-			>
-				{children}
-			</ResultContext>
-		);
-	}
-
 	const rounds = comp_athletes.data?.Rounds ?? [];
 	const currentRound = rounds.find((r) => r.Index === state.selectedRound);
 	const heats = currentRound?.Heats ?? [];
@@ -472,6 +457,21 @@ export function ResultProvider({
 			) ?? [],
 		[currentRound, eventCategory],
 	);
+
+	if (comp_athletes.isLoading) {
+		return (
+			<ResultContext
+				value={{
+					isLoading: true,
+					allocations: [],
+					totalResults: [],
+					hasMultipleHeats: false,
+				}}
+			>
+				{children}
+			</ResultContext>
+		);
+	}
 
 	return (
 		<ResultContext
