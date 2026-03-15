@@ -1,4 +1,3 @@
-import { ClipboardList, Trophy, Users } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
@@ -106,7 +105,7 @@ function CompetitionTabs({
         {
           value: "participants",
           label: "Ilmoittautuneet",
-          icon: Users,
+          icon: "users",
           content: (
             <ParticipantLayout enrollments={athletes.Enrollments} />
           ),
@@ -114,13 +113,13 @@ function CompetitionTabs({
         {
           value: "protocol",
           label: "Pöytäkirjat",
-          icon: ClipboardList,
+          icon: "clipboard-list",
           content: <ProtocolLayout isTrack={isTrack} />,
         },
         {
           value: "results",
           label: "Tulokset",
-          icon: Trophy,
+          icon: "trophy",
           content: (
             <ResultProvider compId={`${compId}/${eventId}`} isProgress={isProgress}>
               <ResultLayout />

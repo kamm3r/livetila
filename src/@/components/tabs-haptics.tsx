@@ -1,6 +1,6 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
+import { ClipboardList, Trophy, Users } from "lucide-react";
 import { useState } from "react";
 import { useHaptics } from "~/@/hooks/use-haptics";
 import {
@@ -10,10 +10,18 @@ import {
 	TabsTrigger,
 } from "~/@/components/ui/tabs";
 
+type IconName = "users" | "clipboard-list" | "trophy";
+
+const iconMap = {
+	users: Users,
+	"clipboard-list": ClipboardList,
+	trophy: Trophy,
+} as const;
+
 interface TabConfig {
 	value: string;
 	label: string;
-	icon: LucideIcon;
+	icon: IconName;
 	content: React.ReactNode;
 }
 
@@ -40,7 +48,7 @@ export default function TabsWithHaptics({
 		<Tabs className={className} value={activeTab} onValueChange={handleTabChange}>
 			<TabsList className="mb-2 grid h-auto w-full grid-cols-3">
 				{tabs.map((tab) => {
-					const Icon = tab.icon;
+					const Icon = iconMap[tab.icon];
 					return (
 						<TabsTrigger
 							key={tab.value}
