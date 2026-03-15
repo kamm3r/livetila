@@ -1,5 +1,6 @@
 "use client";
 
+import { useHaptics } from "~/@/hooks/use-haptics";
 import { useRound } from "~/@/components/round-provider";
 import { Button } from "~/@/components/ui/button";
 import type { Round } from "~/types/comp";
@@ -17,6 +18,7 @@ function roundLabel(round: Round) {
 
 export function RoundSwitcher() {
 	const { state, actions } = useRound();
+	const { feedback } = useHaptics();
 
 	if (state.rounds.length <= 1) {
 		return null;
@@ -28,7 +30,10 @@ export function RoundSwitcher() {
 				<Button
 					className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 					key={round.Index}
-					onClick={() => actions.handleRoundChange(round.Index)}
+					onClick={() => {
+						feedback("selection");
+						actions.handleRoundChange(round.Index);
+					}}
 					variant={state.selectedRound === round.Index ? "default" : "outline"}
 				>
 					{roundLabel(round)}

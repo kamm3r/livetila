@@ -2,6 +2,7 @@
 
 import { Calendar, Clock } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useHaptics } from "~/@/hooks/use-haptics";
 import { Badge } from "~/@/components/ui/badge";
 import {
 	Select,
@@ -109,6 +110,7 @@ export function EventSwitcher({
 }) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const { feedback } = useHaptics();
 	const flattenedEvents = events;
 	const roundParam = searchParams.get("round");
 	const roundName = roundParamToEventName(roundParam);
@@ -119,6 +121,7 @@ export function EventSwitcher({
 	);
 	function handleEventSelection(value: EventWithDate | null) {
 		if (!value) return;
+		feedback("selection");
 		const params = new URLSearchParams(searchParams.toString());
 		const roundCase = eventNameToRoundCase(value.Name);
 		const hasMultipleRounds = hasMultipleRoundsForEvent(
