@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+// Native Vibration API implementation for haptic feedback
 
 export type HapticFeedback =
 	| "success"
