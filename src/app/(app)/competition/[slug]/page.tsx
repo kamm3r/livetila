@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import TabsWithHaptics from "~/@/components/tabs-haptics";
 import {
   ParticipantLayout,
   ProtocolLayout,
@@ -14,12 +15,7 @@ import { flattenEvents, type EventWithDate } from "~/@/lib/events";
 import { RoundProvider } from "~/@/components/round-provider";
 import { RoundSwitcher } from "~/@/components/round-switcher";
 import { Skeleton } from "~/@/components/ui/skeleton";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "~/@/components/ui/tabs";
+
 import { api } from "~/trpc/server";
 import type { Competition, Events } from "~/types/comp";
 
@@ -103,57 +99,36 @@ function CompetitionTabs({
   isProgress: boolean;
 }) {
   return (
-    <Tabs className="mt-2 w-full" defaultValue="participants">
-      <TabsList className="mb-2 grid h-auto w-full grid-cols-3">
-        <TabsTrigger
-          className="data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
-          value="participants"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <Users className="size-4" />
-            <span className="hidden sm:block">Ilmoittautuneet</span>
-          </div>
-        </TabsTrigger>
-        <TabsTrigger
-          className="data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
-          value="protocol"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <ClipboardList className="size-4" />
-            <span className="hidden sm:block">Pöytäkirjat</span>
-          </div>
-        </TabsTrigger>
-        <TabsTrigger
-          className="data-active:bg-primary/30 data-active:text-primary dark:data-active:bg-primary/30 dark:data-active:text-primary"
-          value="results"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <Trophy className="size-4" />
-            <span className="hidden sm:block">Tulokset</span>
-          </div>
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent
-        className="fade-in-50 animate-in duration-300"
-        value="participants"
-      >
-        <ParticipantLayout enrollments={athletes.Enrollments} />
-      </TabsContent>
-      <TabsContent
-        className="fade-in-50 animate-in duration-300"
-        value="protocol"
-      >
-        <ProtocolLayout isTrack={isTrack} />
-      </TabsContent>
-      <TabsContent
-        className="fade-in-50 animate-in space-y-5 duration-300"
-        value="results"
-      >
-        <ResultProvider compId={`${compId}/${eventId}`} isProgress={isProgress}>
-          <ResultLayout />
-        </ResultProvider>
-      </TabsContent>
-    </Tabs>
+    <TabsWithHaptics
+      className="mt-2 w-full"
+      defaultValue="participants"
+      tabs={[
+        {
+          value: "participants",
+          label: "Ilmoittautuneet",
+          icon: Users,
+          content: (
+            <ParticipantLayout enrollments={athletes.Enrollments} />
+          ),
+        },
+        {
+          value: "protocol",
+          label: "Pöytäkirjat",
+          icon: ClipboardList,
+          content: <ProtocolLayout isTrack={isTrack} />,
+        },
+        {
+          value: "results",
+          label: "Tulokset",
+          icon: Trophy,
+          content: (
+            <ResultProvider compId={`${compId}/${eventId}`} isProgress={isProgress}>
+              <ResultLayout />
+            </ResultProvider>
+          ),
+        },
+      ]}
+    />
   );
 }
 

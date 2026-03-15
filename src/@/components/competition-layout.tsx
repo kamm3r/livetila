@@ -2,6 +2,7 @@
 import { CheckCircle } from "lucide-react";
 import type React from "react";
 import { createContext, type ReactNode, use, useMemo } from "react";
+import { useHaptics } from "~/@/hooks/use-haptics";
 import { useRound } from "~/@/components/round-provider";
 import { Button } from "~/@/components/ui/button";
 import { Skeleton } from "~/@/components/ui/skeleton";
@@ -60,6 +61,13 @@ function NameAndOrg({
 
 function HeatSelector({ children }: { children: React.ReactNode }) {
 	const { state, actions, meta } = useRound();
+	const { feedback } = useHaptics();
+
+	const handleHeatChange = (heatIndex: number) => {
+		feedback("selection");
+		actions.handleHeatChange(heatIndex);
+	};
+
 	return (
 		<div className="space-y-6">
 			{meta.showHeatNumbers && (
@@ -73,7 +81,7 @@ function HeatSelector({ children }: { children: React.ReactNode }) {
 							<Button
 								className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 								key={heat.Index}
-								onClick={() => actions.handleHeatChange(heat.Index)}
+								onClick={() => handleHeatChange(heat.Index)}
 								variant={
 									state.selectedHeat === heat.Index ? "default" : "outline"
 								}
