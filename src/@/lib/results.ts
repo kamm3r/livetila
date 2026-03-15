@@ -57,17 +57,33 @@ export function parseResult(
 	return Number.isNaN(num) ? 0 : num;
 }
 
-export function sortByResult<T extends { Result: string | null }>(
-	a: T,
-	b: T,
-	eventCategory: "Track" | "Field" | "Relay",
-): number {
+export function sortByResult<
+	T extends { Result: string | null; Attempts?: { Line1: string; Line2: string }[] },
+>(a: T, b: T, eventCategory: "Track" | "Field" | "Relay"): number {
 	const aResult = parseResult(a.Result, eventCategory);
 	const bResult = parseResult(b.Result, eventCategory);
 
+	// DNS/DQ/DNF/DSQ/NH/NM are always last
 	if (aResult === -1 && bResult !== -1) return 1;
 	if (bResult === -1 && aResult !== -1) return -1;
-	if (aResult === 0 && bResult !== 0) return 1;
-	if (bResult === 0 && aResult !== 0) return -1;
-	return eventCategory === "Field" ? bResult - aResult : aResult - bResult;
+
+	// Both have valid results - sort by result value
+	if (aResult > 0 && bResult > 0) {
+		return eventCategory === "Field" ? bResult - aResult : aResult - bResult;
+	}
+
+	// One has result, one doesn't - result wins
+	if (aResult > 0 && bResult === 0) return -1;
+	if (bResult > 0 && aResult === 0) return 1;
+
+	// Neither has a valid result - check if they have attempts
+	const aHasAttempts = (a.Attempts?.length ?? 0) > 0;
+	const bHasAttempts = (b.Attempts?.length ?? 0) > 0;
+
+	// Athletes with attempts rank higher than those without
+	if (aHasAttempts && !bHasAttempts) return -1;
+	if (bHasAttempts && !aHasAttempts) return 1;
+
+	// Both have attempts or both don't - maintain original order
+	return 0;
 }
