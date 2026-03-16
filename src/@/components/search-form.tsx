@@ -4,6 +4,7 @@ import { Calendar, ChevronRight, Clock, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { useHaptics } from "~/@/hooks/use-haptics";
 import {
 	Command,
 	CommandEmpty,
@@ -53,6 +54,7 @@ const smoothSpring = {
 
 export function SearchForm() {
 	const router = useRouter();
+	const { feedback } = useHaptics();
 	const [query, setQuery] = useState("");
 	const [selectedComp, setSelectedComp] = useState<CompetitionList | null>(
 		null,
@@ -101,12 +103,14 @@ export function SearchForm() {
 	}
 
 	function handleCompetitionSelect(comp: CompetitionList) {
+		feedback("selection");
 		setSelectedComp(comp);
 		setQuery(`${comp.Name} / `);
 	}
 
 	function handleEventSelect(event: EventData) {
 		if (selectedComp) {
+			feedback("success");
 			router.push(`/competition/${selectedComp.Id}-${event.Id}`);
 		}
 	}

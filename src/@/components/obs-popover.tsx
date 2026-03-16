@@ -3,6 +3,7 @@
 import { InfoIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { useHaptics } from "~/@/hooks/use-haptics";
 import { Embed } from "~/@/components/embed";
 import {
 	Popover,
@@ -16,13 +17,19 @@ import {
 export function ObsPopover({ slug }: { slug: string }) {
 	const [origin, setOrigin] = useState<string | null>(null);
 	const [open, setOpen] = useState(false);
+	const { feedback } = useHaptics();
 	const actionsRef = useRef(null);
 	useEffect(() => {
 		setOrigin(window.location.origin);
 	}, []);
 
+	const handleOpenChange = (newOpen: boolean) => {
+		feedback("selection");
+		setOpen(newOpen);
+	};
+
 	return (
-		<Popover actionsRef={actionsRef} onOpenChange={setOpen} open={open}>
+		<Popover actionsRef={actionsRef} onOpenChange={handleOpenChange} open={open}>
 			<PopoverTrigger
 				className="inline-flex h-8 shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap rounded border border-border bg-background bg-clip-padding px-2.5 font-medium text-sm shadow-xs outline-none hover:border-primary/50 hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0"
 				render={

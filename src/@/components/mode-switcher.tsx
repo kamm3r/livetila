@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";
+import { useHaptics } from "~/@/hooks/use-haptics";
 import { Kbd } from "~/@/components/ui/kbd";
 import {
 	Tooltip,
@@ -13,6 +14,7 @@ import { useKeyboardShortcut } from "~/@/hooks/use-keyboard-shortcut";
 export function ModeSwitcher() {
 	const { setTheme, resolvedTheme } = useTheme();
 	const [mounted, setMounted] = useState(false);
+	const { feedback } = useHaptics();
 
 	useEffect(() => {
 		setMounted(true);
@@ -20,8 +22,9 @@ export function ModeSwitcher() {
 
 	const toggleTheme = useCallback(() => {
 		if (!mounted) return;
+		feedback("selection");
 		setTheme(resolvedTheme === "dark" ? "light" : "dark");
-	}, [mounted, resolvedTheme, setTheme]);
+	}, [mounted, resolvedTheme, setTheme, feedback]);
 
 	useKeyboardShortcut("d", toggleTheme, mounted);
 
