@@ -97,8 +97,8 @@ export function SearchForm() {
 		selectedComp || !query.trim()
 			? competitions?.sort((a, b) => b.Date.localeCompare(a.Date))
 			: competitions?.filter((comp) =>
-					comp.Name.toLowerCase().includes(query.toLowerCase()),
-				);
+				comp.Name.toLowerCase().includes(query.toLowerCase()),
+			);
 
 	const eventQuery =
 		selectedComp && query.includes("/")
@@ -108,12 +108,12 @@ export function SearchForm() {
 	const eventResults =
 		selectedComp && events
 			? extractEvents(events)
-					.filter(
-						(evt) =>
-							!eventQuery ||
-							evt.EventName.toLowerCase().includes(eventQuery.toLowerCase()),
-					)
-					.sort((a, b) => a.Time.localeCompare(b.Time))
+				.filter(
+					(evt) =>
+						!eventQuery ||
+						evt.EventName.toLowerCase().includes(eventQuery.toLowerCase()),
+				)
+				.sort((a, b) => a.Time.localeCompare(b.Time))
 			: [];
 
 	function handleInputChange(value: string) {
@@ -271,7 +271,7 @@ export function SearchForm() {
 						{showDropdown && (
 							<motion.div
 								animate={{ scaleX: 1, opacity: 1 }}
-								className="mx-4 h-px bg-gradient-to-r from-transparent via-border to-transparent"
+								className="mx-4 h-px bg-linear-to-r from-transparent via-border to-transparent"
 								exit={{ scaleX: 0, opacity: 0 }}
 								initial={{ scaleX: 0, opacity: 0 }}
 								transition={{ duration: 0.2 }}
@@ -312,7 +312,7 @@ export function SearchForm() {
 
 										{showCompetitions && (
 											<CommandGroup
-												className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-2 [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground/70 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+												className="**:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:pb-2 **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:text-muted-foreground/70 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-wider"
 												heading="Kilpailut"
 											>
 												<motion.div
@@ -380,7 +380,7 @@ export function SearchForm() {
 
 										{showEvents && (
 											<CommandGroup
-												className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-2 [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground/70 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
+												className="**:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:pb-2 **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:text-muted-foreground/70 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-wider"
 												heading="Lajit"
 											>
 												<motion.div
