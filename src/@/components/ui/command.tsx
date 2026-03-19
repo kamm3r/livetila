@@ -24,6 +24,8 @@ function Command({
 				className,
 			)}
 			data-slot="command"
+			// Radix generates random IDs that differ between server/client
+			suppressHydrationWarning
 			{...props}
 		/>
 	);
