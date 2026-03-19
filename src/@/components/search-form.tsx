@@ -82,6 +82,7 @@ export function SearchForm() {
 	);
 	const [isOpen, setIsOpen] = useState(false);
 	const [isFocused, setIsFocused] = useState(false);
+	const [navigatingTo, setNavigatingTo] = useState<number | null>(null);
 	const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -133,8 +134,9 @@ export function SearchForm() {
 	}
 
 	function handleEventSelect(event: EventData) {
-		if (selectedComp) {
+		if (selectedComp && navigatingTo === null) {
 			feedback("success");
+			setNavigatingTo(event.Id);
 			router.push(`/competition/${selectedComp.Id}-${event.Id}`);
 		}
 	}
@@ -388,48 +390,84 @@ export function SearchForm() {
 													initial="initial"
 													variants={staggerChildren}
 												>
-													{eventResults.slice(0, 15).map((evt) => (
-														<motion.div
-															key={`${evt.Id}-${evt.Date}-${evt.Time}`}
-															variants={itemVariants}
-															transition={smoothSpring}
-														>
-															<CommandItem
-																className="group cursor-pointer rounded-xl px-3 py-2.5 transition-colors data-[selected=true]:bg-primary/10"
-																onMouseDown={(event) => {
-																	event.preventDefault();
-																	handleEventSelect(evt);
-																}}
-																onSelect={() => handleEventSelect(evt)}
-																value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
+													{eventResults.slice(0, 15).map((evt) => {
+														const isNavigating = navigatingTo === evt.Id;
+														const isDisabled = navigatingTo !== null && !isNavigating;
+														return (
+															<motion.div
+																key={`${evt.Id}-${evt.Date}-${evt.Time}`}
+																variants={itemVariants}
+																transition={smoothSpring}
 															>
-																<div className="flex w-full items-center justify-between gap-3">
-																	<div className="flex items-center gap-3">
-																		<div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-data-[selected=true]:bg-primary group-data-[selected=true]:text-primary-foreground">
-																			<Clock className="size-4" />
+																<CommandItem
+																	className="group cursor-pointer rounded-xl px-3 py-2.5 transition-all data-[selected=true]:bg-primary/10 disabled:pointer-events-none"
+																	disabled={isDisabled}
+																	onMouseDown={(event) => {
+																		event.preventDefault();
+																		handleEventSelect(evt);
+																	}}
+																	onSelect={() => handleEventSelect(evt)}
+																	style={{ opacity: isDisabled ? 0.4 : 1 }}
+																	value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
+																>
+																	<div className="flex w-full items-center justify-between gap-3">
+																		<div className="flex items-center gap-3">
+																			<div className="relative flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-data-[selected=true]:bg-primary group-data-[selected=true]:text-primary-foreground">
+																				{isNavigating ? (
+																					<Loader2 className="size-4 animate-spin" />
+																				) : (
+																					<Clock className="size-4" />
+																				)}
+																			</div>
+																			<div className="flex flex-col">
+																				<span className="font-medium text-foreground">
+																					{evt.EventName}
+																				</span>
+																				<AnimatePresence mode="wait">
+																					{isNavigating ? (
+																						<motion.span
+																							key="loading-label"
+																							animate={{ opacity: 1, y: 0 }}
+																							className="text-primary text-xs"
+																							exit={{ opacity: 0, y: -4 }}
+																							initial={{ opacity: 0, y: 4 }}
+																							transition={{ duration: 0.15 }}
+																						>
+																							Siirrytään...
+																						</motion.span>
+																					) : (
+																						<motion.span
+																							key="round-label"
+																							animate={{ opacity: 1, y: 0 }}
+																							className="text-muted-foreground text-xs"
+																							exit={{ opacity: 0, y: 4 }}
+																							initial={{ opacity: 0, y: -4 }}
+																							transition={{ duration: 0.15 }}
+																						>
+																							{evt.Name}
+																						</motion.span>
+																					)}
+																				</AnimatePresence>
+																			</div>
 																		</div>
-																		<div className="flex flex-col">
-																			<span className="font-medium text-foreground">
-																				{evt.EventName}
-																			</span>
-																			<span className="text-muted-foreground text-xs">
-																				{evt.Name}
-																			</span>
+																		<div className="flex items-center gap-3">
+																			<div className="flex items-center gap-2 text-muted-foreground text-xs">
+																				<span className="rounded-md bg-muted px-2 py-0.5 font-mono">
+																					{evt.Time}
+																				</span>
+																				<span>{evt.Date}</span>
+																			</div>
+																			{isNavigating ? (
+																				<div className="size-4" />
+																			) : (
+																				<ChevronRight className="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-[selected=true]:translate-x-0.5 group-data-[selected=true]:text-primary group-data-[selected=true]:opacity-100" />
+																			)}
 																		</div>
 																	</div>
-																	<div className="flex items-center gap-3">
-																		<div className="flex items-center gap-2 text-muted-foreground text-xs">
-																			<span className="rounded-md bg-muted px-2 py-0.5 font-mono">
-																				{evt.Time}
-																			</span>
-																			<span>{evt.Date}</span>
-																		</div>
-																		<ChevronRight className="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-[selected=true]:translate-x-0.5 group-data-[selected=true]:text-primary group-data-[selected=true]:opacity-100" />
-																	</div>
-																</div>
-															</CommandItem>
-														</motion.div>
-													))}
+																</CommandItem>
+															</motion.div>
+														);
+													})}
 												</motion.div>
 											</CommandGroup>
 										)}
