@@ -24,10 +24,7 @@ export default async function Home() {
 
 					<div className="fade-in-0 slide-in-from-bottom-4 w-full max-w-xl animate-in delay-150 duration-500">
 						<SearchForm />
-						<p className="mt-2 text-center text-muted-foreground text-xs">
-							Vinkki: valitse kilpailu ja rajaa laji kirjoittamalla “/”
-						</p>
-						<p className="mt-4 text-center text-muted-foreground text-sm">
+						<p className="mt-6 text-center text-muted-foreground text-sm">
 							Powered by tuloslista.com
 						</p>
 					</div>

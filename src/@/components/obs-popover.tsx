@@ -51,13 +51,17 @@ export function ObsPopover({ slug }: { slug: string }) {
 				{open ? (
 					<PopoverContent
 						align="end"
-						className="w-full max-w-96"
+						className="w-full max-w-96 origin-top-right"
 						render={
 							<motion.div
-								animate={{ opacity: 1, transform: "scale(1)" }}
-								exit={{ opacity: 0, transform: "scale(0.2)" }}
-								initial={{ opacity: 0, transform: "scale(0.2)" }}
-								transition={{ type: "spring", duration: 0.4, bounce: 0 }}
+								initial={{ opacity: 0, scale: 0.9, y: -8 }}
+								animate={{ opacity: 1, scale: 1, y: 0 }}
+								exit={{ opacity: 0, scale: 0.95, y: -4 }}
+								transition={{
+									type: "spring",
+									stiffness: 400,
+									damping: 25,
+								}}
 							/>
 						}
 					>
