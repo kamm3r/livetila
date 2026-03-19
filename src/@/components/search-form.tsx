@@ -67,10 +67,13 @@ const staggerChildren = {
 };
 
 const itemVariants = {
-	initial: { opacity: 0, y: 8, scale: 0.96 },
+	initial: { opacity: 0, y: 8, scale: 0.97 },
 	animate: { opacity: 1, y: 0, scale: 1 },
 	exit: { opacity: 0, y: -4, scale: 0.98 },
 };
+
+const groupHeadingClassName =
+	"**:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:pb-2 **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:text-muted-foreground/70 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-wider";
 
 export function SearchForm() {
 	const router = useRouter();
@@ -292,7 +295,7 @@ export function SearchForm() {
 
 										{showCompetitions && (
 											<CommandGroup
-												className="**:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:pb-2 **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:text-muted-foreground/70 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-wider"
+												className={groupHeadingClassName}
 												heading="Kilpailut"
 											>
 												<motion.div
@@ -305,7 +308,7 @@ export function SearchForm() {
 															key={comp.Id}
 															variants={itemVariants}
 															transition={smoothSpring}
-															whileTap={{ scale: 0.98 }}
+															whileTap={{ scale: 0.97 }}
 														>
 															<CommandItem
 																className="group cursor-pointer rounded-xl px-3 py-2.5 transition-colors data-[selected=true]:bg-primary/10 active:bg-primary/15"
@@ -361,7 +364,7 @@ export function SearchForm() {
 
 										{showEvents && (
 											<CommandGroup
-												className="**:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:pb-2 **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:text-muted-foreground/70 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-wider"
+												className={groupHeadingClassName}
 												heading="Lajit"
 											>
 												<motion.div
@@ -377,7 +380,7 @@ export function SearchForm() {
 																key={`${evt.Id}-${evt.Date}-${evt.Time}`}
 																variants={itemVariants}
 																transition={smoothSpring}
-																whileTap={isDisabled ? undefined : { scale: 0.98 }}
+																whileTap={isDisabled ? undefined : { scale: 0.97 }}
 															>
 																<CommandItem
 																	className="group cursor-pointer rounded-xl px-3 py-2.5 transition-all data-[selected=true]:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none"
