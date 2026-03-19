@@ -7,7 +7,6 @@ import {
 	Clock,
 	Loader2,
 	Search,
-	Sparkles,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
@@ -217,41 +216,20 @@ export function SearchForm() {
 								<Search className="size-5" />
 							</motion.div>
 
-							<div className="relative flex-1">
-								<input
-									ref={inputRef}
-									className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
-									onBlur={handleBlur}
-									onChange={(e) => handleInputChange(e.target.value)}
-									onFocus={handleFocus}
-									placeholder={
-										selectedComp
-											? `Hae lajeja...`
-											: "Hae kilpailuja nimellä..."
-									}
-									type="text"
-									value={query}
-								/>
-
-								{/* Selected competition badge */}
-								<AnimatePresence>
-									{selectedComp && (
-										<motion.div
-											animate={{ opacity: 1, x: 0 }}
-											className="absolute top-1/2 right-0 -translate-y-1/2"
-											exit={{ opacity: 0, x: 10 }}
-											initial={{ opacity: 0, x: -10 }}
-											transition={smoothSpring}
-										>
-											<span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-2.5 py-1 font-medium text-primary text-xs">
-												<Sparkles className="size-3" />
-												{selectedComp.Name.slice(0, 20)}
-												{selectedComp.Name.length > 20 ? "..." : ""}
-											</span>
-										</motion.div>
-									)}
-								</AnimatePresence>
-							</div>
+							<input
+								ref={inputRef}
+								className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+								onBlur={handleBlur}
+								onChange={(e) => handleInputChange(e.target.value)}
+								onFocus={handleFocus}
+								placeholder={
+									selectedComp
+										? `Hae lajeja...`
+										: "Hae kilpailuja nimellä..."
+								}
+								type="text"
+								value={query}
+							/>
 
 							{/* Loading indicator */}
 							<AnimatePresence>
@@ -327,9 +305,10 @@ export function SearchForm() {
 															key={comp.Id}
 															variants={itemVariants}
 															transition={smoothSpring}
+															whileTap={{ scale: 0.98 }}
 														>
 															<CommandItem
-																className="group cursor-pointer rounded-xl px-3 py-2.5 transition-colors data-[selected=true]:bg-primary/10"
+																className="group cursor-pointer rounded-xl px-3 py-2.5 transition-colors data-[selected=true]:bg-primary/10 active:bg-primary/15"
 																onMouseDown={(event) => event.preventDefault()}
 																onSelect={() => handleCompetitionSelect(comp)}
 																value={`${comp.Name}-${comp.Date}-${comp.Id}`}
@@ -398,9 +377,10 @@ export function SearchForm() {
 																key={`${evt.Id}-${evt.Date}-${evt.Time}`}
 																variants={itemVariants}
 																transition={smoothSpring}
+																whileTap={isDisabled ? undefined : { scale: 0.98 }}
 															>
 																<CommandItem
-																	className="group cursor-pointer rounded-xl px-3 py-2.5 transition-all data-[selected=true]:bg-primary/10 disabled:pointer-events-none"
+																	className="group cursor-pointer rounded-xl px-3 py-2.5 transition-all data-[selected=true]:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none"
 																	disabled={isDisabled}
 																	onMouseDown={(event) => {
 																		event.preventDefault();
