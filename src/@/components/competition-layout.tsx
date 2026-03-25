@@ -20,6 +20,7 @@ import { api } from "~/trpc/react";
 import type { Allocation, Enrollment, TotalResult } from "~/types/comp";
 
 type Column<T> = {
+	id: string;
 	header: React.ReactNode;
 	className?: string;
 	cell: (row: T) => React.ReactNode;
@@ -133,9 +134,8 @@ function BaseTable<T extends { Id: string | number }>({
 		<Table className="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block">
 			<TableHeader className="sticky top-0 backdrop-blur-md">
 				<TableRow>
-					{columns.map((col, i) => (
-						// biome-ignore lint/suspicious/noArrayIndexKey: fix later
-						<TableHead className={col.className} key={i}>
+					{columns.map((col) => (
+						<TableHead className={col.className} key={col.id}>
 							{col.header}
 						</TableHead>
 					))}
@@ -143,13 +143,15 @@ function BaseTable<T extends { Id: string | number }>({
 			</TableHeader>
 
 			<TableBody>
-				{data.map((row, i) => (
+				{data.map((row) => (
 					<TableRow
 						className={rowClassName ? rowClassName(row) : undefined}
-						key={`${row.Id}-${i}`}
+						key={row.Id}
 					>
-						{columns.map((col, j) => (
-							<TableCell key={`${row.Id}-${i}-${j}`}>{col.cell(row)}</TableCell>
+						{columns.map((col) => (
+							<TableCell key={`${row.Id}-${col.id}`}>
+								{col.cell(row)}
+							</TableCell>
 						))}
 					</TableRow>
 				))}
@@ -233,6 +235,7 @@ function MobileList<T extends AthleteRow>({
 const nameAndOrgColumn = <T extends AthleteRow>(
 	showNumber = false,
 ): Column<T> => ({
+	id: "name-org",
 	header: "Nimi ja Seura",
 	className: "w-full",
 	cell: (row) => (
@@ -245,11 +248,13 @@ const nameAndOrgColumn = <T extends AthleteRow>(
 });
 
 const pbColumn = <T extends { PB?: string | null }>(): Column<T> => ({
+	id: "pb",
 	header: "PB",
 	cell: (row) => <span className="font-medium">{row.PB || "-"}</span>,
 });
 
 const sbColumn = <T extends { SB?: string | null }>(): Column<T> => ({
+	id: "sb",
 	header: "SB",
 	cell: (row) => <span className="font-medium">{row.SB || "-"}</span>,
 });
@@ -258,11 +263,13 @@ const skeletonData = Array.from({ length: 6 }, (_, i) => ({ Id: i }));
 
 const skeletonColumns: Column<{ Id: number }>[] = [
 	{
+		id: "skeleton-rank",
 		header: <Skeleton className="h-4 w-6" />,
 		className: "w-[100px]",
 		cell: () => <Skeleton className="h-4 w-6" />,
 	},
 	{
+		id: "skeleton-name",
 		header: <Skeleton className="h-4 w-32" />,
 		className: "w-full",
 		cell: () => (
@@ -273,6 +280,7 @@ const skeletonColumns: Column<{ Id: number }>[] = [
 		),
 	},
 	{
+		id: "skeleton-result",
 		header: <Skeleton className="ml-auto h-4 w-12" />,
 		cell: () => <Skeleton className="ml-auto h-4 w-12" />,
 	},
@@ -307,6 +315,7 @@ function EmptyState() {
 
 const participantColumns: Column<Enrollment>[] = [
 	{
+		id: "confirmed",
 		header: "Varm.",
 		cell: (p) =>
 			p.Confirmed ? (
@@ -358,6 +367,7 @@ export function ProtocolLayout({ isTrack }: { isTrack: boolean }) {
 			<BaseTable
 				columns={[
 					{
+						id: "order",
 						header: isTrack ? "Rata" : "Järjestys",
 						className: "w-[100px]",
 						cell: (a) => <span>{!a.Number ? "" : a.Number}</span>,
@@ -379,12 +389,14 @@ export function ProtocolLayout({ isTrack }: { isTrack: boolean }) {
 
 const heatResultsColumns: Column<Allocation | TotalResult>[] = [
 	{
+		id: "rank",
 		header: "Sija",
 		className: "w-[100px]",
 		cell: (a) => <span>{a.HeatRank}</span>,
 	},
 	nameAndOrgColumn(true),
 	{
+		id: "result",
 		header: "Tulos",
 		cell: (a) => <AttemptsList attempts={a.Attempts} bestResult={a.Result} />,
 	},
@@ -392,12 +404,14 @@ const heatResultsColumns: Column<Allocation | TotalResult>[] = [
 
 const totalResultsColumns: Column<Allocation | TotalResult>[] = [
 	{
+		id: "rank",
 		header: "Sija",
 		className: "w-[100px]",
 		cell: (a) => <span>{a.ResultRank}</span>,
 	},
 	nameAndOrgColumn(true),
 	{
+		id: "result",
 		header: "Tulos",
 		cell: (a) => <AttemptsList attempts={a.Attempts} bestResult={a.Result} />,
 	},

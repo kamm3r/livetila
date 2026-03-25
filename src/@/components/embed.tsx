@@ -3,7 +3,7 @@
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "~/@/components/ui/button";
 
@@ -13,7 +13,16 @@ export function Embed({ slug }: { slug: string }) {
 	const searchParams = useSearchParams();
 	const round = searchParams.get("round");
 	const [copy, setCopy] = useState(false);
-	const timeoutRef = useRef<number | null>(null);
+	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// Cleanup timeout on unmount to prevent memory leak
+	useEffect(() => {
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+		};
+	}, []);
 
 	function copyUrlToClipboard() {
 		void navigator.clipboard.writeText(
@@ -30,7 +39,7 @@ export function Embed({ slug }: { slug: string }) {
 
 		toast.info("Linkki kopioitu leikepöydälle");
 
-		timeoutRef.current = window.setTimeout(() => {
+		timeoutRef.current = setTimeout(() => {
 			setCopy(false);
 			timeoutRef.current = null;
 		}, 1500);

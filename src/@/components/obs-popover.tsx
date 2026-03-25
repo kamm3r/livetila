@@ -2,7 +2,7 @@
 
 import { InfoIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useHaptics } from "~/@/hooks/use-haptics";
 import { Embed } from "~/@/components/embed";
 import {
@@ -15,13 +15,13 @@ import {
 } from "~/@/components/ui/popover";
 
 export function ObsPopover({ slug }: { slug: string }) {
-	const [origin, setOrigin] = useState<string | null>(null);
 	const [open, setOpen] = useState(false);
 	const { feedback } = useHaptics();
 	const actionsRef = useRef(null);
-	useEffect(() => {
-		setOrigin(window.location.origin);
-	}, []);
+	// Use ref for one-time origin computation without causing re-renders
+	const originRef = useRef(
+		typeof window !== "undefined" ? window.location.origin : "",
+	);
 
 	const handleOpenChange = (newOpen: boolean) => {
 		feedback("selection");
@@ -74,7 +74,7 @@ export function ObsPopover({ slug }: { slug: string }) {
 						<div className="flex flex-col gap-4">
 							<div className="space-y-2">
 								<div className="break-all rounded-lg border bg-muted/90 p-3 font-mono text-sm">
-									{`${origin}`}/obs/{slug}
+									{`${originRef.current}`}/obs/{slug}
 									<br />
 									<span className="rounded bg-primary/20 px-1 py-0.5 text-primary">
 										?round=1&heat=1

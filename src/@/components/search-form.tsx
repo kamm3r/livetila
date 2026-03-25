@@ -10,7 +10,13 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import {
+	useCallback,
+	useMemo,
+	useRef,
+	useState,
+	useTransition,
+} from "react";
 import { useHaptics } from "~/@/hooks/use-haptics";
 import {
 	Command,
@@ -85,6 +91,7 @@ export function SearchForm() {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isFocused, setIsFocused] = useState(false);
 	const [navigatingTo, setNavigatingTo] = useState<number | null>(null);
+	const [_isPending, startTransition] = useTransition();
 	const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -96,67 +103,91 @@ export function SearchForm() {
 			{ enabled: !!selectedComp },
 		);
 
-	const competitionResults =
-		selectedComp || !query.trim()
-			? competitions?.sort((a, b) => b.Date.localeCompare(a.Date))
-			: competitions?.filter((comp) =>
-				comp.Name.toLowerCase().includes(query.toLowerCase()),
-			);
-
-	const eventQuery =
-		selectedComp && query.includes("/")
-			? (query.split("/").pop()?.trim() ?? "")
-			: "";
-
-	const eventResults =
-		selectedComp && events
-			? extractEvents(events)
-				.filter(
-					(evt) =>
-						!eventQuery ||
-						evt.EventName.toLowerCase().includes(eventQuery.toLowerCase()),
-				)
-				.sort((a, b) => a.Time.localeCompare(b.Time))
-			: [];
-
-	function handleInputChange(value: string) {
-		setIsOpen(true);
-		setQuery(value);
-		if (selectedComp && !value.includes("/")) {
-			setSelectedComp(null);
-			setQuery("");
+	// Memoize expensive computations
+	const competitionResults = useMemo(() => {
+		if (selectedComp || !query.trim()) {
+			return competitions?.sort((a, b) => b.Date.localeCompare(a.Date));
 		}
-	}
+		const lowerQuery = query.toLowerCase();
+		return competitions?.filter((comp) =>
+			comp.Name.toLowerCase().includes(lowerQuery),
+		);
+	}, [competitions, selectedComp, query]);
 
-	function handleCompetitionSelect(comp: CompetitionList) {
-		feedback("selection");
-		setSelectedComp(comp);
-		setQuery(`${comp.Name} / `);
-		inputRef.current?.focus();
-	}
-
-	function handleEventSelect(event: EventData) {
-		if (selectedComp && navigatingTo === null) {
-			feedback("success");
-			setNavigatingTo(event.Id);
-			router.push(`/competition/${selectedComp.Id}-${event.Id}`);
+	const eventQuery = useMemo(() => {
+		if (selectedComp && query.includes("/")) {
+			return query.split("/").pop()?.trim() ?? "";
 		}
-	}
+		return "";
+	}, [selectedComp, query]);
 
-	function handleBlur() {
+	const eventResults = useMemo(() => {
+		if (!selectedComp || !events) return [];
+
+		const extracted = extractEvents(events);
+		if (!eventQuery) {
+			return extracted.sort((a, b) => a.Time.localeCompare(b.Time));
+		}
+
+		const lowerEventQuery = eventQuery.toLowerCase();
+		return extracted
+			.filter((evt) =>
+				evt.EventName.toLowerCase().includes(lowerEventQuery),
+			)
+			.sort((a, b) => a.Time.localeCompare(b.Time));
+	}, [selectedComp, events, eventQuery]);
+
+	// Memoized callbacks
+	const handleInputChange = useCallback(
+		(value: string) => {
+			setIsOpen(true);
+			// Use transition for non-urgent filtering to keep UI responsive
+			startTransition(() => {
+				setQuery(value);
+				if (selectedComp && !value.includes("/")) {
+					setSelectedComp(null);
+					setQuery("");
+				}
+			});
+		},
+		[selectedComp],
+	);
+
+	const handleCompetitionSelect = useCallback(
+		(comp: CompetitionList) => {
+			feedback("selection");
+			setSelectedComp(comp);
+			setQuery(`${comp.Name} / `);
+			inputRef.current?.focus();
+		},
+		[feedback],
+	);
+
+	const handleEventSelect = useCallback(
+		(event: EventData) => {
+			if (selectedComp && navigatingTo === null) {
+				feedback("success");
+				setNavigatingTo(event.Id);
+				router.push(`/competition/${selectedComp.Id}-${event.Id}`);
+			}
+		},
+		[selectedComp, navigatingTo, feedback, router],
+	);
+
+	const handleBlur = useCallback(() => {
 		blurTimeoutRef.current = setTimeout(() => {
 			setIsOpen(false);
 			setIsFocused(false);
 		}, 150);
-	}
+	}, []);
 
-	function handleFocus() {
+	const handleFocus = useCallback(() => {
 		if (blurTimeoutRef.current) {
 			clearTimeout(blurTimeoutRef.current);
 		}
 		setIsOpen(true);
 		setIsFocused(true);
-	}
+	}, []);
 
 	const showCompetitions =
 		!selectedComp && (competitionResults?.length ?? 0) > 0;
