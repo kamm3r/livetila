@@ -16,7 +16,7 @@ export function useHaptics() {
 
 	const feedback = (type: HapticFeedback) => {
 		try {
-			trigger(type);
+			void trigger(type);
 		} catch {
 			// Silently fail on unsupported devices
 		}

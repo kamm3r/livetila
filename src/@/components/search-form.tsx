@@ -5,19 +5,11 @@ import {
 	Calendar,
 	ChevronRight,
 	Clock,
-	Loader2,
 	Search,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import {
-	useCallback,
-	useMemo,
-	useRef,
-	useState,
-	useTransition,
-} from "react";
-import { useHaptics } from "~/@/hooks/use-haptics";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import {
 	Command,
 	CommandEmpty,
@@ -25,6 +17,8 @@ import {
 	CommandItem,
 	CommandList,
 } from "~/@/components/ui/command";
+import { Spinner } from "~/@/components/ui/spinner";
+import { useHaptics } from "~/@/hooks/use-haptics";
 import { api } from "~/trpc/react";
 import type { CompetitionList, Events } from "~/types/comp";
 
@@ -131,9 +125,7 @@ export function SearchForm() {
 
 		const lowerEventQuery = eventQuery.toLowerCase();
 		return extracted
-			.filter((evt) =>
-				evt.EventName.toLowerCase().includes(lowerEventQuery),
-			)
+			.filter((evt) => evt.EventName.toLowerCase().includes(lowerEventQuery))
 			.sort((a, b) => a.Time.localeCompare(b.Time));
 	}, [selectedComp, events, eventQuery]);
 
@@ -251,16 +243,14 @@ export function SearchForm() {
 							</motion.div>
 
 							<input
-								ref={inputRef}
 								className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
 								onBlur={handleBlur}
 								onChange={(e) => handleInputChange(e.target.value)}
 								onFocus={handleFocus}
 								placeholder={
-									selectedComp
-										? `Hae lajeja...`
-										: "Hae kilpailuja nimellä..."
+									selectedComp ? `Hae lajeja...` : "Hae kilpailuja nimellä..."
 								}
+								ref={inputRef}
 								type="text"
 								value={query}
 							/>
@@ -273,7 +263,7 @@ export function SearchForm() {
 										exit={{ opacity: 0, scale: 0.8 }}
 										initial={{ opacity: 0, scale: 0.8 }}
 									>
-										<Loader2 className="size-5 animate-spin text-primary" />
+										<Spinner className="text-primary" />
 									</motion.div>
 								)}
 							</AnimatePresence>
@@ -337,12 +327,12 @@ export function SearchForm() {
 													{competitionResults?.slice(0, 10).map((comp) => (
 														<motion.div
 															key={comp.Id}
-															variants={itemVariants}
 															transition={smoothSpring}
+															variants={itemVariants}
 															whileTap={{ scale: 0.97 }}
 														>
 															<CommandItem
-																className="group cursor-pointer rounded-xl px-3 py-2.5 transition-colors data-[selected=true]:bg-primary/10 active:bg-primary/15"
+																className="group cursor-pointer rounded-xl px-3 py-2.5 transition-colors active:bg-primary/15 data-[selected=true]:bg-primary/10"
 																onMouseDown={(event) => event.preventDefault()}
 																onSelect={() => handleCompetitionSelect(comp)}
 																value={`${comp.Name}-${comp.Date}-${comp.Id}`}
@@ -385,7 +375,7 @@ export function SearchForm() {
 											>
 												<div className="relative">
 													<div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
-													<Loader2 className="relative size-6 animate-spin text-primary" />
+													<Spinner className="relative size-6 text-primary" />
 												</div>
 												<p className="text-muted-foreground text-sm">
 													Ladataan lajeja...
@@ -405,16 +395,19 @@ export function SearchForm() {
 												>
 													{eventResults.slice(0, 15).map((evt) => {
 														const isNavigating = navigatingTo === evt.Id;
-														const isDisabled = navigatingTo !== null && !isNavigating;
+														const isDisabled =
+															navigatingTo !== null && !isNavigating;
 														return (
 															<motion.div
 																key={`${evt.Id}-${evt.Date}-${evt.Time}`}
-																variants={itemVariants}
 																transition={smoothSpring}
-																whileTap={isDisabled ? undefined : { scale: 0.97 }}
+																variants={itemVariants}
+																whileTap={
+																	isDisabled ? undefined : { scale: 0.97 }
+																}
 															>
 																<CommandItem
-																	className="group cursor-pointer rounded-xl px-3 py-2.5 transition-all data-[selected=true]:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none"
+																	className="group cursor-pointer rounded-xl px-3 py-2.5 transition-all active:bg-primary/15 disabled:pointer-events-none data-[selected=true]:bg-primary/10"
 																	disabled={isDisabled}
 																	onMouseDown={(event) => {
 																		event.preventDefault();
@@ -428,7 +421,7 @@ export function SearchForm() {
 																		<div className="flex items-center gap-3">
 																			<div className="relative flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-data-[selected=true]:bg-primary group-data-[selected=true]:text-primary-foreground">
 																				{isNavigating ? (
-																					<Loader2 className="size-4 animate-spin" />
+																					<Spinner className="size-4" />
 																				) : (
 																					<Clock className="size-4" />
 																				)}
@@ -440,22 +433,22 @@ export function SearchForm() {
 																				<AnimatePresence mode="wait">
 																					{isNavigating ? (
 																						<motion.span
-																							key="loading-label"
 																							animate={{ opacity: 1, y: 0 }}
 																							className="text-primary text-xs"
 																							exit={{ opacity: 0, y: -4 }}
 																							initial={{ opacity: 0, y: 4 }}
+																							key="loading-label"
 																							transition={{ duration: 0.15 }}
 																						>
 																							Siirrytään...
 																						</motion.span>
 																					) : (
 																						<motion.span
-																							key="round-label"
 																							animate={{ opacity: 1, y: 0 }}
 																							className="text-muted-foreground text-xs"
 																							exit={{ opacity: 0, y: 4 }}
 																							initial={{ opacity: 0, y: -4 }}
+																							key="round-label"
 																							transition={{ duration: 0.15 }}
 																						>
 																							{evt.Name}

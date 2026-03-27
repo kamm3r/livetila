@@ -9,6 +9,30 @@ import { Button } from "~/@/components/ui/button";
 
 const EASE_STANDARD: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
+const contentTransition = {
+	duration: 0.2,
+	ease: EASE_STANDARD
+};
+
+const contentMotion = {
+	initial: {
+		opacity: 0,
+		filter: "blur(2px)",
+		// transform: "scale(0.97)",
+	},
+	animate: {
+		opacity: 1,
+		filter: "blur(0px)",
+		// transform: "scale(1)",
+	},
+	exit: {
+		opacity: 0,
+		filter: "blur(2px)",
+		// transform: "scale(0.97)",
+	},
+	transition: contentTransition,
+};
+
 export function Embed({ slug }: { slug: string }) {
 	const searchParams = useSearchParams();
 	const round = searchParams.get("round");
@@ -29,10 +53,8 @@ export function Embed({ slug }: { slug: string }) {
 			`${window.location.origin}/obs/${slug}?${!round ? "" : "round=1&"}${
 				round === "Final" ? "" : "heat=1"
 			}`,
-		);
-
+		)
 		setCopy(true);
-
 		if (timeoutRef.current) {
 			clearTimeout(timeoutRef.current);
 		}
@@ -47,58 +69,56 @@ export function Embed({ slug }: { slug: string }) {
 
 	return (
 		<Button
-			className="w-full gap-2 transition-none"
+			aria-label={copy ? "Copied" : "Copy to clipboard"}
+			className="w-full gap-2 transition-none active:translate-y-0!"
 			onClick={copyUrlToClipboard}
 			render={
 				<motion.button
 					whileTap={{
 						scale: 0.97,
 						transition: {
-							duration: 0.12,
-							ease: EASE_STANDARD,
+							duration: 0.16,
+							ease: "easeOut"
 						},
 					}}
 				/>
 			}
+			size="icon"
 			variant="secondary"
 		>
 			<div className="relative flex size-4 items-center justify-center">
 				<AnimatePresence initial={false}>
 					{copy ? (
 						<motion.span
-							animate={{ opacity: 1 }}
+						key="check"
 							className="absolute inset-0"
-							exit={{ opacity: 0 }}
-							initial={{ opacity: 0 }}
-							key="check"
-							transition={{
-								duration: 0.15,
-								ease: EASE_STANDARD,
-							}}
+							{...contentMotion}
 						>
-							<CheckIcon className="size-4" />
+							<CheckIcon aria-hidden="true" className="size-4" />
 						</motion.span>
 					) : (
 						<motion.span
-							animate={{ opacity: 1 }}
-							className="absolute inset-0"
-							exit={{ opacity: 0 }}
-							initial={{ opacity: 0 }}
 							key="copy"
-							transition={{
-								duration: 0.15,
-								ease: EASE_STANDARD,
-							}}
+							className="absolute inset-0"
+							{...contentMotion}
 						>
-							<CopyIcon className="size-4" />
+							<CopyIcon aria-hidden="true" className="size-4" />
 						</motion.span>
 					)}
 				</AnimatePresence>
 			</div>
 
-			<span className="sr-only text-sm sm:not-sr-only">
-				{copy ? "Kopioitu!" : "Kopioi linkki"}
-			</span>
+			<div className="relative">
+				<AnimatePresence initial={false} mode="wait">
+					<motion.span
+						key={copy ? "copied" : "copy"}
+						className="text-sm flex items-center whitespace-nowrap"
+						{...contentMotion}
+					>
+						{copy ? "Kopioitu!" : "Kopioi linkki"}
+					</motion.span>
+				</AnimatePresence>
+			</div>
 		</Button>
 	);
 }

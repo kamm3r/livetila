@@ -21,6 +21,7 @@ import {
 	PopoverTrigger,
 } from "~/@/components/ui/popover";
 import { useHaptics } from "~/@/hooks/use-haptics";
+import { Button } from "./ui/button";
 
 
 function useIsMobile(breakpoint = 640) {
@@ -72,7 +73,9 @@ export function ObsPopover({ slug }: { slug: string }) {
 					Vaihda <code>round</code> ja <code>heat</code> arvoja tarpeen mukaan.
 				</div>
 			</div>
+			<div className="flex flex-1">
 			<Embed slug={slug} />
+			</div>
 		</>
 	);
 if (isMobile) {
@@ -85,7 +88,7 @@ if (isMobile) {
 							whileTap={{
 								scale: 0.97,
 								transition: {
-									duration: 0.12,
+									duration: 0.16,
 									ease: [0.25, 0.1, 0.25, 1],
 								},
 							}}
@@ -114,17 +117,20 @@ if (isMobile) {
 				open={open}
 			>
 				<PopoverTrigger
-					className="hidden sm:inline-flex gap-2 items-center justify-center"
+					className="group/button inline-flex shrink-0 items-center justify-center rounded-md border  bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background shadow-xs hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 gap-1.5 px-2.5 in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"
 					render={
-						<motion.button
+						
+
+							<motion.button
 							whileTap={{
 								scale: 0.97,
 								transition: {
-									duration: 0.12,
+									duration: 0.16,
 									ease: [0.25, 0.1, 0.25, 1],
 								},
 							}}
-						/>
+							/>
+					
 					}
 				>
 					<InfoIcon aria-hidden="true" className="size-4" />
@@ -134,16 +140,15 @@ if (isMobile) {
 					{open ? (
 						<PopoverContent
 							align="end"
-							className="hidden w-full max-w-96 origin-top-right sm:flex"
+							className="w-full max-w-96"
 							render={
 								<motion.div
-									animate={{ opacity: 1, scale: 1, y: 0 }}
-									exit={{ opacity: 0, scale: 0.95, y: -4 }}
-									initial={{ opacity: 0, scale: 0.9, y: -8 }}
+									animate={{ opacity: 1, scale: 1}}
+									exit={{ opacity: 0, scale: 0.95}}
+									initial={{ opacity: 0, scale: 0.95}}
 									transition={{
-										type: "spring",
-										stiffness: 400,
-										damping: 25,
+										duration: 0.2,
+										ease: [0.23, 1, 0.32, 1],
 									}}
 								/>
 							}

@@ -6,7 +6,12 @@ export default function ThemedLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+		<ThemeProvider 
+			attribute="class" 
+			defaultTheme="system" 
+			enableSystem 
+			disableTransitionOnChange
+		>
 			<div className="relative flex min-h-dvh flex-col pt-[env(safe-area-inset-top)]">
 				<div className="flex min-h-0 flex-1 flex-col">
 					<Navbar />

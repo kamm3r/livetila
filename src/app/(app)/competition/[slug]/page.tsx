@@ -16,7 +16,7 @@ import { RoundSwitcher } from "~/@/components/round-switcher";
 import { Skeleton } from "~/@/components/ui/skeleton";
 
 import { api } from "~/trpc/server";
-import type { Competition, Events } from "~/types/comp";
+import type { Competition } from "~/types/comp";
 
 const ObsPopover = dynamic(() =>
   import("~/@/components/obs-popover").then((mod) => mod.ObsPopover),

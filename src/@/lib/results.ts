@@ -67,23 +67,18 @@ export function sortByResult<
 	if (aResult === -1 && bResult !== -1) return 1;
 	if (bResult === -1 && aResult !== -1) return -1;
 
-	// Both have valid results - sort by result value
 	if (aResult > 0 && bResult > 0) {
 		return eventCategory === "Field" ? bResult - aResult : aResult - bResult;
 	}
 
-	// One has result, one doesn't - result wins
 	if (aResult > 0 && bResult === 0) return -1;
 	if (bResult > 0 && aResult === 0) return 1;
 
-	// Neither has a valid result - check if they have attempts
 	const aHasAttempts = (a.Attempts?.length ?? 0) > 0;
 	const bHasAttempts = (b.Attempts?.length ?? 0) > 0;
 
-	// Athletes with attempts rank higher than those without
 	if (aHasAttempts && !bHasAttempts) return -1;
 	if (bHasAttempts && !aHasAttempts) return 1;
-
-	// Both have attempts or both don't - maintain original order
+	
 	return 0;
 }
