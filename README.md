@@ -16,11 +16,6 @@ Live result overlay for live.tuloslista API streams.
 
 ## Getting started
 
-### Prerequisites
-
-- Node.js (v18 or later)
-- pnpm package manager
-
 ### Installation
 
 Clone the repository and install dependencies
@@ -51,36 +46,6 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ---
 
-## Build
-
-Create an optimized production build
-
-```bash
-pnpm build
-```
-
-Preview the production build locally
-
-```bash
-pnpm preview
-```
-
----
-
-## Scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development server with turbo mode |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
-| `pnpm preview` | Build and start production server locally |
-| `pnpm check` | Run Biome linter |
-| `pnpm check:write` | Run Biome linter with auto-fix |
-| `pnpm typecheck` | Run TypeScript type checking |
-
----
-
 ## Tech stack
 
 - **Framework**: Next.js 16 with App Router
@@ -91,26 +56,6 @@ pnpm preview
 - **Animations**: Motion, Auto Animate
 - **Linting**: Biome
 - **Icons**: Lucide React
-
----
-
-## Project structure
-
-```
-.
-├── src/
-│   ├── app/              # Next.js app router pages
-│   │   ├── (app)/        # Main application routes
-│   │   ├── (overlay)/    # Overlay-specific routes
-│   │   └── api/          # API routes
-│   ├── @/                # Component aliases
-│   ├── server/           # Server-side utilities
-│   ├── trpc/             # tRPC configuration
-│   ├── types/            # TypeScript types
-│   └── styles/           # Global styles
-├── public/               # Static assets
-└── ...config files
-```
 
 ---
 
