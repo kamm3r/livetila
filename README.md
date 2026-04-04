@@ -6,33 +6,11 @@ Live result overlay for live.tuloslista API streams.
 
 ## Getting started
 
-### Installation
-
-Clone the repository and install dependencies
-
-```bash
-git clone <repository-url>
-cd livetila
-pnpm install
-```
-
 Create a `.env` file from the example
 
 ```bash
 cp .env.example .env
 ```
-
----
-
-## Development
-
-Start the development server with hot reload
-
-```bash
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ---
 
