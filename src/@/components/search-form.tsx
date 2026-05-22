@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useHaptics } from "~/@/hooks/use-haptics";
 import {
 	Command,
@@ -22,6 +22,7 @@ import {
 import { api } from "~/trpc/react";
 import type { CompetitionList, Events } from "~/types/comp";
 
+// Types
 type EventData = {
 	Id: number;
 	EventName: string;
@@ -30,40 +31,32 @@ type EventData = {
 	Time: string;
 };
 
+type SearchStep = "competitions" | "events";
+
+// Utils
 function extractEvents(data: Events): EventData[] {
 	const results: EventData[] = [];
 	for (const dateKey of Object.keys(data)) {
 		data[dateKey]?.forEach((event) => {
 			const compDate = new Date(event.BeginDateTimeWithTZ);
-			const month = String(compDate.getMonth() + 1).padStart(2, "0");
-			const day = String(compDate.getDate()).padStart(2, "0");
-			const hours = String(compDate.getHours()).padStart(2, "0");
-			const minutes = String(compDate.getMinutes()).padStart(2, "0");
 			results.push({
 				Id: event.EventId,
 				EventName: event.EventName,
 				Name: event.Name,
-				Date: `${day}.${month}.`,
-				Time: `${hours}:${minutes}`,
+				Date: `${String(compDate.getDate()).padStart(2, "0")}.${String(compDate.getMonth() + 1).padStart(2, "0")}.`,
+				Time: `${String(compDate.getHours()).padStart(2, "0")}:${String(compDate.getMinutes()).padStart(2, "0")}`,
 			});
 		});
 	}
 	return results;
 }
 
+// Animation constants
 const smoothSpring = {
 	type: "spring" as const,
 	stiffness: 300,
 	damping: 30,
 	mass: 0.8,
-};
-
-const staggerChildren = {
-	animate: {
-		transition: {
-			staggerChildren: 0.035,
-		},
-	},
 };
 
 const itemVariants = {
@@ -78,50 +71,65 @@ const groupHeadingClassName =
 export function SearchForm() {
 	const router = useRouter();
 	const { feedback } = useHaptics();
+	const inputRef = useRef<HTMLInputElement>(null);
+	const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// Core state
 	const [query, setQuery] = useState("");
-	const [selectedComp, setSelectedComp] = useState<CompetitionList | null>(
-		null,
-	);
 	const [isOpen, setIsOpen] = useState(false);
 	const [isFocused, setIsFocused] = useState(false);
+	const [selectedComp, setSelectedComp] = useState<CompetitionList | null>(null);
 	const [navigatingTo, setNavigatingTo] = useState<number | null>(null);
-	const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const inputRef = useRef<HTMLInputElement>(null);
 
+	// Derived step - determines which list to show
+	const step: SearchStep = selectedComp ? "events" : "competitions";
+
+	// Data fetching
 	const { data: competitions, isLoading: isLoadingComps } =
 		api.competition.getCompetitions.useQuery();
+
 	const { data: events, isLoading: isLoadingEvents } =
 		api.competition.getEvents.useQuery(
 			{ compId: selectedComp?.Id.toString() ?? "" },
 			{ enabled: !!selectedComp },
 		);
 
-	const competitionResults =
-		selectedComp || !query.trim()
-			? competitions?.sort((a, b) => b.Date.localeCompare(a.Date))
-			: competitions?.filter((comp) =>
-				comp.Name.toLowerCase().includes(query.toLowerCase()),
-			);
+	// Memoized filtered results
+	const filteredCompetitions = useMemo(() => {
+		if (!competitions) return [];
+		const sorted = [...competitions].sort((a, b) => b.Date.localeCompare(a.Date));
+		if (!query.trim()) return sorted;
+		return sorted.filter((comp) =>
+			comp.Name.toLowerCase().includes(query.toLowerCase()),
+		);
+	}, [competitions, query]);
 
-	const eventQuery =
-		selectedComp && query.includes("/")
+	const filteredEvents = useMemo(() => {
+		if (!events) return [];
+		const allEvents = extractEvents(events).sort((a, b) =>
+			a.Time.localeCompare(b.Time),
+		);
+		// Extract query after "/" for event filtering
+		const eventQuery = query.includes("/")
 			? (query.split("/").pop()?.trim() ?? "")
 			: "";
+		if (!eventQuery) return allEvents;
+		return allEvents.filter((evt) =>
+			evt.EventName.toLowerCase().includes(eventQuery.toLowerCase()),
+		);
+	}, [events, query]);
 
-	const eventResults =
-		selectedComp && events
-			? extractEvents(events)
-				.filter(
-					(evt) =>
-						!eventQuery ||
-						evt.EventName.toLowerCase().includes(eventQuery.toLowerCase()),
-				)
-				.sort((a, b) => a.Time.localeCompare(b.Time))
-			: [];
+	// Computed UI state
+	const isLoading = step === "competitions" ? isLoadingComps : isLoadingEvents;
+	const results = step === "competitions" ? filteredCompetitions : filteredEvents;
+	const hasResults = results.length > 0;
+	const showDropdown = isOpen && (isLoading || hasResults || query.length > 0);
 
+	// Handlers
 	function handleInputChange(value: string) {
-		setIsOpen(true);
 		setQuery(value);
+		setIsOpen(true);
+		// If user clears the "/" separator, go back to competition step
 		if (selectedComp && !value.includes("/")) {
 			setSelectedComp(null);
 			setQuery("");
@@ -136,11 +144,16 @@ export function SearchForm() {
 	}
 
 	function handleEventSelect(event: EventData) {
-		if (selectedComp && navigatingTo === null) {
-			feedback("success");
-			setNavigatingTo(event.Id);
-			router.push(`/competition/${selectedComp.Id}-${event.Id}`);
-		}
+		if (!selectedComp || navigatingTo !== null) return;
+		feedback("success");
+		setNavigatingTo(event.Id);
+		router.push(`/competition/${selectedComp.Id}-${event.Id}`);
+	}
+
+	function handleFocus() {
+		if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+		setIsOpen(true);
+		setIsFocused(true);
 	}
 
 	function handleBlur() {
@@ -149,29 +162,6 @@ export function SearchForm() {
 			setIsFocused(false);
 		}, 150);
 	}
-
-	function handleFocus() {
-		if (blurTimeoutRef.current) {
-			clearTimeout(blurTimeoutRef.current);
-		}
-		setIsOpen(true);
-		setIsFocused(true);
-	}
-
-	const showCompetitions =
-		!selectedComp && competitions && (competitionResults?.length ?? 0) > 0;
-	const showEvents =
-		selectedComp && eventResults.length > 0 && !isLoadingEvents;
-	const showLoading = isLoadingComps || (selectedComp && isLoadingEvents);
-	const showEmpty =
-		isOpen &&
-		!showLoading &&
-		!showCompetitions &&
-		!showEvents &&
-		(query.length > 0 || selectedComp) &&
-		competitions !== undefined;
-	const showDropdown =
-		isOpen && (showCompetitions || showEvents || showLoading || showEmpty);
 
 	return (
 		<div className="relative mx-auto w-full max-w-2xl">
@@ -194,9 +184,7 @@ export function SearchForm() {
 				>
 					{/* Gradient border effect */}
 					<motion.div
-						animate={{
-							opacity: isFocused ? 1 : 0,
-						}}
+						animate={{ opacity: isFocused ? 1 : 0 }}
 						className="pointer-events-none absolute inset-0 rounded-2xl"
 						style={{
 							background:
@@ -205,7 +193,7 @@ export function SearchForm() {
 						transition={{ duration: 0.3 }}
 					/>
 
-					{/* Input Section */}
+					{/* Input */}
 					<div className="relative z-10">
 						<div className="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-3.5">
 							<motion.div
@@ -227,19 +215,18 @@ export function SearchForm() {
 								onChange={(e) => handleInputChange(e.target.value)}
 								onFocus={handleFocus}
 								placeholder={
-									selectedComp
-										? `Hae lajeja...`
+									step === "events"
+										? "Hae lajeja..."
 										: "Hae kilpailuja nimellä..."
 								}
 								type="text"
 								value={query}
 							/>
 
-							{/* Loading indicator */}
 							<AnimatePresence>
-								{showLoading && (
+								{isLoading && (
 									<motion.div
-										animate={{ opacity: 1, scale: 1, rotate: 0 }}
+										animate={{ opacity: 1, scale: 1 }}
 										exit={{ opacity: 0, scale: 0.8 }}
 										initial={{ opacity: 0, scale: 0.8 }}
 									>
@@ -271,12 +258,32 @@ export function SearchForm() {
 								className="overflow-hidden"
 								exit={{ height: 0, opacity: 0 }}
 								initial={{ height: 0, opacity: 0 }}
-								key={selectedComp ? "events-list" : "competitions-list"}
+								key={step}
 								transition={{ duration: 0.2, ease: "easeOut" }}
 							>
 								<div className="p-2">
 									<CommandList className="max-h-80 overflow-y-auto">
-										{showEmpty && (
+										{/* Loading state */}
+										{isLoading && (
+											<motion.div
+												animate={{ opacity: 1 }}
+												className="flex flex-col items-center gap-3 py-8"
+												initial={{ opacity: 0 }}
+											>
+												<div className="relative">
+													<div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+													<Loader2 className="relative size-6 animate-spin text-primary" />
+												</div>
+												<p className="text-muted-foreground text-sm">
+													{step === "events"
+														? "Ladataan lajeja..."
+														: "Ladataan kilpailuja..."}
+												</p>
+											</motion.div>
+										)}
+
+										{/* Empty state */}
+										{!isLoading && !hasResults && (
 											<motion.div
 												animate={{ opacity: 1, y: 0 }}
 												initial={{ opacity: 0, y: 10 }}
@@ -286,7 +293,7 @@ export function SearchForm() {
 														<Search className="size-5 text-muted-foreground" />
 													</div>
 													<p className="text-muted-foreground text-sm">
-														{selectedComp
+														{step === "events"
 															? "Ei lajeja löytynyt"
 															: "Ei kilpailuja löytynyt"}
 													</p>
@@ -294,7 +301,8 @@ export function SearchForm() {
 											</motion.div>
 										)}
 
-										{showCompetitions && (
+										{/* Competition results */}
+										{!isLoading && step === "competitions" && hasResults && (
 											<CommandGroup
 												className={groupHeadingClassName}
 												heading="Kilpailut"
@@ -302,9 +310,11 @@ export function SearchForm() {
 												<motion.div
 													animate="animate"
 													initial="initial"
-													variants={staggerChildren}
+													variants={{
+														animate: { transition: { staggerChildren: 0.035 } },
+													}}
 												>
-													{competitionResults?.slice(0, 10).map((comp) => (
+													{filteredCompetitions.slice(0, 10).map((comp) => (
 														<motion.div
 															key={comp.Id}
 															variants={itemVariants}
@@ -313,9 +323,9 @@ export function SearchForm() {
 														>
 															<CommandItem
 																className="group cursor-pointer rounded-xl px-2 py-2 transition-colors data-[selected=true]:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
-																onMouseDown={(event) => event.preventDefault()}
+																onMouseDown={(e) => e.preventDefault()}
 																onSelect={() => handleCompetitionSelect(comp)}
-																value={`${comp.Name}-${comp.Date}-${comp.Id}`}
+																value={`${comp.Name}-${comp.Id}`}
 															>
 																<div className="flex flex-1 items-center justify-between gap-2 sm:gap-3">
 																	<div className="flex items-center gap-2 sm:gap-3">
@@ -347,23 +357,8 @@ export function SearchForm() {
 											</CommandGroup>
 										)}
 
-										{isLoadingEvents && (
-											<motion.div
-												animate={{ opacity: 1 }}
-												className="flex flex-col items-center gap-3 py-8"
-												initial={{ opacity: 0 }}
-											>
-												<div className="relative">
-													<div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
-													<Loader2 className="relative size-6 animate-spin text-primary" />
-												</div>
-												<p className="text-muted-foreground text-sm">
-													Ladataan lajeja...
-												</p>
-											</motion.div>
-										)}
-
-										{showEvents && (
+										{/* Event results */}
+										{!isLoading && step === "events" && hasResults && (
 											<CommandGroup
 												className={groupHeadingClassName}
 												heading="Lajit"
@@ -371,28 +366,33 @@ export function SearchForm() {
 												<motion.div
 													animate="animate"
 													initial="initial"
-													variants={staggerChildren}
+													variants={{
+														animate: { transition: { staggerChildren: 0.035 } },
+													}}
 												>
-													{eventResults.slice(0, 15).map((evt) => {
+													{filteredEvents.slice(0, 15).map((evt) => {
 														const isNavigating = navigatingTo === evt.Id;
-														const isDisabled = navigatingTo !== null && !isNavigating;
+														const isDisabled =
+															navigatingTo !== null && !isNavigating;
 														return (
 															<motion.div
-																key={`${evt.Id}-${evt.Date}-${evt.Time}`}
+																key={`${evt.Id}-${evt.Time}`}
 																variants={itemVariants}
 																transition={smoothSpring}
-																whileTap={isDisabled ? undefined : { scale: 0.97 }}
+																whileTap={
+																	isDisabled ? undefined : { scale: 0.97 }
+																}
 															>
 																<CommandItem
 																	className="group cursor-pointer rounded-xl px-2 py-2 transition-all data-[selected=true]:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none sm:px-3 sm:py-2.5"
 																	disabled={isDisabled}
-																	onMouseDown={(event) => {
-																		event.preventDefault();
+																	onMouseDown={(e) => {
+																		e.preventDefault();
 																		handleEventSelect(evt);
 																	}}
 																	onSelect={() => handleEventSelect(evt)}
 																	style={{ opacity: isDisabled ? 0.4 : 1 }}
-																	value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
+																	value={`${evt.EventName}-${evt.Id}`}
 																>
 																	<div className="flex w-full items-center justify-between gap-2 sm:gap-3">
 																		<div className="flex items-center gap-2 sm:gap-3">
@@ -410,7 +410,7 @@ export function SearchForm() {
 																				<AnimatePresence mode="wait">
 																					{isNavigating ? (
 																						<motion.span
-																							key="loading-label"
+																							key="loading"
 																							animate={{ opacity: 1, y: 0 }}
 																							className="text-primary text-xs"
 																							exit={{ opacity: 0, y: -4 }}
@@ -421,7 +421,7 @@ export function SearchForm() {
 																						</motion.span>
 																					) : (
 																						<motion.span
-																							key="round-label"
+																							key="name"
 																							animate={{ opacity: 1, y: 0 }}
 																							className="text-muted-foreground text-xs"
 																							exit={{ opacity: 0, y: 4 }}
