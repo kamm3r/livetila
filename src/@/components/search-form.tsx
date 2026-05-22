@@ -159,16 +159,17 @@ export function SearchForm() {
 	}
 
 	const showCompetitions =
-		!selectedComp && (competitionResults?.length ?? 0) > 0;
+		!selectedComp && competitions && (competitionResults?.length ?? 0) > 0;
 	const showEvents =
 		selectedComp && eventResults.length > 0 && !isLoadingEvents;
-	const showLoading = isLoadingComps || isLoadingEvents;
+	const showLoading = isLoadingComps || (selectedComp && isLoadingEvents);
 	const showEmpty =
 		isOpen &&
-		query.length > 0 &&
+		!showLoading &&
 		!showCompetitions &&
 		!showEvents &&
-		!showLoading;
+		(query.length > 0 || selectedComp) &&
+		competitions !== undefined;
 	const showDropdown =
 		isOpen && (showCompetitions || showEvents || showLoading || showEmpty);
 
