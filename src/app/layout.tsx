@@ -19,10 +19,6 @@ export default function RootLayout({
 			lang="fi"
 			suppressHydrationWarning
 		>
-			<head>
-				<link rel="preconnect" href="https://cached-public-api.tuloslista.com" />
-				<link rel="dns-prefetch" href="https://cached-public-api.tuloslista.com" />
-			</head>
 			<body>
 				<TRPCReactProvider>{children}</TRPCReactProvider>
 			</body>

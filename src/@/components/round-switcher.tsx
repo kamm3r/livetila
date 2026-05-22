@@ -25,7 +25,7 @@ export function RoundSwitcher() {
 	}
 
 	return (
-		<div className="flex gap-2">
+		<div className="flex flex-wrap gap-2">
 			{state.rounds.map((round) => (
 				<Button
 					className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -34,6 +34,7 @@ export function RoundSwitcher() {
 						feedback("selection");
 						actions.handleRoundChange(round.Index);
 					}}
+					size="sm"
 					variant={state.selectedRound === round.Index ? "default" : "outline"}
 				>
 					{roundLabel(round)}

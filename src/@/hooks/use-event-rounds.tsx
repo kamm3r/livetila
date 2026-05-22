@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Heat, Round } from "~/types/comp";
 
 export interface RoundState {
@@ -55,46 +55,40 @@ export function useEventRounds(rounds: Round[]): RoundContextValue {
 	);
 	const [selectedHeat, setSelectedHeat] = useState<number>(1);
 
-	// Sync with URL changes
-	useEffect(() => {
+	// Derive state during render instead of effects (rerender-derived-state-no-effect)
+	const prevRoundFromUrl = useRef(roundFromUrl);
+	const prevRoundsLength = useRef(rounds.length);
+
+	if (roundFromUrl !== prevRoundFromUrl.current) {
+		prevRoundFromUrl.current = roundFromUrl;
 		if (roundFromUrl != null && roundFromUrl !== selectedRound) {
 			setSelectedRound(roundFromUrl);
 			setSelectedHeat(getFirstHeatIndex(rounds, roundFromUrl));
 		}
-	}, [roundFromUrl, selectedRound, rounds]);
+	}
 
-	// Sync with rounds data changes
-	useEffect(() => {
+	if (rounds.length !== prevRoundsLength.current) {
+		prevRoundsLength.current = rounds.length;
 		if (rounds.length > 0 && selectedRound === 0 && roundFromUrl == null) {
 			const defaultIndex = getDefaultRoundIndex(rounds);
 			setSelectedRound(defaultIndex);
 			setSelectedHeat(getFirstHeatIndex(rounds, defaultIndex));
 		}
-	}, [rounds, selectedRound, roundFromUrl]);
+	}
 
-	const currentRound = useMemo(
-		() => rounds.find((round) => round.Index === selectedRound) ?? rounds[0],
-		[rounds, selectedRound],
-	);
+	const currentRound =
+		rounds.find((round) => round.Index === selectedRound) ?? rounds[0];
 
 	const heats = currentRound?.Heats ?? [];
 
-	const currentHeat = useMemo(
-		() => heats.find((heat) => heat.Index === selectedHeat) ?? heats[0],
-		[heats, selectedHeat],
-	);
+	const currentHeat =
+		heats.find((heat) => heat.Index === selectedHeat) ?? heats[0];
 
 	const showHeatNumbers = heats.length >= 2;
 
-	const availableRounds = useMemo(
-		() => rounds.map((round) => round.Index),
-		[rounds],
-	);
+	const availableRounds = rounds.map((round) => round.Index);
 
-	const availableHeats = useMemo(
-		() => heats.map((heat) => heat.Index),
-		[heats],
-	);
+	const availableHeats = heats.map((heat) => heat.Index);
 
 	const handleRoundChange = useCallback(
 		(roundIndex: number) => {

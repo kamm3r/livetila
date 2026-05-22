@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import { cache } from "react";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { tryCatch } from "~/shared/try-catch";
@@ -12,120 +11,105 @@ import type {
 
 const API_URL = "https://cached-public-api.tuloslista.com/live/v1";
 
-// Cached fetch functions for request deduplication
-const cachedFetchAthletes = cache(async (compId: string) => {
-	const { data, error } = await tryCatch(
-		fetch(`${API_URL}/results/${compId}`, {
-			cache: "no-store",
-		}),
-	);
-
-	if (error || !data) {
-		console.error("Error fetching comp data:", error);
-		throw new TRPCError({
-			code: "INTERNAL_SERVER_ERROR",
-			message: "Failed to fetch athlete data",
-		});
-	}
-
-	if (!data.ok) {
-		console.error("API returned error status:", data.status);
-		throw new TRPCError({
-			code: "INTERNAL_SERVER_ERROR",
-			message: "Failed to fetch athlete data",
-		});
-	}
-
-	return data.json() as Promise<Competition>;
-});
-
-const cachedFetchCompetitionDetails = cache(async (competitionDetailsId: string) => {
-	const { data, error } = await tryCatch(
-		fetch(`${API_URL}/competition/${competitionDetailsId}/properties`),
-	);
-	if (error || !data) {
-		console.error("Error fetching comp data:", error);
-		throw new TRPCError({
-			code: "INTERNAL_SERVER_ERROR",
-			message: "Failed to fetch competition details",
-		});
-	}
-
-	if (!data.ok) {
-		console.error("API returned error status:", data.status);
-		throw new TRPCError({
-			code: "INTERNAL_SERVER_ERROR",
-			message: "Failed to fetch competition details",
-		});
-	}
-
-	return data.json() as Promise<CompetitionProperties>;
-});
-
-const cachedFetchCompetitions = cache(async () => {
-	const { data, error } = await tryCatch(fetch(`${API_URL}/competition`));
-
-	if (error || !data) {
-		console.error("Error fetching comp data:", error);
-		throw new TRPCError({
-			code: "INTERNAL_SERVER_ERROR",
-			message: "Failed to fetch competitions",
-		});
-	}
-
-	if (!data.ok) {
-		console.error("API returned error status:", data.status);
-		throw new TRPCError({
-			code: "INTERNAL_SERVER_ERROR",
-			message: "Failed to fetch competitions",
-		});
-	}
-
-	return data.json() as Promise<CompetitionList[]>;
-});
-
-const cachedFetchEvents = cache(async (compId: string) => {
-	const { data, error } = await tryCatch(
-		fetch(`${API_URL}/competition/${compId}`),
-	);
-	if (error || !data) {
-		console.error("Error fetching comp data:", error);
-		throw new TRPCError({
-			code: "INTERNAL_SERVER_ERROR",
-			message: "Failed to fetch events",
-		});
-	}
-
-	if (!data.ok) {
-		console.error("API returned error status:", data.status);
-		throw new TRPCError({
-			code: "INTERNAL_SERVER_ERROR",
-			message: "Failed to fetch events",
-		});
-	}
-
-	return data.json() as Promise<Events>;
-});
-
 export const competitionsRouter = createTRPCRouter({
 	getAthletes: publicProcedure
 		.input(z.object({ compId: z.string() }))
 		.query(async ({ input }): Promise<Competition> => {
-			return cachedFetchAthletes(input.compId);
+			const { data, error } = await tryCatch(
+				fetch(`${API_URL}/results/${input.compId}`, {
+					cache: "no-store",
+				}),
+			);
+
+			if (error || !data) {
+				console.error("Error fetching comp data:", error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch athlete data",
+				});
+			}
+
+			if (!data.ok) {
+				console.error("API returned error status:", data.status);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch athlete data",
+				});
+			}
+
+			return (await data.json()) as Competition;
 		}),
 	getCompetitionDetails: publicProcedure
 		.input(z.object({ competitionDetailsId: z.string() }))
 		.query(async ({ input }): Promise<CompetitionProperties> => {
-			return cachedFetchCompetitionDetails(input.competitionDetailsId);
+			const { data, error } = await tryCatch(
+				fetch(
+					`${API_URL}/competition/${input.competitionDetailsId}/properties`,
+				),
+			);
+			if (error || !data) {
+				console.error("Error fetching comp data:", error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch competition details",
+				});
+			}
+
+			if (!data.ok) {
+				console.error("API returned error status:", data.status);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch competition details",
+				});
+			}
+
+			return (await data.json()) as CompetitionProperties;
 		}),
 	getCompetitions: publicProcedure.query(
 		async (): Promise<CompetitionList[]> => {
-			return cachedFetchCompetitions();
+			const { data, error } = await tryCatch(fetch(`${API_URL}/competition`));
+
+			if (error || !data) {
+				console.error("Error fetching comp data:", error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch competitions",
+				});
+			}
+
+			if (!data.ok) {
+				console.error("API returned error status:", data.status);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch competitions",
+				});
+			}
+
+			return (await data.json()) as CompetitionList[];
 		},
 	),
 	getEvents: publicProcedure
 		.input(z.object({ compId: z.string() }))
 		.query(async ({ input }): Promise<Events> => {
-			return cachedFetchEvents(input.compId);
+			const { data, error } = await tryCatch(
+				fetch(`${API_URL}/competition/${input.compId}`),
+			);
+			if (error || !data) {
+				console.error("Error fetching comp data:", error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch events",
+				});
+			}
+
+			if (!data.ok) {
+				console.error("API returned error status:", data.status);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch events",
+				});
+			}
+
+			return (await data.json()) as Events;
 		}),
 });

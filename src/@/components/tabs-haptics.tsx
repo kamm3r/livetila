@@ -33,9 +33,9 @@ interface TabsWithHapticsProps {
 }
 
 const tabContentVariants = {
-	initial: { opacity: 0, y: 8, scale: 0.97 },
+	initial: { opacity: 0, y: 8, scale: 0.98 },
 	animate: { opacity: 1, y: 0, scale: 1 },
-	exit: { opacity: 0, y: -8, scale: 0.97 },
+	exit: { opacity: 0, y: -8, scale: 0.98 },
 };
 
 export default function TabsWithHaptics({
@@ -60,7 +60,7 @@ export default function TabsWithHaptics({
 					return (
 						<TabsTrigger
 							key={tab.value}
-							className="relative data-active:bg-transparent data-active:text-primary dark:data-active:bg-transparent dark:data-active:text-primary border-0"
+							className="relative data-active:bg-transparent data-active:text-primary dark:data-active:bg-transparent dark:data-active:text-primary"
 							value={tab.value}
 						>
 							{isActive && (
@@ -76,7 +76,7 @@ export default function TabsWithHaptics({
 							)}
 							<motion.div
 								className="relative z-10 flex items-center justify-center gap-2"
-								whileTap={{ scale: 0.97 }}
+								whileTap={{ scale: 0.95 }}
 								transition={{ duration: 0.1 }}
 							>
 								<Icon className="size-4" />
@@ -94,7 +94,7 @@ export default function TabsWithHaptics({
 								key={tab.value}
 								className="space-y-5"
 								value={tab.value}
-								
+								forceMount
 							>
 								<motion.div
 									variants={tabContentVariants}

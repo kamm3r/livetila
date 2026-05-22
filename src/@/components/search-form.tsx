@@ -5,11 +5,13 @@ import {
 	Calendar,
 	ChevronRight,
 	Clock,
+	Loader2,
 	Search,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
+import { useHaptics } from "~/@/hooks/use-haptics";
 import {
 	Command,
 	CommandEmpty,
@@ -17,8 +19,6 @@ import {
 	CommandItem,
 	CommandList,
 } from "~/@/components/ui/command";
-import { Spinner } from "~/@/components/ui/spinner";
-import { useHaptics } from "~/@/hooks/use-haptics";
 import { api } from "~/trpc/react";
 import type { CompetitionList, Events } from "~/types/comp";
 
@@ -85,7 +85,6 @@ export function SearchForm() {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isFocused, setIsFocused] = useState(false);
 	const [navigatingTo, setNavigatingTo] = useState<number | null>(null);
-	const [_isPending, startTransition] = useTransition();
 	const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -97,89 +96,67 @@ export function SearchForm() {
 			{ enabled: !!selectedComp },
 		);
 
-	// Memoize expensive computations
-	const competitionResults = useMemo(() => {
-		if (selectedComp || !query.trim()) {
-			return competitions?.sort((a, b) => b.Date.localeCompare(a.Date));
+	const competitionResults =
+		selectedComp || !query.trim()
+			? competitions?.sort((a, b) => b.Date.localeCompare(a.Date))
+			: competitions?.filter((comp) =>
+				comp.Name.toLowerCase().includes(query.toLowerCase()),
+			);
+
+	const eventQuery =
+		selectedComp && query.includes("/")
+			? (query.split("/").pop()?.trim() ?? "")
+			: "";
+
+	const eventResults =
+		selectedComp && events
+			? extractEvents(events)
+				.filter(
+					(evt) =>
+						!eventQuery ||
+						evt.EventName.toLowerCase().includes(eventQuery.toLowerCase()),
+				)
+				.sort((a, b) => a.Time.localeCompare(b.Time))
+			: [];
+
+	function handleInputChange(value: string) {
+		setIsOpen(true);
+		setQuery(value);
+		if (selectedComp && !value.includes("/")) {
+			setSelectedComp(null);
+			setQuery("");
 		}
-		const lowerQuery = query.toLowerCase();
-		return competitions?.filter((comp) =>
-			comp.Name.toLowerCase().includes(lowerQuery),
-		);
-	}, [competitions, selectedComp, query]);
+	}
 
-	const eventQuery = useMemo(() => {
-		if (selectedComp && query.includes("/")) {
-			return query.split("/").pop()?.trim() ?? "";
+	function handleCompetitionSelect(comp: CompetitionList) {
+		feedback("selection");
+		setSelectedComp(comp);
+		setQuery(`${comp.Name} / `);
+		inputRef.current?.focus();
+	}
+
+	function handleEventSelect(event: EventData) {
+		if (selectedComp && navigatingTo === null) {
+			feedback("success");
+			setNavigatingTo(event.Id);
+			router.push(`/competition/${selectedComp.Id}-${event.Id}`);
 		}
-		return "";
-	}, [selectedComp, query]);
+	}
 
-	const eventResults = useMemo(() => {
-		if (!selectedComp || !events) return [];
-
-		const extracted = extractEvents(events);
-		if (!eventQuery) {
-			return extracted.sort((a, b) => a.Time.localeCompare(b.Time));
-		}
-
-		const lowerEventQuery = eventQuery.toLowerCase();
-		return extracted
-			.filter((evt) => evt.EventName.toLowerCase().includes(lowerEventQuery))
-			.sort((a, b) => a.Time.localeCompare(b.Time));
-	}, [selectedComp, events, eventQuery]);
-
-	// Memoized callbacks
-	const handleInputChange = useCallback(
-		(value: string) => {
-			setIsOpen(true);
-			// Use transition for non-urgent filtering to keep UI responsive
-			startTransition(() => {
-				setQuery(value);
-				if (selectedComp && !value.includes("/")) {
-					setSelectedComp(null);
-					setQuery("");
-				}
-			});
-		},
-		[selectedComp],
-	);
-
-	const handleCompetitionSelect = useCallback(
-		(comp: CompetitionList) => {
-			feedback("selection");
-			setSelectedComp(comp);
-			setQuery(`${comp.Name} / `);
-			inputRef.current?.focus();
-		},
-		[feedback],
-	);
-
-	const handleEventSelect = useCallback(
-		(event: EventData) => {
-			if (selectedComp && navigatingTo === null) {
-				feedback("success");
-				setNavigatingTo(event.Id);
-				router.push(`/competition/${selectedComp.Id}-${event.Id}`);
-			}
-		},
-		[selectedComp, navigatingTo, feedback, router],
-	);
-
-	const handleBlur = useCallback(() => {
+	function handleBlur() {
 		blurTimeoutRef.current = setTimeout(() => {
 			setIsOpen(false);
 			setIsFocused(false);
 		}, 150);
-	}, []);
+	}
 
-	const handleFocus = useCallback(() => {
+	function handleFocus() {
 		if (blurTimeoutRef.current) {
 			clearTimeout(blurTimeoutRef.current);
 		}
 		setIsOpen(true);
 		setIsFocused(true);
-	}, []);
+	}
 
 	const showCompetitions =
 		!selectedComp && (competitionResults?.length ?? 0) > 0;
@@ -229,7 +206,7 @@ export function SearchForm() {
 
 					{/* Input Section */}
 					<div className="relative z-10">
-						<div className="flex items-center gap-3 px-4 py-3.5">
+						<div className="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-3.5">
 							<motion.div
 								animate={{
 									scale: isFocused ? 1.1 : 1,
@@ -243,14 +220,16 @@ export function SearchForm() {
 							</motion.div>
 
 							<input
-								className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
+								ref={inputRef}
+								className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:text-base"
 								onBlur={handleBlur}
 								onChange={(e) => handleInputChange(e.target.value)}
 								onFocus={handleFocus}
 								placeholder={
-									selectedComp ? `Hae lajeja...` : "Hae kilpailuja nimellä..."
+									selectedComp
+										? `Hae lajeja...`
+										: "Hae kilpailuja nimellä..."
 								}
-								ref={inputRef}
 								type="text"
 								value={query}
 							/>
@@ -263,7 +242,7 @@ export function SearchForm() {
 										exit={{ opacity: 0, scale: 0.8 }}
 										initial={{ opacity: 0, scale: 0.8 }}
 									>
-										<Spinner className="text-primary" />
+										<Loader2 className="size-5 animate-spin text-primary" />
 									</motion.div>
 								)}
 							</AnimatePresence>
@@ -327,23 +306,23 @@ export function SearchForm() {
 													{competitionResults?.slice(0, 10).map((comp) => (
 														<motion.div
 															key={comp.Id}
-															transition={smoothSpring}
 															variants={itemVariants}
+															transition={smoothSpring}
 															whileTap={{ scale: 0.97 }}
 														>
 															<CommandItem
-																className="group cursor-pointer rounded-xl px-3 py-2.5 transition-colors active:bg-primary/15 data-[selected=true]:bg-primary/10"
+																className="group cursor-pointer rounded-xl px-2 py-2 transition-colors data-[selected=true]:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
 																onMouseDown={(event) => event.preventDefault()}
 																onSelect={() => handleCompetitionSelect(comp)}
 																value={`${comp.Name}-${comp.Date}-${comp.Id}`}
 															>
-																<div className="flex flex-1 items-center justify-between gap-3">
-																	<div className="flex items-center gap-3">
-																		<div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-data-[selected=true]:bg-primary group-data-[selected=true]:text-primary-foreground">
+																<div className="flex flex-1 items-center justify-between gap-2 sm:gap-3">
+																	<div className="flex items-center gap-2 sm:gap-3">
+																		<div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-data-[selected=true]:bg-primary group-data-[selected=true]:text-primary-foreground sm:size-9">
 																			<Calendar className="size-4" />
 																		</div>
 																		<div className="flex flex-col">
-																			<span className="font-medium text-foreground">
+																			<span className="font-medium text-foreground text-sm sm:text-base">
 																				{comp.Name}
 																			</span>
 																			<span className="text-muted-foreground text-xs">
@@ -375,7 +354,7 @@ export function SearchForm() {
 											>
 												<div className="relative">
 													<div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
-													<Spinner className="relative size-6 text-primary" />
+													<Loader2 className="relative size-6 animate-spin text-primary" />
 												</div>
 												<p className="text-muted-foreground text-sm">
 													Ladataan lajeja...
@@ -395,19 +374,16 @@ export function SearchForm() {
 												>
 													{eventResults.slice(0, 15).map((evt) => {
 														const isNavigating = navigatingTo === evt.Id;
-														const isDisabled =
-															navigatingTo !== null && !isNavigating;
+														const isDisabled = navigatingTo !== null && !isNavigating;
 														return (
 															<motion.div
 																key={`${evt.Id}-${evt.Date}-${evt.Time}`}
-																transition={smoothSpring}
 																variants={itemVariants}
-																whileTap={
-																	isDisabled ? undefined : { scale: 0.97 }
-																}
+																transition={smoothSpring}
+																whileTap={isDisabled ? undefined : { scale: 0.97 }}
 															>
 																<CommandItem
-																	className="group cursor-pointer rounded-xl px-3 py-2.5 transition-all active:bg-primary/15 disabled:pointer-events-none data-[selected=true]:bg-primary/10"
+																	className="group cursor-pointer rounded-xl px-2 py-2 transition-all data-[selected=true]:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none sm:px-3 sm:py-2.5"
 																	disabled={isDisabled}
 																	onMouseDown={(event) => {
 																		event.preventDefault();
@@ -417,38 +393,38 @@ export function SearchForm() {
 																	style={{ opacity: isDisabled ? 0.4 : 1 }}
 																	value={`${evt.EventName}-${evt.Date}-${evt.Time}-${evt.Id}`}
 																>
-																	<div className="flex w-full items-center justify-between gap-3">
-																		<div className="flex items-center gap-3">
-																			<div className="relative flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-data-[selected=true]:bg-primary group-data-[selected=true]:text-primary-foreground">
+																	<div className="flex w-full items-center justify-between gap-2 sm:gap-3">
+																		<div className="flex items-center gap-2 sm:gap-3">
+																			<div className="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-data-[selected=true]:bg-primary group-data-[selected=true]:text-primary-foreground sm:size-9">
 																				{isNavigating ? (
-																					<Spinner className="size-4" />
+																					<Loader2 className="size-4 animate-spin" />
 																				) : (
 																					<Clock className="size-4" />
 																				)}
 																			</div>
 																			<div className="flex flex-col">
-																				<span className="font-medium text-foreground">
+																				<span className="font-medium text-foreground text-sm sm:text-base">
 																					{evt.EventName}
 																				</span>
 																				<AnimatePresence mode="wait">
 																					{isNavigating ? (
 																						<motion.span
+																							key="loading-label"
 																							animate={{ opacity: 1, y: 0 }}
 																							className="text-primary text-xs"
 																							exit={{ opacity: 0, y: -4 }}
 																							initial={{ opacity: 0, y: 4 }}
-																							key="loading-label"
 																							transition={{ duration: 0.15 }}
 																						>
 																							Siirrytään...
 																						</motion.span>
 																					) : (
 																						<motion.span
+																							key="round-label"
 																							animate={{ opacity: 1, y: 0 }}
 																							className="text-muted-foreground text-xs"
 																							exit={{ opacity: 0, y: 4 }}
 																							initial={{ opacity: 0, y: -4 }}
-																							key="round-label"
 																							transition={{ duration: 0.15 }}
 																						>
 																							{evt.Name}
@@ -457,13 +433,16 @@ export function SearchForm() {
 																				</AnimatePresence>
 																			</div>
 																		</div>
-																		<div className="flex items-center gap-3">
-																			<div className="flex items-center gap-2 text-muted-foreground text-xs">
+																		<div className="flex items-center gap-2 sm:gap-3">
+																			<div className="hidden items-center gap-2 text-muted-foreground text-xs sm:flex">
 																				<span className="rounded-md bg-muted px-2 py-0.5 font-mono">
 																					{evt.Time}
 																				</span>
 																				<span>{evt.Date}</span>
 																			</div>
+																			<span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-muted-foreground text-xs sm:hidden">
+																				{evt.Time}
+																			</span>
 																			{isNavigating ? (
 																				<div className="size-4" />
 																			) : (

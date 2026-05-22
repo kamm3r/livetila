@@ -1,15 +1,5 @@
 const INVALID_RESULTS = ["DNS", "DQ", "DNF", "DSQ", "NH", "NM"] as const;
 
-function isDns(value: string | null): boolean {
-	return value === "DNS";
-}
-
-function isInvalidResult(value: string | null): boolean {
-	return INVALID_RESULTS.includes(
-		value as (typeof INVALID_RESULTS)[number],
-	);
-}
-
 // Hoisted RegExp patterns (js-hoist-regexp)
 const SPRINT_RE = /^(\d+),(\d{2})$/;
 const DISTANCE_RE = /^(\d+)\.(\d{2}),(\d{2})$/;
@@ -70,35 +60,30 @@ export function parseResult(
 export function sortByResult<
 	T extends { Result: string | null; Attempts?: { Line1: string; Line2: string }[] },
 >(a: T, b: T, eventCategory: "Track" | "Field" | "Relay"): number {
-	const aIsDns = isDns(a.Result);
-	const bIsDns = isDns(b.Result);
-
-	// DNS always last of all
-	if (aIsDns && !bIsDns) return 1;
-	if (bIsDns && !aIsDns) return -1;
-
-	const aIsInvalid = isInvalidResult(a.Result);
-	const bIsInvalid = isInvalidResult(b.Result);
-
-	// Other invalid results after valid/empty ones, but before DNS
-	if (aIsInvalid && !bIsInvalid) return 1;
-	if (bIsInvalid && !aIsInvalid) return -1;
-
 	const aResult = parseResult(a.Result, eventCategory);
 	const bResult = parseResult(b.Result, eventCategory);
 
+	// DNS/DQ/DNF/DSQ/NH/NM are always last
+	if (aResult === -1 && bResult !== -1) return 1;
+	if (bResult === -1 && aResult !== -1) return -1;
+
+	// Both have valid results - sort by result value
 	if (aResult > 0 && bResult > 0) {
 		return eventCategory === "Field" ? bResult - aResult : aResult - bResult;
 	}
 
+	// One has result, one doesn't - result wins
 	if (aResult > 0 && bResult === 0) return -1;
 	if (bResult > 0 && aResult === 0) return 1;
 
+	// Neither has a valid result - check if they have attempts
 	const aHasAttempts = (a.Attempts?.length ?? 0) > 0;
 	const bHasAttempts = (b.Attempts?.length ?? 0) > 0;
 
+	// Athletes with attempts rank higher than those without
 	if (aHasAttempts && !bHasAttempts) return -1;
 	if (bHasAttempts && !aHasAttempts) return 1;
 
+	// Both have attempts or both don't - maintain original order
 	return 0;
 }

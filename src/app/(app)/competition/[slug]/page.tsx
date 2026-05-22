@@ -16,7 +16,7 @@ import { RoundSwitcher } from "~/@/components/round-switcher";
 import { Skeleton } from "~/@/components/ui/skeleton";
 
 import { api } from "~/trpc/server";
-import type { Competition } from "~/types/comp";
+import type { Competition, Events } from "~/types/comp";
 
 const ObsPopover = dynamic(() =>
   import("~/@/components/obs-popover").then((mod) => mod.ObsPopover),
@@ -69,9 +69,9 @@ async function CompetitionContent({
 
   return (
     <RoundProvider key={eventId} rounds={athletes.Rounds}>
-      <div className="flex flex-1 items-end justify-between gap-2 lg:flex-col">
-        <ObsPopover slug={`${compId}-${eventId}`} />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <RoundSwitcher />
+        <ObsPopover slug={`${compId}-${eventId}`} />
       </div>
       <CompetitionTabs
         athletes={athletes}
@@ -150,10 +150,10 @@ export default async function Comp({
   const compEvents = flattenEvents(compEventsRaw);
 
   return (
-    <main className="container relative mx-auto flex grow flex-col p-4 sm:p-8">
+    <main className="container relative mx-auto flex grow flex-col px-4 py-4 sm:p-8">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col items-start gap-2">
-          <h2 className="scroll-m-20 border-b pb-2 font-semibold text-3xl tracking-tight first:mt-0">
+        <div className="flex flex-col items-start gap-3">
+          <h2 className="scroll-m-20 border-b pb-2 font-semibold text-2xl tracking-tight first:mt-0 sm:text-3xl">
             {compDetails ? compDetails.Competition.Name : null}
           </h2>
           <EventSwitcher
