@@ -127,8 +127,9 @@ export function SearchForm() {
 
 	// Handlers
 	function handleInputChange(value: string) {
+		console.log("[v0] handleInputChange:", { value, isOpen, selectedComp: !!selectedComp });
 		setQuery(value);
-		setIsOpen(true);
+		if (!isOpen) setIsOpen(true);
 		// If user clears the "/" separator, go back to competition step
 		if (selectedComp && !value.includes("/")) {
 			setSelectedComp(null);
