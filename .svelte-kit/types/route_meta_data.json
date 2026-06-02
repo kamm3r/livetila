@@ -1,0 +1,7 @@
+{
+	"/(overlay)": [],
+	"/(app)": [],
+	"/": [],
+	"/competition/[slug]": [],
+	"/obs/[slug]": []
+}

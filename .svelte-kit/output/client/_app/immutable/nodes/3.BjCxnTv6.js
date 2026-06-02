@@ -1,0 +1,1 @@
+import{E as e,O as t,W as n,ot as r,x as i}from"../chunks/87F2_Zqa.js";import"../chunks/xihTtKlq.js";import"../chunks/CJzZDjbd.js";var a=t(`<div class="fixed inset-0 z-50"><!></div>`);function o(t,o){var s=a();i(n(s),o,`default`,{},null),r(s),e(t,s)}export{o as component};
