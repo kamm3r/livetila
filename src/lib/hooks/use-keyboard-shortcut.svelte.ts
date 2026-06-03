@@ -1,11 +1,19 @@
 import { onMount } from "svelte";
 
+function isEditableTarget(target: EventTarget | null): boolean {
+	if (!(target instanceof HTMLElement)) return false;
+	if (target.isContentEditable) return true;
+	const tag = target.tagName;
+	return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
+
 export function useKeyboardShortcut(key: string, callback: () => void) {
 	onMount(() => {
 		function handleKeyDown(event: KeyboardEvent) {
-			if (event.key === key && !event.repeat) {
-				callback();
-			}
+			if (event.key !== key || event.repeat) return;
+			if (event.ctrlKey || event.metaKey || event.altKey) return;
+			if (isEditableTarget(event.target)) return;
+			callback();
 		}
 
 		document.addEventListener("keydown", handleKeyDown);

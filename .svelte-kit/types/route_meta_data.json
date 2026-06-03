@@ -1,7 +1,16 @@
 {
 	"/(overlay)": [],
-	"/(app)": [],
-	"/": [],
-	"/competition/[slug]": [],
-	"/obs/[slug]": []
+	"/(app)": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.ts"
+	],
+	"/": [
+		"src/routes/+layout.ts"
+	],
+	"/competition/[slug]": [
+		"src/routes/+layout.ts"
+	],
+	"/obs/[slug]": [
+		"src/routes/+layout.ts"
+	]
 }

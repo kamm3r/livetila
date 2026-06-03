@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { ArrowRight, Calendar, ChevronRight, Clock, Loader2, Search } from "@lucide/svelte";
 	import { goto } from "$app/navigation";
-	import { animate, scroll, inView } from "motion";
 	import { triggerHaptic } from "$lib/hooks/use-haptics";
 	import { api } from "$lib/api";
 	import type { CompetitionList, Events } from "~/types/comp";
@@ -38,7 +37,6 @@
 	}
 
 	let query = $state("");
-	let isOpen = $state(false);
 	let isFocused = $state(false);
 	let selectedComp = $state<CompetitionList | null>(null);
 	let navigatingTo = $state<number | null>(null);
@@ -91,12 +89,11 @@
 	const isLoading = $derived(step === "competitions" ? isLoadingComps : isLoadingEvents);
 	const results = $derived(step === "competitions" ? filteredCompetitions : filteredEvents);
 	const hasResults = $derived(results.length > 0);
-	const showDropdown = $derived(isOpen && (isLoading || hasResults || query.length > 0));
+	const showDropdown = $derived(isFocused && query.length > 0 && (isLoading || hasResults));
 
 	function handleInputChange(e: Event) {
 		const value = (e.target as HTMLInputElement).value;
 		query = value;
-		if (!isOpen) isOpen = true;
 		if (selectedComp && !value.includes("/")) {
 			selectedComp = null;
 			query = "";
@@ -118,15 +115,11 @@
 	}
 
 	function handleFocus() {
-		isOpen = true;
 		isFocused = true;
 	}
 
 	function handleBlur() {
-		setTimeout(() => {
-			isOpen = false;
-			isFocused = false;
-		}, 150);
+		isFocused = false;
 	}
 </script>
 

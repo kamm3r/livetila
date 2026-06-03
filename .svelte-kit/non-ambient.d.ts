@@ -29,25 +29,19 @@ declare module "$app/types" {
 	type MatcherParam<M> = M extends (param : string) => param is (infer U extends string) ? U : string;
 
 	export interface AppTypes {
-		RouteId(): "/(overlay)" | "/(app)" | "/" | "/competition" | "/(app)/competition" | "/competition/[slug]" | "/(app)/competition/[slug]" | "/obs" | "/(overlay)/obs" | "/obs/[slug]" | "/(overlay)/obs/[slug]";
+		RouteId(): "/(overlay)" | "/(app)" | "/" | "/competition" | "/competition/[slug]" | "/obs" | "/obs/[slug]";
 		RouteParams(): {
 			"/competition/[slug]": { slug: string };
-			"/(app)/competition/[slug]": { slug: string };
-			"/obs/[slug]": { slug: string };
-			"/(overlay)/obs/[slug]": { slug: string }
+			"/obs/[slug]": { slug: string }
 		};
 		LayoutParams(): {
-			"/(overlay)": { slug?: string | undefined };
-			"/(app)": { slug?: string | undefined };
+			"/(overlay)": Record<string, never>;
+			"/(app)": Record<string, never>;
 			"/": { slug?: string | undefined };
 			"/competition": { slug?: string | undefined };
-			"/(app)/competition": { slug?: string | undefined };
 			"/competition/[slug]": { slug: string };
-			"/(app)/competition/[slug]": { slug: string };
 			"/obs": { slug?: string | undefined };
-			"/(overlay)/obs": { slug?: string | undefined };
-			"/obs/[slug]": { slug: string };
-			"/(overlay)/obs/[slug]": { slug: string }
+			"/obs/[slug]": { slug: string }
 		};
 		Pathname(): "/" | `/competition/${string}` & {} | `/obs/${string}` & {};
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;

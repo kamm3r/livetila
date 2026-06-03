@@ -53,21 +53,22 @@
 		return () => clearInterval(interval);
 	});
 
-	const eventCategory = $derived("Field");
+	const eventCategory = $derived(competition?.EventCategory ?? "Field");
 	const isTrack = $derived(eventCategory === "Track" || eventCategory === "Relay");
 
 	const roundIndex = $derived((Number(selectedRound) || 1) - 1);
 	const rounds = $derived(competition?.Rounds?.[roundIndex]);
 	const heats = $derived(rounds?.Heats ?? []);
 
-	const heatIndexRaw = $derived(selectedHeat ? Number(selectedHeat) - 1 : null);
-	const heatIndex = $derived(
-		heatIndexRaw != null && Number.isInteger(heatIndexRaw) ? heatIndexRaw : null,
-	);
+	const heatIndex = $derived.by(() => {
+		if (!selectedHeat) return null;
+		const raw = Number(selectedHeat) - 1;
+		return Number.isInteger(raw) ? raw : null;
+	});
 	const heatExists = $derived(
-		heatIndex != null && heatIndex >= 0 && heatIndex < heats.length,
+		heatIndex !== null && heatIndex >= 0 && heatIndex < heats.length,
 	);
-	const heat = $derived(heatExists ? heats[heatIndex] : null);
+	const heat = $derived(heatExists && heatIndex !== null ? heats[heatIndex] : null);
 
 	const allocations = $derived(
 		(selectedHeat ? (heat?.Allocations ?? []) : (rounds?.TotalResults ?? []))
@@ -115,8 +116,8 @@
 				<p class="px-2 py-1 text-cyan-600 text-xl">Failed to load</p>
 			{:else if isLoading}
 				<ul>
-					{#each Array(8) as _, i}
-						<li class="border-black/50 border-t-2" key={i}>
+					{#each Array(8) as _, i (i)}
+						<li class="border-black/50 border-t-2">
 							<div class="flex flex-[1_1_100%] justify-between px-4 py-2">
 								<div class="h-4 w-40 animate-pulse rounded bg-gray-700/60"></div>
 								<div class="h-4 w-16 animate-pulse rounded bg-gray-700/60"></div>

@@ -272,11 +272,12 @@
 
 					<!-- Results -->
 					{:else if activeTab === "results"}
+						{@const eventCategory = competition?.EventCategory ?? "Field"}
 						{@const sortedAllocs = currentHeat && heats.length > 0
-							? [...currentHeat.Allocations].sort((a: any, b: any) => sortByResult(a, b, competition.EventCategory))
+							? [...currentHeat.Allocations].sort((a: any, b: any) => sortByResult(a, b, eventCategory))
 							: []}
 						{@const sortedTotal = currentRound?.TotalResults
-							? [...currentRound.TotalResults].sort((a: any, b: any) => sortByResult(a, b, competition.EventCategory))
+							? [...currentRound.TotalResults].sort((a: any, b: any) => sortByResult(a, b, eventCategory))
 							: []}
 
 						<div class="space-y-6">

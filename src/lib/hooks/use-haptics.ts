@@ -7,12 +7,16 @@ export type HapticFeedback =
 	| "heavy"
 	| "selection";
 
-let webHaptics: { trigger: (type: string) => void } | null = null;
+type HapticsInstance = {
+	trigger: (type: HapticFeedback) => void;
+};
+
+let webHaptics: HapticsInstance | null = null;
 
 async function initHaptics() {
 	try {
-		const mod = await import("web-haptics");
-		webHaptics = mod.createHaptics?.() ?? null;
+		const mod = await import("web-haptics/svelte");
+		webHaptics = mod.createWebHaptics();
 	} catch {
 		// Silently fail on unsupported devices
 	}

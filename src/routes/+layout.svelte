@@ -1,12 +1,12 @@
 <script lang="ts">
 	import "../app.css";
-	import { theme } from "$lib/theme";
+	import { theme, type Theme } from "$lib/theme";
 	import { onMount } from "svelte";
 
 	onMount(() => {
 		const stored = localStorage.getItem("theme");
-		if (stored) {
-			theme.setTheme(stored);
+		if (stored === "light" || stored === "dark") {
+			theme.setTheme(stored satisfies Theme);
 		}
 	});
 </script>

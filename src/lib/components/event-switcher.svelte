@@ -78,6 +78,13 @@
 		goto(url);
 		isOpen = false;
 	}
+
+	function handleOverlayKeydown(event: KeyboardEvent) {
+		if (event.key === "Escape") {
+			event.preventDefault();
+			isOpen = false;
+		}
+	}
 </script>
 
 <div class="relative">
@@ -102,10 +109,18 @@
 	</button>
 
 	{#if isOpen}
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="fixed inset-0 z-40" onclick={() => isOpen = false} onkeydown={() => isOpen = false}></div>
+    <div
+      class="fixed inset-0 z-40"
+      role="button"
+      tabindex="-1"
+      aria-label="Sulje valikko"
+      onclick={() => isOpen = false}
+      onkeydown={handleOverlayKeydown}
+    ></div>
 
-		<div class="absolute left-0 right-0 z-50 mt-1 max-h-72 overflow-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-md sm:w-[400px]">
+		<div class="absolute left-0 right-0 z-50 mt-1 max-h-72 overflow-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-md sm:w-[400px]" role="listbox">
 			{#each events as event, i}
 				<button
 					class="flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground {event.EventId === Number(currentEventId) ? 'bg-accent' : ''}"
