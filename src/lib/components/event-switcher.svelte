@@ -140,7 +140,7 @@
     ></div>
 
     <div
-      class="absolute left-0 right-0 z-50 mt-1 max-h-72 overflow-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-md sm:w-[400px]"
+      class="absolute left-0 right-0 z-50 mt-1 max-h-96 min-w-[8rem] overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md sm:w-[400px]"
       role="listbox"
     >
       {#each events as event, i}
