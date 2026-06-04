@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { CheckCircle } from "@lucide/svelte";
   import { ClipboardList, Trophy, Users } from "@lucide/svelte";
   import ObsPopover from "$lib/components/obs-popover.svelte";
@@ -7,6 +7,7 @@
   import { flattenEvents } from "$lib/events";
   import { sortByResult } from "$lib/results";
   import { api } from "$lib/api";
+  import { createQuery } from "@tanstack/svelte-query";
   import { triggerHaptic } from "$lib/hooks/use-haptics";
   import type {
     Competition,
@@ -15,37 +16,17 @@
   } from "~/types/comp";
   import type { Heat, Round } from "~/types/comp";
 
-  const slug = $derived($page.params.slug);
-  const compId = $derived(slug?.split("-", 2)[0] ?? "");
-  const eventId = $derived(slug?.split("-", 2)[1] ?? "");
+  const slug = $derived(page.params.slug ?? "");
+  const compId = $derived(slug.split("-", 2)[0] ?? "");
+  const eventId = $derived(slug.split("-", 2)[1] ?? "");
 
-  let competition = $state<Competition | null>(null);
-  let compDetails = $state<CompetitionProperties | null>(null);
-  let compEventsRaw = $state<Events | null>(null);
-  let isLoading = $state(true);
-  let error = $state<string | null>(null);
+  const eventsQuery = createQuery<Events>(() => ({
+    queryKey: ["events", compId],
+    queryFn: () => api.getEvents(compId),
+    enabled: Boolean(compId),
+  }));
 
-  $effect(() => {
-    if (!compId || !eventId) return;
-    isLoading = true;
-    error = null;
-    Promise.all([
-      api.getAthletes(`${compId}/${eventId}`),
-      api.getEvents(compId),
-      api.getCompetitionDetails(compId),
-    ])
-      .then(([comp, events, details]) => {
-        competition = comp;
-        compEventsRaw = events;
-        compDetails = details;
-        isLoading = false;
-      })
-      .catch(() => {
-        error = "Failed to load competition data";
-        isLoading = false;
-      });
-  });
-
+  const compEventsRaw = $derived(eventsQuery.data ?? null);
   const compEvents = $derived(
     compEventsRaw ? flattenEvents(compEventsRaw) : [],
   );
@@ -55,17 +36,26 @@
   const isTrack = $derived(selectedEvent?.Category === "Track");
   const isProgress = $derived(selectedEvent?.Status === "Progress");
 
-  $effect(() => {
-    if (!competition || !isProgress) return;
-    const interval = setInterval(async () => {
-      try {
-        competition = await api.getAthletes(`${compId}/${eventId}`);
-      } catch {
-        /* keep old data */
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  });
+  const athletesQuery = createQuery<Competition>(() => ({
+    queryKey: ["athletes", compId, eventId],
+    queryFn: () => api.getAthletes(`${compId}/${eventId}`),
+    enabled: Boolean(compId && eventId),
+    refetchInterval: isProgress ? 1000 : false,
+    refetchIntervalInBackground: false,
+  }));
+
+  const detailsQuery = createQuery<CompetitionProperties>(() => ({
+    queryKey: ["competition-details", compId],
+    queryFn: () => api.getCompetitionDetails(compId),
+    enabled: Boolean(compId),
+  }));
+
+  const competition = $derived(athletesQuery.data ?? null);
+  const compDetails = $derived(detailsQuery.data ?? null);
+  const isLoading = $derived(
+    athletesQuery.isPending || detailsQuery.isPending || eventsQuery.isPending,
+  );
+  const error = $derived(athletesQuery.isError ? "Failed to load competition data" : null);
 
   // Round state
   const rounds = $derived(competition?.Rounds ?? []);
