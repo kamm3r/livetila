@@ -97,7 +97,7 @@
 
 <div class="relative">
   <button
-    class="flex w-full items-center rounded-lg border border-input bg-background px-4 py-2 text-left text-sm shadow-xs hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-[400px]"
+    class="flex w-full items-center rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-[400px]"
     onclick={() => (isOpen = !isOpen)}
   >
     {#if currentEvent}
