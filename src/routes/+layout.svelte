@@ -1,16 +1,16 @@
 <script lang="ts">
-  import "./layout.css";
   import "../app.css";
-  import { theme, type Theme } from "$lib/theme";
-  import { onMount } from "svelte";
+  import { browser } from "$app/environment";
+  import { QueryClient, QueryClientProvider } from "@tanstack/svelte-query";
 
-  onMount(() => {
-    const stored = localStorage.getItem("theme");
-
-    if (stored === "light" || stored === "dark") {
-      theme.setTheme(stored satisfies Theme);
-    }
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        enabled: browser,
+      },
+    },
   });
+  let { children } = $props();
 </script>
 
 <svelte:head>
@@ -24,4 +24,6 @@
   <link rel="icon" href="/favicon.ico" />
 </svelte:head>
 
-<slot></slot>
+<QueryClientProvider client={queryClient}>
+  {@render children()}
+</QueryClientProvider>
