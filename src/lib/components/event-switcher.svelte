@@ -145,7 +145,7 @@
     >
       {#each events as event, i}
         <button
-          class="flex w-full cursor-pointer items-center rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground {event.EventId ===
+          class="flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground {event.EventId ===
           Number(currentEventId)
             ? 'bg-accent'
             : ''}"
