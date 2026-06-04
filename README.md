@@ -69,15 +69,15 @@ pnpm preview
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development server with turbo mode |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
-| `pnpm preview` | Build and start production server locally |
-| `pnpm check` | Run Biome linter |
-| `pnpm check:write` | Run Biome linter with auto-fix |
-| `pnpm typecheck` | Run TypeScript type checking |
+| Command            | Description                               |
+| ------------------ | ----------------------------------------- |
+| `pnpm dev`         | Start development server with turbo mode  |
+| `pnpm build`       | Build for production                      |
+| `pnpm start`       | Start production server                   |
+| `pnpm preview`     | Build and start production server locally |
+| `pnpm check`       | Run Biome linter                          |
+| `pnpm check:write` | Run Biome linter with auto-fix            |
+| `pnpm typecheck`   | Run TypeScript type checking              |
 
 ---
 
