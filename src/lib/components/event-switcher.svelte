@@ -3,6 +3,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { triggerHaptic } from "$lib/hooks/use-haptics";
+  import Badge from "$lib/components/ui/badge/badge.svelte";
   import type { EventWithDate } from "$lib/events";
 
   let {
@@ -23,11 +24,10 @@
   type RoundKey = keyof typeof roundMapping;
 
   const statusVariants: Record<string, string> = {
-    Unallocated: "bg-muted text-muted-foreground",
-    Allocated: "bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200",
-    Progress:
-      "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200",
-    Official: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+    Unallocated: "unallocated",
+    Allocated: "allocated",
+    Progress: "progress",
+    Official: "official",
   };
 
   const eventStatusLabel: Record<string, string> = {
@@ -104,13 +104,9 @@
       <div class="flex w-full items-center justify-between gap-2">
         <div class="flex flex-col gap-2">
           <span>{currentEvent.EventName} {currentEvent.Name}</span>
-          <span
-            class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium {statusVariants[
-              currentEvent.Status
-            ] || ''}"
-          >
+          <Badge variant={statusVariants[currentEvent.Status] || "default"}>
             {eventStatusLabel[currentEvent.Status] || currentEvent.Status}
-          </span>
+          </Badge>
         </div>
         <div
           class="flex min-w-[90px] flex-col items-end gap-2 text-muted-foreground text-xs"
@@ -154,13 +150,9 @@
           <div class="flex w-full items-center justify-between gap-2">
             <div class="flex flex-col gap-1">
               <span>{event.EventName} {event.Name}</span>
-              <span
-                class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium {statusVariants[
-                  event.Status
-                ] || ''}"
-              >
+              <Badge variant={statusVariants[event.Status] || "default"}>
                 {eventStatusLabel[event.Status] || event.Status}
-              </span>
+              </Badge>
             </div>
             <div
               class="flex min-w-[90px] flex-col items-end gap-1 text-muted-foreground text-xs"
