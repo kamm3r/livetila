@@ -6,6 +6,7 @@
   import EventSwitcher from "$lib/components/event-switcher.svelte";
   import { flattenEvents } from "$lib/events";
   import { sortByResult } from "$lib/results";
+  import * as Table from "$lib/components/ui/table";
   import { api } from "$lib/api";
   import { createQuery } from "@tanstack/svelte-query";
   import { triggerHaptic } from "$lib/hooks/use-haptics";
@@ -223,43 +224,34 @@
           {#if activeTab === "participants"}
             <div class="space-y-6">
               {#if competition.Enrollments.length > 0}
-                <table
+                <Table.Root
                   class="hidden max-h-[600px] overflow-y-auto rounded-md border lg:table"
                 >
-                  <thead class="sticky top-0 backdrop-blur-md">
-                    <tr class="border-b">
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs"
-                      ></th>
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs w-full"
-                        >Nimi ja Seura</th
+                  <Table.Header class="sticky top-0 backdrop-blur-md">
+                    <Table.Row>
+                      <Table.Head class="text-muted-foreground text-xs"></Table.Head>
+                      <Table.Head class="text-muted-foreground text-xs w-full"
+                        >Nimi ja Seura</Table.Head
                       >
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs"
-                        >PB</th
-                      >
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs"
-                        >SB</th
-                      >
-                    </tr>
-                  </thead>
-                  <tbody>
+                      <Table.Head class="text-muted-foreground text-xs">PB</Table.Head>
+                      <Table.Head class="text-muted-foreground text-xs">SB</Table.Head>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {#each competition.Enrollments as enrollment (enrollment.Id)}
-                      <tr
-                        class="border-b transition-colors hover:bg-muted/50 {enrollment.Confirmed
+                      <Table.Row
+                        class={enrollment.Confirmed
                           ? 'bg-green-300/10 hover:bg-green-300/15'
-                          : ''}"
+                          : ''}
                       >
-                        <td class="p-2 align-middle"
+                        <Table.Cell
                           >{#if enrollment.Confirmed}<div
                               class="flex size-5 items-center justify-center"
                             >
                               <CheckCircle class="size-3 text-white" />
-                            </div>{/if}</td
+                            </div>{/if}</Table.Cell
                         >
-                        <td class="p-2 align-middle w-full">
+                        <Table.Cell class="w-full">
                           <div class="flex flex-col">
                             <div class="flex items-center">
                               {#if enrollment.Number}<span
@@ -272,21 +264,21 @@
                               {enrollment.Organization?.Name ?? "-"}
                             </div>
                           </div>
-                        </td>
-                        <td class="p-2 align-middle"
+                        </Table.Cell>
+                        <Table.Cell
                           ><span class="font-medium"
                             >{enrollment.PB || "-"}</span
-                          ></td
+                          ></Table.Cell
                         >
-                        <td class="p-2 align-middle"
+                        <Table.Cell
                           ><span class="font-medium"
                             >{enrollment.SB || "-"}</span
-                          ></td
+                          ></Table.Cell
                         >
-                      </tr>
+                      </Table.Row>
                     {/each}
-                  </tbody>
-                </table>
+                  </Table.Body>
+                </Table.Root>
                 <ul class="flex flex-col gap-4 lg:hidden">
                   {#each competition.Enrollments as enrollment (enrollment.Id)}
                     <li
@@ -323,13 +315,17 @@
           {:else if activeTab === "protocol"}
             <div class="space-y-6">
               {#if showHeatNumbers && heats.length > 0}
-                <div class="mb-4 flex flex-wrap gap-2">
-                  <div class="mb-2 w-full text-muted-foreground text-sm">
-                    Valitse erä:
+                <div
+                  class="mb-4 flex overflow-x-auto flex-nowrap gap-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  <div
+                    class="sticky left-0 z-10 shrink-0 self-center rounded-md bg-muted px-2 py-1 text-muted-foreground text-xs"
+                  >
+                    Erä:
                   </div>
                   {#each [...heats].sort((a: any, b: any) => a.Index - b.Index) as heat (heat.Index)}
                     <button
-                      class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {selectedHeat ===
+                      class="shrink-0 inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {selectedHeat ===
                       heat.Index
                         ? 'bg-primary text-primary-foreground shadow-xs'
                         : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'}"
@@ -341,36 +337,28 @@
               {/if}
               {#if currentHeat && heats.length > 0}
                 {@const heatAllocs = [...currentHeat.Allocations]}
-                <table
+                <Table.Root
                   class="hidden max-h-[600px] overflow-y-auto rounded-md border lg:table"
                 >
-                  <thead class="sticky top-0 backdrop-blur-md">
-                    <tr class="border-b">
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs w-[100px]"
-                        >{isTrack ? "Rata" : "Järjestys"}</th
+                  <Table.Header class="sticky top-0 backdrop-blur-md">
+                    <Table.Row>
+                      <Table.Head class="text-muted-foreground text-xs w-[100px]"
+                        >{isTrack ? "Rata" : "Järjestys"}</Table.Head
                       >
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs w-full"
-                        >Nimi ja Seura</th
+                      <Table.Head class="text-muted-foreground text-xs w-full"
+                        >Nimi ja Seura</Table.Head
                       >
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs"
-                        >PB</th
-                      >
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs"
-                        >SB</th
-                      >
-                    </tr>
-                  </thead>
-                  <tbody>
+                      <Table.Head class="text-muted-foreground text-xs">PB</Table.Head>
+                      <Table.Head class="text-muted-foreground text-xs">SB</Table.Head>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {#each heatAllocs as alloc (alloc.Id)}
-                      <tr class="border-b transition-colors hover:bg-muted/50">
-                        <td class="p-2 align-middle"
-                          ><span>{alloc.Number || ""}</span></td
+                      <Table.Row>
+                        <Table.Cell
+                          ><span>{alloc.Number || ""}</span></Table.Cell
                         >
-                        <td class="p-2 align-middle w-full">
+                        <Table.Cell class="w-full">
                           <div class="flex flex-col">
                             <div class="flex items-center">
                               {#if alloc.Number}<span
@@ -383,38 +371,41 @@
                               {alloc.Organization?.Name ?? "-"}
                             </div>
                           </div>
-                        </td>
-                        <td class="p-2 align-middle"
+                        </Table.Cell>
+                        <Table.Cell
                           ><span class="font-medium">{alloc.PB || "-"}</span
-                          ></td
+                          ></Table.Cell
                         >
-                        <td class="p-2 align-middle"
+                        <Table.Cell
                           ><span class="font-medium">{alloc.SB || "-"}</span
-                          ></td
+                          ></Table.Cell
                         >
-                      </tr>
+                      </Table.Row>
                     {/each}
-                  </tbody>
-                </table>
-                <ul class="flex flex-col gap-4 lg:hidden">
+                  </Table.Body>
+                </Table.Root>
+                <ul class="flex flex-col gap-3 lg:hidden">
                   {#each heatAllocs as alloc (alloc.Id)}
                     <li
-                      class="rounded-xl border bg-card px-3 py-3 shadow-sm sm:px-4 sm:py-4"
+                      class="rounded-xl border bg-card px-3 py-3 shadow-sm"
                     >
-                      <div class="flex flex-col gap-2">
-                        <div>
-                          <h3 class="font-semibold text-sm sm:text-base">
-                            {alloc.Number || ""}
-                            {alloc.Name}
-                          </h3>
-                          <p class="text-muted-foreground text-xs">
+                      <div class="flex items-start gap-3">
+                        <div
+                          class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-medium text-muted-foreground"
+                        >
+                          {alloc.Number || "-"}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <span class="truncate font-medium text-sm"
+                            >{alloc.Name}</span
+                          >
+                          <p class="mt-0.5 text-muted-foreground text-xs">
                             {alloc.Organization?.Name ?? "-"}
                           </p>
-                        </div>
-                        <div class="flex gap-3 text-xs opacity-70">
-                          <span>PB {alloc.PB || "-"}</span><span
-                            >SB {alloc.SB || "-"}</span
-                          >
+                          <div class="mt-1 flex gap-3 text-xs text-muted-foreground">
+                            <span>PB {alloc.PB || "-"}</span
+                            ><span>SB {alloc.SB || "-"}</span>
+                          </div>
                         </div>
                       </div>
                     </li>
@@ -446,13 +437,17 @@
 
             <div class="space-y-6">
               {#if showHeatNumbers && heats.length > 0}
-                <div class="mb-4 flex flex-wrap gap-2">
-                  <div class="mb-2 w-full text-muted-foreground text-sm">
-                    Valitse erä:
+                <div
+                  class="mb-4 flex overflow-x-auto flex-nowrap gap-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  <div
+                    class="sticky left-0 z-10 shrink-0 self-center rounded-md bg-muted px-2 py-1 text-muted-foreground text-xs"
+                  >
+                    Erä:
                   </div>
                   {#each [...heats].sort((a: any, b: any) => a.Index - b.Index) as heat (heat.Index)}
                     <button
-                      class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {selectedHeat ===
+                      class="shrink-0 inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {selectedHeat ===
                       heat.Index
                         ? 'bg-primary text-primary-foreground shadow-xs'
                         : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'}"
@@ -464,32 +459,29 @@
               {/if}
 
               {#if sortedAllocs.length > 0}
-                <table
+                <Table.Root
                   class="hidden max-h-[600px] overflow-y-auto rounded-md border lg:table"
                 >
-                  <thead class="sticky top-0 backdrop-blur-md">
-                    <tr class="border-b">
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs w-[100px]"
-                        >Sija</th
+                  <Table.Header class="sticky top-0 backdrop-blur-md">
+                    <Table.Row>
+                      <Table.Head class="text-muted-foreground text-xs w-[100px]"
+                        >Sija</Table.Head
                       >
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs w-full"
-                        >Nimi ja Seura</th
+                      <Table.Head class="text-muted-foreground text-xs w-full"
+                        >Nimi ja Seura</Table.Head
                       >
-                      <th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs"
-                        >Tulos</th
+                      <Table.Head class="text-muted-foreground text-xs"
+                        >Tulos</Table.Head
                       >
-                    </tr>
-                  </thead>
-                  <tbody>
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {#each sortedAllocs as alloc (alloc.Id)}
-                      <tr class="border-b transition-colors hover:bg-muted/50">
-                        <td class="p-2 align-middle"
-                          ><span>{alloc.HeatRank}</span></td
+                      <Table.Row>
+                        <Table.Cell
+                          ><span>{alloc.HeatRank}</span></Table.Cell
                         >
-                        <td class="p-2 align-middle w-full">
+                        <Table.Cell class="w-full">
                           <div class="flex flex-col">
                             <div class="flex items-center">
                               {#if alloc.Number}<span
@@ -502,8 +494,8 @@
                               {alloc.Organization?.Name ?? "-"}
                             </div>
                           </div>
-                        </td>
-                        <td class="p-2 align-middle">
+                        </Table.Cell>
+                        <Table.Cell>
                           {#if alloc.Attempts}
                             <ul class="flex gap-2">
                               {#each alloc.Attempts as attempt, i}
@@ -521,42 +513,61 @@
                               {/each}
                             </ul>
                           {/if}
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                      </Table.Row>
                     {/each}
-                  </tbody>
-                </table>
-                <ul class="flex flex-col gap-4 lg:hidden">
+                  </Table.Body>
+                </Table.Root>
+                <ul class="flex flex-col gap-3 lg:hidden">
                   {#each sortedAllocs as alloc (alloc.Id)}
                     <li
-                      class="rounded-xl border bg-card px-3 py-3 shadow-sm sm:px-4 sm:py-4"
+                      class="rounded-xl border bg-card px-3 py-3 shadow-sm"
                     >
-                      <div class="flex flex-col gap-2">
-                        <div>
-                          <h3 class="font-semibold text-sm sm:text-base">
-                            {alloc.HeatRank || ""}
-                            {alloc.Name}
-                          </h3>
-                          <p class="text-muted-foreground text-xs">
-                            {alloc.Organization?.Name ?? "-"}
-                          </p>
+                      <div class="flex items-start gap-3">
+                        <div
+                          class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-medium text-muted-foreground"
+                        >
+                          {alloc.HeatRank || "-"}
                         </div>
-                        {#if alloc.Attempts}
-                          <ul class="flex gap-2">
-                            {#each alloc.Attempts as attempt, i}
-                              <li
-                                class="-my-1 flex flex-col rounded bg-muted-foreground/20 px-2 py-1 text-sm {alloc.Result ===
-                                attempt.Line1
-                                  ? 'border-primary/20! bg-primary/10! text-primary'
-                                  : ''}"
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center justify-between gap-4">
+                            <div class="min-w-0">
+                              <span class="truncate font-medium text-sm"
+                                >{alloc.Name}</span
                               >
-                                <span>{attempt.Line1}</span
-                                >{#if attempt.Line2}<span>{attempt.Line2}</span
-                                  >{/if}
-                              </li>
-                            {/each}
-                          </ul>
-                        {/if}
+                              <p
+                                class="mt-0.5 text-muted-foreground text-xs"
+                              >
+                                {alloc.Organization?.Name ?? "-"}
+                              </p>
+                            </div>
+                            {#if !alloc.Attempts?.length && alloc.Result}
+                              <span
+                                class="shrink-0 font-medium text-sm tabular-nums"
+                                >{alloc.Result}</span
+                              >
+                            {/if}
+                          </div>
+                          {#if alloc.Attempts}
+                            <ul class="mt-2 flex flex-wrap gap-1.5">
+                              {#each alloc.Attempts as attempt, i}
+                                <li
+                                  class="inline-flex items-center rounded bg-muted-foreground/15 px-1.5 py-0.5 text-xs leading-none {alloc.Result ===
+                                  attempt.Line1
+                                    ? 'bg-primary/10 text-primary font-medium'
+                                    : ''}"
+                                >
+                                  <span>{attempt.Line1}</span>
+                                  {#if attempt.Line2}
+                                    <span class="ml-0.5 opacity-60"
+                                      >/{attempt.Line2}</span
+                                    >
+                                  {/if}
+                                </li>
+                              {/each}
+                            </ul>
+                          {/if}
+                        </div>
                       </div>
                     </li>
                   {/each}
@@ -573,38 +584,37 @@
                 <h3 class="scroll-m-20 font-semibold text-2xl tracking-tight">
                   Kokonaistulokset
                 </h3>
-                <table
+                <Table.Root
                   class="hidden max-h-[600px] overflow-y-auto rounded-md border lg:table"
                 >
-                  <thead class="sticky top-0 backdrop-blur-md"
-                    ><tr class="border-b"
-                      ><th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs w-[100px]"
-                        >Sija</th
-                      ><th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs w-full"
-                        >Nimi ja Seura</th
-                      ><th
-                        class="h-10 px-2 text-left align-middle font-medium text-muted-foreground text-xs"
-                        >Tulos</th
-                      ></tr
-                    ></thead
-                  >
-                  <tbody>
+                  <Table.Header class="sticky top-0 backdrop-blur-md">
+                    <Table.Row>
+                      <Table.Head class="text-muted-foreground text-xs w-[100px]"
+                        >Sija</Table.Head
+                      >
+                      <Table.Head class="text-muted-foreground text-xs w-full"
+                        >Nimi ja Seura</Table.Head
+                      >
+                      <Table.Head class="text-muted-foreground text-xs"
+                        >Tulos</Table.Head
+                      >
+                    </Table.Row>
+                  </Table.Header>
+                  <Table.Body>
                     {#each sortedTotal as tr (tr.Id)}
-                      <tr class="border-b transition-colors hover:bg-muted/50">
-                        <td class="p-2 align-middle"
-                          ><span>{tr.ResultRank}</span></td
+                      <Table.Row>
+                        <Table.Cell
+                          ><span>{tr.ResultRank}</span></Table.Cell
                         >
-                        <td class="p-2 align-middle w-full">
+                        <Table.Cell class="w-full">
                           <div class="flex flex-col">
                             <span class="font-medium">{tr.Name}</span>
                             <div class="mt-1 text-muted-foreground text-xs">
                               {tr.Organization?.Name ?? "-"}
                             </div>
                           </div>
-                        </td>
-                        <td class="p-2 align-middle">
+                        </Table.Cell>
+                        <Table.Cell>
                           {#if tr.Attempts}
                             <ul class="flex gap-2">
                               {#each tr.Attempts as attempt, i}
@@ -622,42 +632,61 @@
                               {/each}
                             </ul>
                           {/if}
-                        </td>
-                      </tr>
+                        </Table.Cell>
+                      </Table.Row>
                     {/each}
-                  </tbody>
-                </table>
-                <ul class="flex flex-col gap-4 lg:hidden">
+                  </Table.Body>
+                </Table.Root>
+                <ul class="flex flex-col gap-3 lg:hidden">
                   {#each sortedTotal as tr (tr.Id)}
                     <li
-                      class="rounded-xl border bg-card px-3 py-3 shadow-sm sm:px-4 sm:py-4"
+                      class="rounded-xl border bg-card px-3 py-3 shadow-sm"
                     >
-                      <div class="flex flex-col gap-2">
-                        <div>
-                          <h3 class="font-semibold text-sm sm:text-base">
-                            {tr.ResultRank || ""}
-                            {tr.Name}
-                          </h3>
-                          <p class="text-muted-foreground text-xs">
-                            {tr.Organization?.Name ?? "-"}
-                          </p>
+                      <div class="flex items-start gap-3">
+                        <div
+                          class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-medium text-muted-foreground"
+                        >
+                          {tr.ResultRank || "-"}
                         </div>
-                        {#if tr.Attempts}
-                          <ul class="flex gap-2">
-                            {#each tr.Attempts as attempt, i}
-                              <li
-                                class="-my-1 flex flex-col rounded bg-muted-foreground/20 px-2 py-1 text-sm {tr.Result ===
-                                attempt.Line1
-                                  ? 'border-primary/20! bg-primary/10! text-primary'
-                                  : ''}"
+                        <div class="min-w-0 flex-1">
+                          <div class="flex items-center justify-between gap-4">
+                            <div class="min-w-0">
+                              <span class="truncate font-medium text-sm"
+                                >{tr.Name}</span
                               >
-                                <span>{attempt.Line1}</span
-                                >{#if attempt.Line2}<span>{attempt.Line2}</span
-                                  >{/if}
-                              </li>
-                            {/each}
-                          </ul>
-                        {/if}
+                              <p
+                                class="mt-0.5 text-muted-foreground text-xs"
+                              >
+                                {tr.Organization?.Name ?? "-"}
+                              </p>
+                            </div>
+                            {#if !tr.Attempts?.length && tr.Result}
+                              <span
+                                class="shrink-0 font-medium text-sm tabular-nums"
+                                >{tr.Result}</span
+                              >
+                            {/if}
+                          </div>
+                          {#if tr.Attempts}
+                            <ul class="mt-2 flex flex-wrap gap-1.5">
+                              {#each tr.Attempts as attempt, i}
+                                <li
+                                  class="inline-flex items-center rounded bg-muted-foreground/15 px-1.5 py-0.5 text-xs leading-none {tr.Result ===
+                                  attempt.Line1
+                                    ? 'bg-primary/10 text-primary font-medium'
+                                    : ''}"
+                                >
+                                  <span>{attempt.Line1}</span>
+                                  {#if attempt.Line2}
+                                    <span class="ml-0.5 opacity-60"
+                                      >/{attempt.Line2}</span
+                                    >
+                                  {/if}
+                                </li>
+                              {/each}
+                            </ul>
+                          {/if}
+                        </div>
                       </div>
                     </li>
                   {/each}
