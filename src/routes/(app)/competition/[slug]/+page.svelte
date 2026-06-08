@@ -1,21 +1,23 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import { CheckCircle } from "@lucide/svelte";
   import { ClipboardList, Trophy, Users } from "@lucide/svelte";
   import ObsPopover from "$lib/components/obs-popover.svelte";
   import EventSwitcher from "$lib/components/event-switcher.svelte";
+  import RoundSwitcher from "$lib/components/round-switcher.svelte";
+  import TabsWithHaptics from "$lib/components/tabs-haptics.svelte";
+  import RoundProvider from "$lib/components/round-provider.svelte";
+  import ResultProvider from "$lib/components/result-provider.svelte";
+  import ParticipantLayout from "$lib/components/participant-layout.svelte";
+  import ProtocolLayout from "$lib/components/protocol-layout.svelte";
+  import ResultLayout from "$lib/components/result-layout.svelte";
   import { flattenEvents } from "$lib/events";
-  import { sortByResult } from "$lib/results";
-  import * as Table from "$lib/components/ui/table";
   import { api } from "$lib/api";
   import { createQuery } from "@tanstack/svelte-query";
-  import { triggerHaptic } from "$lib/hooks/use-haptics";
   import type {
     Competition,
     CompetitionProperties,
     Events,
   } from "~/types/comp";
-  import type { Heat, Round } from "~/types/comp";
 
   const slug = $derived(page.params.slug ?? "");
   const compId = $derived(slug.split("-", 2)[0] ?? "");
@@ -59,47 +61,6 @@
   const error = $derived(
     athletesQuery.isError ? "Failed to load competition data" : null,
   );
-
-  // Round state
-  const rounds = $derived(competition?.Rounds ?? []);
-  let selectedRound = $state(0);
-  let selectedHeat = $state(1);
-
-  $effect(() => {
-    if (rounds.length > 0 && selectedRound === 0) {
-      selectedRound = rounds.at(-1)?.Index ?? 0;
-    }
-  });
-
-  const currentRound = $derived(
-    rounds.find((r) => r.Index === selectedRound) ?? rounds[0],
-  );
-  const heats = $derived(currentRound?.Heats ?? []);
-  const currentHeat = $derived(
-    heats.find((h) => h.Index === selectedHeat) ?? heats[0],
-  );
-  const showHeatNumbers = $derived(heats.length >= 2);
-
-  function handleRoundChange(index: number) {
-    triggerHaptic("selection");
-    selectedRound = index;
-    const round = rounds.find((r) => r.Index === index);
-    selectedHeat = round?.Heats?.[0]?.Index ?? 1;
-  }
-
-  function handleHeatChange(index: number) {
-    if (heats.some((h) => h.Index === index)) {
-      triggerHaptic("selection");
-      selectedHeat = index;
-    }
-  }
-
-  // Tabs
-  let activeTab = $state("participants");
-  function handleTabChange(value: string) {
-    triggerHaptic("selection");
-    activeTab = value;
-  }
 </script>
 
 <svelte:head>
@@ -132,8 +93,6 @@
       <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
     </div>
   {:else if competition}
-    {@const srounds = competition.Rounds ?? []}
-    {@const hasMultipleRounds = srounds.length > 1}
     <div class="flex flex-col gap-4">
       <div class="flex flex-col items-start gap-3">
         <h2
@@ -148,576 +107,70 @@
         />
       </div>
 
-      {#if hasMultipleRounds}
-        <div class="flex flex-wrap gap-2">
-          {#each srounds as round (round.Index)}
-            <button
-              class="inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {selectedRound ===
-              round.Index
-                ? 'bg-primary text-primary-foreground shadow-xs'
-                : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'}"
-              onclick={() => handleRoundChange(round.Index)}
-            >
-              {round.RoundTypeCategory === "Qualify"
-                ? "Alkuerät"
-                : round.RoundTypeCategory === "Final"
-                  ? "Loppukilpailu"
-                  : round.Name}
-            </button>
-          {/each}
-        </div>
-      {/if}
-
-      <div
-        class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
-      >
-        <div></div>
-        <ObsPopover slug={`${compId}-${eventId}`} />
-      </div>
-
-      <!-- Tabs -->
-      <div class="mt-2 w-full">
-        <div
-          class="relative mb-2 grid h-auto w-full grid-cols-3 rounded-lg bg-muted p-1 text-muted-foreground"
-        >
-          <!-- svelte-ignore a11y_no_static_element_interactions -->
+      {#key eventId}
+        <RoundProvider rounds={competition.Rounds}>
           <div
-            class="pointer-events-none absolute inset-y-1 left-1 z-0 rounded-md bg-background shadow-xs transition-[transform,width] duration-200 ease-out motion-reduce:transition-none"
-            style="transform: translateX({activeTab === 'protocol'
-              ? '100%'
-              : activeTab === 'results'
-                ? '200%'
-                : '0%'}); width: calc((100% - 0.5rem) / 3)"
-          ></div>
-          <button
-            class="relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {activeTab ===
-            'participants'
-              ? 'text-foreground'
-              : 'hover:text-foreground'}"
-            onclick={() => handleTabChange("participants")}
+            class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
           >
-            <div class="flex items-center justify-center gap-2">
-              <Users class="size-4" /><span class="hidden sm:block"
-                >Ilmoittautuneet</span
-              >
-            </div>
-          </button>
-          <button
-            class="relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {activeTab ===
-            'protocol'
-              ? 'text-foreground'
-              : 'hover:text-foreground'}"
-            onclick={() => handleTabChange("protocol")}
-          >
-            <div class="flex items-center justify-center gap-2">
-              <ClipboardList class="size-4" /><span class="hidden sm:block"
-                >Pöytäkirjat</span
-              >
-            </div>
-          </button>
-          <button
-            class="relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {activeTab ===
-            'results'
-              ? 'text-foreground'
-              : 'hover:text-foreground'}"
-            onclick={() => handleTabChange("results")}
-          >
-            <div class="flex items-center justify-center gap-2">
-              <Trophy class="size-4" /><span class="hidden sm:block"
-                >Tulokset</span
-              >
-            </div>
-          </button>
-        </div>
+            <RoundSwitcher />
+            <ObsPopover slug={`${compId}-${eventId}`} />
+          </div>
 
-        <div class="space-y-5">
-          <!-- Participants -->
-          {#if activeTab === "participants"}
-            <div class="space-y-6">
-              {#if competition.Enrollments.length > 0}
-                <Table.Root
-                  class="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block"
-                >
-                  <Table.Header class="sticky top-0 backdrop-blur-md">
-                    <Table.Row>
-                      <Table.Head class="text-muted-foreground text-xs"
-                      ></Table.Head>
-                      <Table.Head class="text-muted-foreground text-xs w-full"
-                        >Nimi ja Seura</Table.Head
-                      >
-                      <Table.Head class="text-muted-foreground text-xs"
-                        >PB</Table.Head
-                      >
-                      <Table.Head class="text-muted-foreground text-xs"
-                        >SB</Table.Head
-                      >
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    {#each competition.Enrollments as enrollment (enrollment.Id)}
-                      <Table.Row
-                        class={enrollment.Confirmed
-                          ? "bg-green-300/10 hover:bg-green-300/15"
-                          : ""}
-                      >
-                        <Table.Cell
-                          >{#if enrollment.Confirmed}<div
-                              class="flex size-5 items-center justify-center"
-                            >
-                              <CheckCircle class="size-3 text-white" />
-                            </div>{/if}</Table.Cell
-                        >
-                        <Table.Cell class="w-full">
-                          <div class="flex flex-col">
-                            <div class="flex items-center">
-                              {#if enrollment.Number}<span
-                                  class="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200"
-                                  >{enrollment.Number}</span
-                                >{/if}
-                              <span class="font-medium">{enrollment.Name}</span>
-                            </div>
-                            <div class="mt-1 text-muted-foreground text-xs">
-                              {enrollment.Organization?.Name ?? "-"}
-                            </div>
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell
-                          ><span class="font-medium"
-                            >{enrollment.PB || "-"}</span
-                          ></Table.Cell
-                        >
-                        <Table.Cell
-                          ><span class="font-medium"
-                            >{enrollment.SB || "-"}</span
-                          ></Table.Cell
-                        >
-                      </Table.Row>
-                    {/each}
-                  </Table.Body>
-                </Table.Root>
-                <ul class="flex flex-col gap-4 lg:hidden">
-                  {#each competition.Enrollments as enrollment (enrollment.Id)}
-                    <li
-                      class="rounded-xl border bg-card px-3 py-3 shadow-sm sm:px-4 sm:py-4 {enrollment.Confirmed
-                        ? 'bg-green-300/10'
-                        : ''}"
-                    >
-                      <div class="flex flex-col gap-2">
-                        <div>
-                          <h3 class="font-semibold text-sm sm:text-base">
-                            {enrollment.Name}
-                          </h3>
-                          <p class="text-muted-foreground text-xs">
-                            {enrollment.Organization?.Name ?? "-"}
-                          </p>
-                        </div>
-                        <div class="flex gap-3 text-xs opacity-70">
-                          <span>PB {enrollment.PB || "-"}</span><span
-                            >SB {enrollment.SB || "-"}</span
-                          >
-                        </div>
-                      </div>
-                    </li>
-                  {/each}
-                </ul>
-              {:else}
-                <div class="py-8 text-center">
-                  <p class="text-muted-foreground">Ei ilmoittautuneita.</p>
-                </div>
-              {/if}
-            </div>
-
-            <!-- Protocol -->
-          {:else if activeTab === "protocol"}
-            <div class="space-y-6">
-              {#if showHeatNumbers && heats.length > 0}
-                <div
-                  class="mb-4 flex overflow-x-auto flex-nowrap gap-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
-                  <div
-                    class="sticky left-0 z-10 shrink-0 self-center rounded-md bg-muted px-2 py-1 text-muted-foreground text-xs"
-                  >
-                    Erä:
-                  </div>
-                  {#each [...heats].sort((a: any, b: any) => a.Index - b.Index) as heat (heat.Index)}
-                    <button
-                      class="shrink-0 inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {selectedHeat ===
-                      heat.Index
-                        ? 'bg-primary text-primary-foreground shadow-xs'
-                        : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'}"
-                      onclick={() => handleHeatChange(heat.Index)}
-                      >Erä {heat.Index}</button
-                    >
-                  {/each}
-                </div>
-              {/if}
-              {#if currentHeat && heats.length > 0}
-                {@const heatAllocs = [...currentHeat.Allocations]}
-                <Table.Root
-                  class="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block"
-                >
-                  <Table.Header class="sticky top-0 backdrop-blur-md">
-                    <Table.Row>
-                      <Table.Head
-                        class="text-muted-foreground text-xs w-[100px]"
-                        >{isTrack ? "Rata" : "Järjestys"}</Table.Head
-                      >
-                      <Table.Head class="text-muted-foreground text-xs w-full"
-                        >Nimi ja Seura</Table.Head
-                      >
-                      <Table.Head class="text-muted-foreground text-xs"
-                        >PB</Table.Head
-                      >
-                      <Table.Head class="text-muted-foreground text-xs"
-                        >SB</Table.Head
-                      >
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    {#each heatAllocs as alloc (alloc.Id)}
-                      <Table.Row>
-                        <Table.Cell
-                          ><span>{alloc.Number || ""}</span></Table.Cell
-                        >
-                        <Table.Cell class="w-full">
-                          <div class="flex flex-col">
-                            <div class="flex items-center">
-                              {#if alloc.Number}<span
-                                  class="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200"
-                                  >{alloc.Number}</span
-                                >{/if}
-                              <span class="font-medium">{alloc.Name}</span>
-                            </div>
-                            <div class="mt-1 text-muted-foreground text-xs">
-                              {alloc.Organization?.Name ?? "-"}
-                            </div>
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell
-                          ><span class="font-medium">{alloc.PB || "-"}</span
-                          ></Table.Cell
-                        >
-                        <Table.Cell
-                          ><span class="font-medium">{alloc.SB || "-"}</span
-                          ></Table.Cell
-                        >
-                      </Table.Row>
-                    {/each}
-                  </Table.Body>
-                </Table.Root>
-                <ul class="flex flex-col gap-3 lg:hidden">
-                  {#each heatAllocs as alloc (alloc.Id)}
-                    <li class="rounded-xl border bg-card px-3 py-3 shadow-sm">
-                      <div class="flex items-start gap-3">
-                        <div
-                          class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-medium text-muted-foreground"
-                        >
-                          {alloc.Number || "-"}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                          <span class="truncate font-medium text-sm"
-                            >{alloc.Name}</span
-                          >
-                          <p class="mt-0.5 text-muted-foreground text-xs">
-                            {alloc.Organization?.Name ?? "-"}
-                          </p>
-                          <div
-                            class="mt-1 flex gap-3 text-xs text-muted-foreground"
-                          >
-                            <span>PB {alloc.PB || "-"}</span><span
-                              >SB {alloc.SB || "-"}</span
-                            >
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  {/each}
-                </ul>
-              {:else}
-                <div class="py-8 text-center">
-                  <p class="text-muted-foreground">
-                    Eräjakoja ei ole saatavilla vielä...
-                  </p>
-                </div>
-              {/if}
-            </div>
-
-            <!-- Results -->
-          {:else if activeTab === "results"}
-            {@const eventCategory = competition?.EventCategory ?? "Field"}
-            {@const sortedAllocs =
-              currentHeat && heats.length > 0
-                ? [...currentHeat.Allocations].sort((a: any, b: any) =>
-                    sortByResult(a, b, eventCategory),
-                  )
-                : []}
-            {@const sortedTotal = currentRound?.TotalResults
-              ? [...currentRound.TotalResults].sort((a: any, b: any) =>
-                  sortByResult(a, b, eventCategory),
-                )
-              : []}
-
-            <div class="space-y-6">
-              {#if showHeatNumbers && heats.length > 0}
-                <div
-                  class="mb-4 flex overflow-x-auto flex-nowrap gap-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
-                  <div
-                    class="sticky left-0 z-10 shrink-0 self-center rounded-md bg-muted px-2 py-1 text-muted-foreground text-xs"
-                  >
-                    Erä:
-                  </div>
-                  {#each [...heats].sort((a: any, b: any) => a.Index - b.Index) as heat (heat.Index)}
-                    <button
-                      class="shrink-0 inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {selectedHeat ===
-                      heat.Index
-                        ? 'bg-primary text-primary-foreground shadow-xs'
-                        : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'}"
-                      onclick={() => handleHeatChange(heat.Index)}
-                      >Erä {heat.Index}</button
-                    >
-                  {/each}
-                </div>
-              {/if}
-
-              {#if sortedAllocs.length > 0}
-                <Table.Root
-                  class="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block"
-                >
-                  <Table.Header class="sticky top-0 backdrop-blur-md">
-                    <Table.Row>
-                      <Table.Head
-                        class="text-muted-foreground text-xs w-[100px]"
-                        >Sija</Table.Head
-                      >
-                      <Table.Head class="text-muted-foreground text-xs w-full"
-                        >Nimi ja Seura</Table.Head
-                      >
-                      <Table.Head class="text-muted-foreground text-xs"
-                        >Tulos</Table.Head
-                      >
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    {#each sortedAllocs as alloc (alloc.Id)}
-                      <Table.Row>
-                        <Table.Cell><span>{alloc.HeatRank}</span></Table.Cell>
-                        <Table.Cell class="w-full">
-                          <div class="flex flex-col">
-                            <div class="flex items-center">
-                              {#if alloc.Number}<span
-                                  class="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200"
-                                  >{alloc.Number}</span
-                                >{/if}
-                              <span class="font-medium">{alloc.Name}</span>
-                            </div>
-                            <div class="mt-1 text-muted-foreground text-xs">
-                              {alloc.Organization?.Name ?? "-"}
-                            </div>
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          {#if alloc.Attempts}
-                            <ul class="flex gap-2">
-                              {#each alloc.Attempts as attempt, i}
-                                <li
-                                  class="-my-1 flex flex-col rounded bg-muted-foreground/20 px-2 py-1 text-sm {alloc.Result ===
-                                  attempt.Line1
-                                    ? 'border-primary/20! bg-primary/10! text-primary'
-                                    : ''}"
-                                >
-                                  <span>{attempt.Line1}</span
-                                  >{#if attempt.Line2}<span
-                                      >{attempt.Line2}</span
-                                    >{/if}
-                                </li>
-                              {/each}
-                            </ul>
-                          {/if}
-                        </Table.Cell>
-                      </Table.Row>
-                    {/each}
-                  </Table.Body>
-                </Table.Root>
-                <ul class="flex flex-col gap-3 lg:hidden">
-                  {#each sortedAllocs as alloc (alloc.Id)}
-                    <li class="rounded-xl border bg-card px-3 py-3 shadow-sm">
-                      <div class="flex items-start gap-3">
-                        <div
-                          class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-medium text-muted-foreground"
-                        >
-                          {alloc.HeatRank || "-"}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                          <div class="flex items-center justify-between gap-4">
-                            <div class="min-w-0">
-                              <span class="truncate font-medium text-sm"
-                                >{alloc.Name}</span
-                              >
-                              <p class="mt-0.5 text-muted-foreground text-xs">
-                                {alloc.Organization?.Name ?? "-"}
-                              </p>
-                            </div>
-                            {#if !alloc.Attempts?.length && alloc.Result}
-                              <span
-                                class="shrink-0 font-medium text-sm tabular-nums"
-                                >{alloc.Result}</span
-                              >
-                            {/if}
-                          </div>
-                          {#if alloc.Attempts}
-                            <ul class="mt-2 flex flex-wrap gap-1.5">
-                              {#each alloc.Attempts as attempt, i}
-                                <li
-                                  class="inline-flex items-center rounded bg-muted-foreground/15 px-1.5 py-0.5 text-xs leading-none {alloc.Result ===
-                                  attempt.Line1
-                                    ? 'bg-primary/10 text-primary font-medium'
-                                    : ''}"
-                                >
-                                  <span>{attempt.Line1}</span>
-                                  {#if attempt.Line2}
-                                    <span class="ml-0.5 opacity-60"
-                                      >/{attempt.Line2}</span
-                                    >
-                                  {/if}
-                                </li>
-                              {/each}
-                            </ul>
-                          {/if}
-                        </div>
-                      </div>
-                    </li>
-                  {/each}
-                </ul>
-              {:else}
-                <div class="py-8 text-center">
-                  <p class="text-muted-foreground">
-                    Tuloksia ei ole saatavilla vielä...
-                  </p>
-                </div>
-              {/if}
-
-              {#if heats.length > 1 && sortedTotal.length > 0}
-                <h3 class="scroll-m-20 font-semibold text-2xl tracking-tight">
-                  Kokonaistulokset
-                </h3>
-                <Table.Root
-                  class="hidden max-h-[600px] overflow-y-auto rounded-md border lg:block"
-                >
-                  <Table.Header class="sticky top-0 backdrop-blur-md">
-                    <Table.Row>
-                      <Table.Head
-                        class="text-muted-foreground text-xs w-[100px]"
-                        >Sija</Table.Head
-                      >
-                      <Table.Head class="text-muted-foreground text-xs w-full"
-                        >Nimi ja Seura</Table.Head
-                      >
-                      <Table.Head class="text-muted-foreground text-xs"
-                        >Tulos</Table.Head
-                      >
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    {#each sortedTotal as tr (tr.Id)}
-                      <Table.Row>
-                        <Table.Cell><span>{tr.ResultRank}</span></Table.Cell>
-                        <Table.Cell class="w-full">
-                          <div class="flex flex-col">
-                            <div class="flex items-center">
-                              {#if tr.Number}<span
-                                  class="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200"
-                                  >{tr.Number}</span
-                                >{/if}
-                              <span class="font-medium">{tr.Name}</span>
-                            </div>
-                            <div class="mt-1 text-muted-foreground text-xs">
-                              {tr.Organization?.Name ?? "-"}
-                            </div>
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          {#if tr.Attempts}
-                            <ul class="flex gap-2">
-                              {#each tr.Attempts as attempt, i}
-                                <li
-                                  class="-my-1 flex flex-col rounded bg-muted-foreground/20 px-2 py-1 text-sm {tr.Result ===
-                                  attempt.Line1
-                                    ? 'border-primary/20! bg-primary/10! text-primary'
-                                    : ''}"
-                                >
-                                  <span>{attempt.Line1}</span
-                                  >{#if attempt.Line2}<span
-                                      >{attempt.Line2}</span
-                                    >{/if}
-                                </li>
-                              {/each}
-                            </ul>
-                          {/if}
-                        </Table.Cell>
-                      </Table.Row>
-                    {/each}
-                  </Table.Body>
-                </Table.Root>
-                <ul class="flex flex-col gap-3 lg:hidden">
-                  {#each sortedTotal as tr (tr.Id)}
-                    <li class="rounded-xl border bg-card px-3 py-3 shadow-sm">
-                      <div class="flex items-start gap-3">
-                        <div
-                          class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-medium text-muted-foreground"
-                        >
-                          {tr.ResultRank || "-"}
-                        </div>
-                        <div class="min-w-0 flex-1">
-                          <div class="flex items-center justify-between gap-4">
-                            <div class="min-w-0">
-                              {#if tr.Number}<span
-                                  class="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200"
-                                  >{tr.Number}</span
-                                >{/if}
-                              <span class="truncate font-medium text-sm"
-                                >{tr.Name}</span
-                              >
-                              <p class="mt-0.5 text-muted-foreground text-xs">
-                                {tr.Organization?.Name ?? "-"}
-                              </p>
-                            </div>
-                            {#if !tr.Attempts?.length && tr.Result}
-                              <span
-                                class="shrink-0 font-medium text-sm tabular-nums"
-                                >{tr.Result}</span
-                              >
-                            {/if}
-                          </div>
-                          {#if tr.Attempts}
-                            <ul class="mt-2 flex flex-wrap gap-1.5">
-                              {#each tr.Attempts as attempt, i}
-                                <li
-                                  class="inline-flex items-center rounded bg-muted-foreground/15 px-1.5 py-0.5 text-xs leading-none {tr.Result ===
-                                  attempt.Line1
-                                    ? 'bg-primary/10 text-primary font-medium'
-                                    : ''}"
-                                >
-                                  <span>{attempt.Line1}</span>
-                                  {#if attempt.Line2}
-                                    <span class="ml-0.5 opacity-60"
-                                      >/{attempt.Line2}</span
-                                    >
-                                  {/if}
-                                </li>
-                              {/each}
-                            </ul>
-                          {/if}
-                        </div>
-                      </div>
-                    </li>
-                  {/each}
-                </ul>
-              {/if}
-            </div>
-          {/if}
-        </div>
-      </div>
+          <TabsWithHaptics
+            defaultValue="participants"
+            tabs={[
+              {
+                value: "participants",
+                label: "Ilmoittautuneet",
+                icon: usersIcon,
+                content: participantsContent,
+              },
+              {
+                value: "protocol",
+                label: "Pöytäkirjat",
+                icon: clipboardIcon,
+                content: protocolContent,
+              },
+              {
+                value: "results",
+                label: "Tulokset",
+                icon: trophyIcon,
+                content: resultsContent,
+              },
+            ]}
+          />
+        </RoundProvider>
+      {/key}
     </div>
   {/if}
 </main>
+
+{#snippet usersIcon()}
+  <Users class="size-4" />
+{/snippet}
+
+{#snippet clipboardIcon()}
+  <ClipboardList class="size-4" />
+{/snippet}
+
+{#snippet trophyIcon()}
+  <Trophy class="size-4" />
+{/snippet}
+
+{#snippet participantsContent()}
+  <ParticipantLayout enrollments={competition!.Enrollments} />
+{/snippet}
+
+{#snippet protocolContent()}
+  <ProtocolLayout {isTrack} />
+{/snippet}
+
+{#snippet resultsContent()}
+  <ResultProvider
+    compId={`${compId}/${eventId}`}
+    {isProgress}
+    eventCategory={competition!.EventCategory}
+  >
+    <ResultLayout />
+  </ResultProvider>
+{/snippet}
