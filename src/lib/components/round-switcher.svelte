@@ -6,7 +6,8 @@
 </script>
 
 {#if ctx.rounds.length > 1}
-  <div class="flex flex-wrap gap-2">
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="text-muted-foreground text-xs">Kierros:</span>
     {#each ctx.rounds as round (round.Index)}
       <Button
         size="sm"

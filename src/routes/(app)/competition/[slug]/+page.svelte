@@ -55,6 +55,15 @@
 
   const competition = $derived(athletesQuery.data ?? null);
   const compDetails = $derived(detailsQuery.data ?? null);
+
+  const roundFromUrl = $derived(page.url.searchParams.get("round"));
+  const initialRound = $derived(
+    competition && roundFromUrl
+      ? competition.Rounds.find((r) => r.RoundTypeCategory === roundFromUrl)
+          ?.Index
+      : undefined,
+  );
+
   const isLoading = $derived(
     athletesQuery.isPending || detailsQuery.isPending || eventsQuery.isPending,
   );
@@ -104,11 +113,12 @@
           competitionId={compId}
           currentEventId={eventId}
           events={compEvents}
+          {roundFromUrl}
         />
       </div>
 
       {#key eventId}
-        <RoundProvider rounds={competition.Rounds}>
+        <RoundProvider rounds={competition.Rounds} {initialRound}>
           <div
             class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
           >

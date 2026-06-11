@@ -1,19 +1,21 @@
 <script lang="ts">
   import { Calendar, Clock } from "@lucide/svelte";
   import { goto } from "$app/navigation";
-  import { page } from "$app/stores";
   import { triggerHaptic } from "$lib/hooks/use-haptics";
   import Badge from "$lib/components/ui/badge/badge.svelte";
+  import { cn } from "$lib/utils";
   import type { EventWithDate } from "$lib/events";
 
   let {
     competitionId,
     events = [],
     currentEventId,
+    roundFromUrl,
   }: {
     competitionId: string;
     events: EventWithDate[];
     currentEventId: string;
+    roundFromUrl?: string | null;
   } = $props();
 
   const roundMapping = {
@@ -69,7 +71,13 @@
   }
 
   const currentEvent = $derived(
-    events.find((e) => e.EventId === Number(currentEventId)),
+    roundFromUrl
+      ? events.find(
+            (e) =>
+              e.EventId === Number(currentEventId) &&
+              eventNameToRoundCase(e.Name) === roundFromUrl,
+          ) ?? events.find((e) => e.EventId === Number(currentEventId))
+      : events.find((e) => e.EventId === Number(currentEventId)),
   );
 
   function handleSelect(value: string) {
@@ -141,10 +149,12 @@
     >
       {#each events as event, i}
         <button
-          class="flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground {event.EventId ===
-          Number(currentEventId)
-            ? 'bg-accent'
-            : ''}"
+          class={cn(
+            "flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
+            event.EventId === Number(currentEventId) &&
+              event.Name === currentEvent?.Name &&
+              "bg-accent",
+          )}
           onclick={() => handleSelect(i.toString())}
         >
           <div class="flex w-full items-center justify-between gap-2">

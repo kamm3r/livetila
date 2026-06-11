@@ -1,49 +1,68 @@
 <script module lang="ts">
-  import { getContext, setContext } from "svelte";
+  import { createContext, type Snippet } from "svelte";
   import type { Heat, Round } from "~/types/comp";
-
-  const ROUND_CONTEXT_KEY = Symbol("round-provider");
 
   export type RoundContext = {
     rounds: Round[];
     selectedRound: number;
     selectedHeat: number;
-    currentRound: Round;
-    currentHeat: Heat;
+    currentRound: Round | undefined;
+    currentHeat: Heat | undefined;
     heats: Heat[];
     showHeatNumbers: boolean;
     handleRoundChange: (index: number) => void;
     handleHeatChange: (index: number) => void;
   };
 
-  export function getRoundContext(): RoundContext {
-    return getContext(ROUND_CONTEXT_KEY);
-  }
+  export const [getRoundContext, setRoundContext] =
+    createContext<RoundContext>();
 </script>
 
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import { triggerHaptic } from "$lib/hooks/use-haptics";
 
   let {
     rounds = [],
+    initialRound,
     children,
   }: {
     rounds: Round[];
-    children: import("svelte").Snippet;
+    initialRound?: number;
+    children: Snippet;
   } = $props();
 
-  let selectedRound = $state(0);
-  let selectedHeat = $state(1);
+  let selectedRound = $state(-1);
+  let selectedHeat = $state(-1);
 
   $effect(() => {
-    if (rounds.length > 0 && selectedRound === 0) {
-      selectedRound = rounds.at(-1)?.Index ?? 0;
+    if (rounds.length > 0 && (selectedRound === -1 || selectedHeat === -1)) {
+      if (selectedRound === -1) {
+        selectedRound =
+          initialRound ?? rounds.at(-1)?.Index ?? rounds[0]?.Index ?? -1;
+      }
+      const round = rounds.find((r) => r.Index === selectedRound);
+      if (round && selectedHeat === -1) {
+        selectedHeat = round.Heats[0]?.Index ?? -1;
+      }
     }
   });
 
   const currentRound = $derived(
     rounds.find((r) => r.Index === selectedRound) ?? rounds[0],
   );
+
+  $effect(() => {
+    const round = currentRound;
+    if (round?.RoundTypeCategory && rounds.length > 1) {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("round") !== round.RoundTypeCategory) {
+        url.searchParams.set("round", round.RoundTypeCategory);
+        goto(url, { replaceState: true, noScroll: true, keepFocus: true });
+      }
+    }
+  });
+
   const heats = $derived(currentRound?.Heats ?? []);
   const currentHeat = $derived(
     heats.find((h) => h.Index === selectedHeat) ?? heats[0],
@@ -54,7 +73,7 @@
     triggerHaptic("selection");
     selectedRound = index;
     const round = rounds.find((r) => r.Index === index);
-    selectedHeat = round?.Heats?.[0]?.Index ?? 1;
+    selectedHeat = round?.Heats?.[0]?.Index ?? -1;
   }
 
   function handleHeatChange(index: number) {
@@ -64,7 +83,7 @@
     }
   }
 
-  setContext(ROUND_CONTEXT_KEY, {
+  setRoundContext({
     get rounds() {
       return rounds;
     },
