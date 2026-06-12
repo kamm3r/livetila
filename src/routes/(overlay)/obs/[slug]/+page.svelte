@@ -125,8 +125,12 @@
           {#each Array.from({ length: 8 }) as _, i (i)}
             <li class="border-black/50 border-t-2">
               <div class="flex flex-[1_1_100%] justify-between px-4 py-2">
-                <div class="h-4 w-40 animate-pulse rounded bg-gray-700/60"></div>
-                <div class="h-4 w-16 animate-pulse rounded bg-gray-700/60"></div>
+                <div
+                  class="h-4 w-40 animate-pulse rounded bg-gray-700/60"
+                ></div>
+                <div
+                  class="h-4 w-16 animate-pulse rounded bg-gray-700/60"
+                ></div>
               </div>
             </li>
           {/each}

@@ -1,7 +1,5 @@
 <script module lang="ts">
-  import { getContext, setContext } from "svelte";
-
-  const RESULT_CONTEXT_KEY = Symbol("result-provider");
+  import { createContext, type Snippet } from "svelte";
 
   export type ResultContext = {
     compId: string;
@@ -9,9 +7,8 @@
     eventCategory: "Track" | "Field" | "Relay";
   };
 
-  export function getResultContext(): ResultContext {
-    return getContext(RESULT_CONTEXT_KEY);
-  }
+  export const [getResultContext, setResultContext] =
+    createContext<ResultContext>();
 </script>
 
 <script lang="ts">
@@ -24,10 +21,10 @@
     compId: string;
     isProgress: boolean;
     eventCategory: "Track" | "Field" | "Relay";
-    children: import("svelte").Snippet;
+    children: Snippet;
   } = $props();
 
-  setContext(RESULT_CONTEXT_KEY, {
+  setResultContext({
     get compId() {
       return compId;
     },

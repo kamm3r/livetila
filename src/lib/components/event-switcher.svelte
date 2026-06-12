@@ -1,8 +1,10 @@
 <script lang="ts">
   import { Calendar, Clock } from "@lucide/svelte";
+  import { fly } from "svelte/transition";
+    import { createWebHaptics } from "web-haptics/svelte";
+  import { onDestroy } from "svelte";
   import { goto } from "$app/navigation";
-  import { triggerHaptic } from "$lib/hooks/use-haptics";
-  import Badge from "$lib/components/ui/badge/badge.svelte";
+  import Badge, { type BadgeVariant } from "$lib/components/ui/badge/badge.svelte";
   import { cn } from "$lib/utils";
   import type { EventWithDate } from "$lib/events";
 
@@ -25,7 +27,7 @@
 
   type RoundKey = keyof typeof roundMapping;
 
-  const statusVariants: Record<string, string> = {
+  const statusVariants: Record<string, BadgeVariant> = {
     Unallocated: "unallocated",
     Allocated: "allocated",
     Progress: "progress",
@@ -70,19 +72,30 @@
     return timeFormatter.format(new Date(date));
   }
 
+  const sortedEvents = $derived(
+    [...events].sort(
+      (a, b) =>
+        new Date(a.BeginDateTimeWithTZ).getTime() -
+        new Date(b.BeginDateTimeWithTZ).getTime(),
+    ),
+  );
+
   const currentEvent = $derived(
     roundFromUrl
-      ? events.find(
-            (e) =>
-              e.EventId === Number(currentEventId) &&
-              eventNameToRoundCase(e.Name) === roundFromUrl,
-          ) ?? events.find((e) => e.EventId === Number(currentEventId))
+      ? (events.find(
+          (e) =>
+            e.EventId === Number(currentEventId) &&
+            eventNameToRoundCase(e.Name) === roundFromUrl,
+        ) ?? events.find((e) => e.EventId === Number(currentEventId)))
       : events.find((e) => e.EventId === Number(currentEventId)),
   );
 
+ const { trigger, destroy } = createWebHaptics();
+  onDestroy(destroy);
+
   function handleSelect(value: string) {
-    triggerHaptic("selection");
-    const event = events[Number(value)];
+    trigger("selection");
+    const event = sortedEvents[Number(value)];
     if (!event) return;
     const roundCase = eventNameToRoundCase(event.Name);
     const hasMultiple = hasMultipleRoundsForEvent(event.EventName);
@@ -105,7 +118,7 @@
 
 <div class="relative">
   <button
-    class="flex w-full items-center rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-[400px]"
+    class="flex w-full items-center rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.97] motion-reduce:active:scale-100 transition-transform duration-100 ease-out sm:w-[400px]"
     onclick={() => (isOpen = !isOpen)}
   >
     {#if currentEvent}
@@ -132,8 +145,6 @@
   </button>
 
   {#if isOpen}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="fixed inset-0 z-40"
       role="button"
@@ -141,13 +152,15 @@
       aria-label="Sulje valikko"
       onclick={() => (isOpen = false)}
       onkeydown={handleOverlayKeydown}
+      transition:fly={{ duration: 150, opacity: 0 }}
     ></div>
 
     <div
-      class="absolute left-0 right-0 z-50 mt-1 max-h-96 min-w-[8rem] overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md sm:w-[400px]"
+      class="absolute left-0 right-0 z-50 mt-1 max-h-96 min-w-32 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md sm:w-[400px]"
       role="listbox"
+      transition:fly={{ y: -6, duration: 180, opacity: 0 }}
     >
-      {#each events as event, i}
+      {#each sortedEvents as event, i (`${event.EventId}-${event.Name}`)}
         <button
           class={cn(
             "flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",

@@ -14,14 +14,14 @@
 <div class="space-y-6">
   {#if ctx.showHeatNumbers && ctx.heats.length > 0}
     <div
-      class="mb-4 flex overflow-x-auto flex-nowrap gap-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      class="mb-4 flex overflow-x-auto flex-nowrap gap-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
     >
       <div
         class="sticky left-0 z-10 shrink-0 self-center rounded-md bg-muted px-2 py-1 text-muted-foreground text-xs"
       >
         Erä:
       </div>
-      {#each [...ctx.heats].sort((a: any, b: any) => a.Index - b.Index) as heat (heat.Index)}
+      {#each [...ctx.heats].sort((a, b) => a.Index - b.Index) as heat (heat.Index)}
         <button
           class="shrink-0 inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {ctx.selectedHeat ===
           heat.Index

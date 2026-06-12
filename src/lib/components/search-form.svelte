@@ -6,11 +6,12 @@
     Calendar,
     ChevronRight,
     Clock,
-    Loader2,
+    LoaderCircle,
     Search,
   } from "@lucide/svelte";
+  import { createWebHaptics } from "web-haptics/svelte";
+  import { onDestroy } from "svelte";
   import { goto } from "$app/navigation";
-  import { triggerHaptic } from "$lib/hooks/use-haptics";
   import { api } from "$lib/api";
   import type { CompetitionList, Events } from "~/types/comp";
 
@@ -21,6 +22,7 @@
     CommandItem,
     CommandList,
   } from "$lib/components/ui/command";
+  import { cn } from "../utils";
 
   type EventData = {
     Id: number;
@@ -62,12 +64,13 @@
   let navigatingTo = $state<number | null>(null);
 
   let inputEl: HTMLInputElement | undefined = $state(undefined);
-  let blurTimeout: ReturnType<typeof setTimeout> | undefined = $state(undefined);
+  let blurTimeout: ReturnType<typeof setTimeout> | undefined =
+    $state(undefined);
 
-  let competitions = $state<CompetitionList[]>([]);
-  let events = $state<Events>({});
-  let isLoadingComps = $state(true);
-  let isLoadingEvents = $state(false);
+  let competitions = $state.raw<CompetitionList[]>([]);
+  let events = $state.raw<Events>({});
+  let isLoadingComps = $state.raw(true);
+  let isLoadingEvents = $state.raw(false);
 
   $effect(() => {
     api
@@ -134,16 +137,9 @@
     isOpen && (isLoading || hasResults || query.length > 0),
   );
 
-  let prevShowDropdown = false;
-  let dropdownKey = $state(0);
-  $effect(() => {
-    if (showDropdown !== prevShowDropdown) {
-      prevShowDropdown = showDropdown;
-    }
-  });
-  $effect(() => {
-    step;
-    dropdownKey = Date.now();
+  let dropdownKey = $derived.by(() => {
+    void step;
+    return Date.now();
   });
 
   function handleInput(value: string) {
@@ -155,8 +151,11 @@
     }
   }
 
+  const { trigger, destroy } = createWebHaptics();
+  onDestroy(destroy);
+
   function handleCompetitionSelect(comp: CompetitionList) {
-    triggerHaptic("selection");
+    trigger();
     selectedComp = comp;
     query = `${comp.Name} / `;
     inputEl?.focus();
@@ -164,7 +163,7 @@
 
   function handleEventSelect(evt: EventData) {
     if (!selectedComp || navigatingTo !== null) return;
-    triggerHaptic("success");
+    trigger();
     navigatingTo = evt.Id;
     goto(`/competition/${selectedComp.Id}-${evt.Id}`);
   }
@@ -184,11 +183,17 @@
 </script>
 
 <div class="relative mx-auto w-full max-w-2xl">
-  <Command class="overflow-visible bg-transparent" role="search" shouldFilter={false}>
+  <Command
+    class="overflow-visible bg-transparent"
+    role="search"
+    shouldFilter={false}
+  >
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
-      class="relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl transition-all duration-300 ease-out"
-      class:focused={isFocused}
+      class={cn(
+        "relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl transition-all duration-300 ease-out",
+        isFocused && "focused",
+      )}
       style="box-shadow: {showDropdown
         ? '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)'
         : isFocused
@@ -196,19 +201,23 @@
           : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}"
     >
       <div
-        class="pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300"
-        class:opacity-100={isFocused}
-        class:opacity-0={!isFocused}
+        class={cn(
+          "pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300",
+          isFocused ? "opacity-100" : "opacity-0",
+        )}
         style="background: linear-gradient(135deg, rgba(113, 180, 255, 0.15) 0%, rgba(113, 180, 255, 0.05) 50%, rgba(113, 180, 255, 0.15) 100%)"
-      />
+      ></div>
 
       <div class="relative z-10">
-        <div class="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-3.5">
+        <div
+          class="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-3.5"
+        >
           <span
-            class="inline-flex transition-all duration-300 ease-out"
-            class:scale-110={isFocused}
-            class:text-primary={isFocused}
-            class:text-muted-foreground={!isFocused}
+            class={cn(
+              "inline-flex transition-all duration-300 ease-out",
+              isFocused && "scale-110 text-primary",
+              !isFocused && "text-muted-foreground",
+            )}
           >
             <Search class="size-5" />
           </span>
@@ -231,7 +240,7 @@
               in:scale={{ duration: 150, start: 0.8 }}
               out:scale={{ duration: 150, start: 0.8 }}
             >
-              <Loader2 class="size-5 animate-spin text-primary" />
+              <LoaderCircle class="size-5 animate-spin text-primary" />
             </div>
           {/if}
         </div>
@@ -239,10 +248,10 @@
 
       {#if showDropdown}
         <div
-          in:scale={{ duration: 200, start: 0, axis: "x" }}
-          out:scale={{ duration: 200, start: 0, axis: "x" }}
+          in:scale={{ duration: 200, start: 0 }}
+          out:scale={{ duration: 200, start: 0 }}
           class="mx-4 h-px bg-linear-to-r from-transparent via-border to-transparent"
-        />
+        ></div>
       {/if}
 
       {#key dropdownKey}
@@ -260,8 +269,12 @@
                     class="flex flex-col items-center gap-3 py-8"
                   >
                     <div class="relative">
-                      <div class="absolute inset-0 animate-ping rounded-full bg-primary/20" />
-                      <Loader2 class="relative size-6 animate-spin text-primary" />
+                      <div
+                        class="absolute inset-0 animate-ping rounded-full bg-primary/20"
+                      ></div>
+                      <LoaderCircle
+                        class="relative size-6 animate-spin text-primary"
+                      />
                     </div>
                     <p class="text-muted-foreground text-sm">
                       {step === "events"
@@ -271,7 +284,9 @@
                   </div>
                 {:else if !hasResults}
                   <div in:fly={{ y: 10, duration: 200 }}>
-                    <CommandEmpty class="flex flex-col items-center gap-2 py-8 text-center">
+                    <CommandEmpty
+                      class="flex flex-col items-center gap-2 py-8 text-center"
+                    >
                       <div class="rounded-full bg-muted p-3">
                         <Search class="size-5 text-muted-foreground" />
                       </div>
@@ -327,20 +342,20 @@
                                 </span>
                               </div>
                             </div>
-                            <ArrowRight class="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-selected:translate-x-0.5 group-data-selected:text-primary group-data-selected:opacity-100" />
+                            <ArrowRight
+                              class="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-selected:translate-x-0.5 group-data-selected:text-primary group-data-selected:opacity-100"
+                            />
                           </div>
                         </CommandItem>
                       </div>
                     {/each}
                   </CommandGroup>
                 {:else if step === "events" && hasResults}
-                  <CommandGroup
-                    class={groupHeadingClassName}
-                    heading="Lajit"
-                  >
+                  <CommandGroup class={groupHeadingClassName} heading="Lajit">
                     {#each filteredEvents.slice(0, 15) as evt, i (evt.Id + evt.Time)}
                       {@const isNavigating = navigatingTo === evt.Id}
-                      {@const isDisabled = navigatingTo !== null && !isNavigating}
+                      {@const isDisabled =
+                        navigatingTo !== null && !isNavigating}
                       <div
                         in:fly={{ y: 8, duration: 250, delay: i * 35 }}
                         out:fly={{ y: -4, duration: 150 }}
@@ -364,7 +379,7 @@
                                 class="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
                               >
                                 {#if isNavigating}
-                                  <Loader2 class="size-4 animate-spin" />
+                                  <LoaderCircle class="size-4 animate-spin" />
                                 {:else}
                                   <Clock class="size-4" />
                                 {/if}
@@ -400,7 +415,9 @@
                               {#if isNavigating}
                                 <div class="size-4"></div>
                               {:else}
-                                <ChevronRight class="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-selected:translate-x-0.5 group-data-selected:text-primary group-data-selected:opacity-100" />
+                                <ChevronRight
+                                  class="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-selected:translate-x-0.5 group-data-selected:text-primary group-data-selected:opacity-100"
+                                />
                               {/if}
                             </div>
                           </div>

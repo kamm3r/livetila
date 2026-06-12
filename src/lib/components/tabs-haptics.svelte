@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { triggerHaptic } from "$lib/hooks/use-haptics";
+  import { createWebHaptics } from "web-haptics/svelte";
+  import { onDestroy } from "svelte";
   import type { Snippet } from "svelte";
 
   type Tab = {
@@ -19,10 +20,13 @@
     class?: string;
   } = $props();
 
-  let activeTab = $state(defaultValue);
+  let activeTab = $derived(defaultValue);
+
+  const { trigger, destroy } = createWebHaptics();
+  onDestroy(destroy);
 
   function handleTabChange(value: string) {
-    triggerHaptic("selection");
+    trigger("selection");
     activeTab = value;
   }
 </script>
@@ -40,7 +44,7 @@
           ? '200%'
           : '0%'}); width: calc((100% - 0.5rem) / {Math.min(tabs.length, 3)})"
     ></div>
-    {#each tabs as tab}
+    {#each tabs as tab (tab.value)}
       <button
         class="relative z-10 inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {activeTab ===
         tab.value
@@ -57,7 +61,7 @@
   </div>
 
   <div class="space-y-5">
-    {#each tabs as tab}
+    {#each tabs as tab (tab.value)}
       {#if activeTab === tab.value}
         {@render tab.content()}
       {/if}

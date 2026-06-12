@@ -9,7 +9,7 @@
 
   const sortedAllocs = $derived(
     ctx.currentHeat && ctx.heats.length > 0
-      ? [...ctx.currentHeat.Allocations].sort((a: any, b: any) =>
+      ? [...ctx.currentHeat.Allocations].sort((a, b) =>
           sortByResult(a, b, resultCtx.eventCategory),
         )
       : [],
@@ -17,7 +17,7 @@
 
   const sortedTotal = $derived(
     ctx.currentRound?.TotalResults
-      ? [...ctx.currentRound.TotalResults].sort((a: any, b: any) =>
+      ? [...ctx.currentRound.TotalResults].sort((a, b) =>
           sortByResult(a, b, resultCtx.eventCategory),
         )
       : [],
@@ -27,14 +27,14 @@
 <div class="space-y-6">
   {#if ctx.showHeatNumbers && ctx.heats.length > 0}
     <div
-      class="mb-4 flex overflow-x-auto flex-nowrap gap-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      class="mb-4 flex overflow-x-auto flex-nowrap gap-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
     >
       <div
         class="sticky left-0 z-10 shrink-0 self-center rounded-md bg-muted px-2 py-1 text-muted-foreground text-xs"
       >
         Erä:
       </div>
-      {#each [...ctx.heats].sort((a: any, b: any) => a.Index - b.Index) as heat (heat.Index)}
+      {#each [...ctx.heats].sort((a, b) => a.Index - b.Index) as heat (heat.Index)}
         <button
           class="shrink-0 inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {ctx.selectedHeat ===
           heat.Index
@@ -86,7 +86,7 @@
             <Table.Cell>
               {#if alloc.Attempts}
                 <ul class="flex gap-2">
-                  {#each alloc.Attempts as attempt, i}
+                  {#each alloc.Attempts as attempt, i (i)}
                     <li
                       class="-my-1 flex flex-col rounded bg-muted-foreground/20 px-2 py-1 text-sm {alloc.Result ===
                       attempt.Line1
@@ -129,7 +129,7 @@
               </div>
               {#if alloc.Attempts}
                 <ul class="mt-2 flex flex-wrap gap-1.5">
-                  {#each alloc.Attempts as attempt, i}
+                  {#each alloc.Attempts as attempt, i (i)}
                     <li
                       class="inline-flex items-center rounded bg-muted-foreground/15 px-1.5 py-0.5 text-xs leading-none {alloc.Result ===
                       attempt.Line1
@@ -196,7 +196,7 @@
             <Table.Cell>
               {#if tr.Attempts}
                 <ul class="flex gap-2">
-                  {#each tr.Attempts as attempt, i}
+                  {#each tr.Attempts as attempt, i (i)}
                     <li
                       class="-my-1 flex flex-col rounded bg-muted-foreground/20 px-2 py-1 text-sm {tr.Result ===
                       attempt.Line1
@@ -245,7 +245,7 @@
               </div>
               {#if tr.Attempts}
                 <ul class="mt-2 flex flex-wrap gap-1.5">
-                  {#each tr.Attempts as attempt, i}
+                  {#each tr.Attempts as attempt, i (i)}
                     <li
                       class="inline-flex items-center rounded bg-muted-foreground/15 px-1.5 py-0.5 text-xs leading-none {tr.Result ===
                       attempt.Line1

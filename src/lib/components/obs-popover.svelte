@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { createWebHaptics } from "web-haptics/svelte";
+  import { onDestroy } from "svelte";
   import { InfoIcon } from "@lucide/svelte";
   import Embed from "./embed.svelte";
-  import { triggerHaptic } from "$lib/hooks/use-haptics";
   import {
     Popover,
     PopoverTrigger,
@@ -35,9 +36,10 @@
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   });
-
+  const { trigger, destroy } = createWebHaptics();
+  onDestroy(destroy);
   function handleOpenChange(newOpen: boolean) {
-    triggerHaptic("selection");
+    trigger("selection");
     open = newOpen;
   }
 </script>

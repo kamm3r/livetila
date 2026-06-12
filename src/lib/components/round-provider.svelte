@@ -20,7 +20,8 @@
 
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { triggerHaptic } from "$lib/hooks/use-haptics";
+  import { createWebHaptics } from "web-haptics/svelte";
+  import { onDestroy } from "svelte";
 
   let {
     rounds = [],
@@ -69,8 +70,11 @@
   );
   const showHeatNumbers = $derived(heats.length >= 2);
 
+    const { trigger, destroy } = createWebHaptics();
+  onDestroy(destroy);
+
   function handleRoundChange(index: number) {
-    triggerHaptic("selection");
+    trigger();
     selectedRound = index;
     const round = rounds.find((r) => r.Index === index);
     selectedHeat = round?.Heats?.[0]?.Index ?? -1;
@@ -78,7 +82,7 @@
 
   function handleHeatChange(index: number) {
     if (heats.some((h) => h.Index === index)) {
-      triggerHaptic("selection");
+      trigger("selection");
       selectedHeat = index;
     }
   }

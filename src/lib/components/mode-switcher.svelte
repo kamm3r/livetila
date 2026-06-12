@@ -1,19 +1,29 @@
 <script lang="ts">
   import { toggleMode } from "mode-watcher";
-  import { useKeyboardShortcut } from "$lib/hooks/use-keyboard-shortcut.svelte";
   import Button from "$lib/components/ui/button/button.svelte";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import * as Kbd from "$lib/components/ui/kbd/index.js";
   import { cn } from "$lib/utils.js";
-
-  useKeyboardShortcut("d", () => toggleMode());
 
   type Props = {
     class?: string;
   };
 
   let { class: className }: Props = $props();
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key !== "d" || event.repeat) return;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.isContentEditable) return;
+    const tag = target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    toggleMode();
+  }
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <Tooltip.Root>
   <Tooltip.Trigger>
