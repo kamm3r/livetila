@@ -70,7 +70,7 @@
   );
   const showHeatNumbers = $derived(heats.length >= 2);
 
-    const { trigger, destroy } = createWebHaptics();
+  const { trigger, destroy } = createWebHaptics();
   onDestroy(destroy);
 
   function handleRoundChange(index: number) {

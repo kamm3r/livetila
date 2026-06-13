@@ -1,9 +1,9 @@
-s<script lang="ts">
+<script lang="ts">
   import { CheckIcon, CopyIcon } from "@lucide/svelte";
   import { page } from "$app/state";
   import { fade } from "svelte/transition";
   import { toast } from "svelte-sonner";
-  import * as Button from "$lib/components/ui/button/index.js";
+  import { Button } from "$lib/components/ui/button";
 
   let { slug }: { slug: string } = $props();
 
@@ -33,7 +33,9 @@ s<script lang="ts">
   });
 </script>
 
-<Button.Root
+s
+
+<Button
   variant="secondary"
   class="w-full gap-2 active:translate-y-0! active:scale-[0.97] transition-transform"
   onclick={copyUrlToClipboard}
@@ -41,15 +43,15 @@ s<script lang="ts">
   <div class="relative flex size-4 items-center justify-center">
     {#if copy}
       <span class="absolute inset-0" transition:fade={{ duration: 150 }}>
-        <CheckIcon class="size-4" />
+        <CheckIcon data-icon="inline-start" />
       </span>
     {:else}
       <span class="absolute inset-0" transition:fade={{ duration: 150 }}>
-        <CopyIcon class="size-4" />
+        <CopyIcon data-icon="inline-start" />
       </span>
     {/if}
   </div>
   <span class="sr-only text-sm sm:not-sr-only"
     >{copy ? "Kopioitu!" : "Kopioi linkki"}</span
   >
-</Button.Root>
+</Button>

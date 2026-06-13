@@ -10,6 +10,7 @@
   import ParticipantLayout from "$lib/components/participant-layout.svelte";
   import ProtocolLayout from "$lib/components/protocol-layout.svelte";
   import ResultLayout from "$lib/components/result-layout.svelte";
+  import { Skeleton } from "$lib/components/ui/skeleton";
   import { flattenEvents } from "$lib/events";
   import { api } from "$lib/api";
   import { createQuery } from "@tanstack/svelte-query";
@@ -85,14 +86,14 @@
   {:else if isLoading}
     <div class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
-        <div class="h-8 w-28 animate-pulse rounded-md bg-muted"></div>
-        <div class="h-10 w-48 animate-pulse rounded-md bg-muted"></div>
+        <Skeleton class="h-8 w-28 rounded-md" />
+        <Skeleton class="h-10 w-48 rounded-md" />
       </div>
-      <div class="mt-2 space-y-3">
-        <div class="h-10 w-full animate-pulse rounded bg-muted"></div>
-        <div class="h-14 w-full animate-pulse rounded bg-muted"></div>
-        <div class="h-14 w-full animate-pulse rounded bg-muted"></div>
-        <div class="h-14 w-full animate-pulse rounded bg-muted"></div>
+      <div class="mt-2 flex flex-col gap-3">
+        <Skeleton class="h-10 w-full" />
+        <Skeleton class="h-14 w-full" />
+        <Skeleton class="h-14 w-full" />
+        <Skeleton class="h-14 w-full" />
       </div>
     </div>
   {:else if error}

@@ -60,7 +60,7 @@
         </DrawerDescription>
       </DrawerHeader>
       <div class="flex flex-col gap-4 px-4 pt-2 pb-8">
-        <div class="space-y-2">
+        <div class="flex flex-col gap-2">
           <div
             class="break-all rounded-lg border bg-muted/90 p-3 font-mono text-sm"
           >
@@ -93,7 +93,7 @@
         </PopoverDescription>
       </PopoverHeader>
       <div class="flex flex-col gap-4 p-4 pt-2">
-        <div class="space-y-2">
+        <div class="flex flex-col gap-2">
           <div
             class="break-all rounded-lg border bg-muted/90 p-3 font-mono text-sm"
           >

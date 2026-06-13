@@ -1,10 +1,11 @@
 <script lang="ts">
+  import { Button } from "$lib/components/ui/button";
+  import * as Popover from "$lib/components/ui/popover";
   import { Calendar, Clock } from "@lucide/svelte";
-  import { fly } from "svelte/transition";
-    import { createWebHaptics } from "web-haptics/svelte";
+  import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy } from "svelte";
   import { goto } from "$app/navigation";
-  import Badge, { type BadgeVariant } from "$lib/components/ui/badge/badge.svelte";
+  import { Badge, type BadgeVariant } from "$lib/components/ui/badge";
   import { cn } from "$lib/utils";
   import type { EventWithDate } from "$lib/events";
 
@@ -40,8 +41,6 @@
     Progress: "Käynnissä",
     Official: "Tulokset valmiit",
   };
-
-  let isOpen = $state(false);
 
   function eventNameToRoundCase(name: string): RoundKey | undefined {
     return (Object.entries(roundMapping) as [string, string][]).find(
@@ -90,7 +89,7 @@
       : events.find((e) => e.EventId === Number(currentEventId)),
   );
 
- const { trigger, destroy } = createWebHaptics();
+  const { trigger, destroy } = createWebHaptics();
   onDestroy(destroy);
 
   function handleSelect(value: string) {
@@ -105,92 +104,69 @@
       url += `?round=${roundCase}`;
     }
     goto(url);
-    isOpen = false;
-  }
-
-  function handleOverlayKeydown(event: KeyboardEvent) {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      isOpen = false;
-    }
   }
 </script>
 
-<div class="relative">
-  <button
-    class="flex w-full items-center rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.97] motion-reduce:active:scale-100 transition-transform duration-100 ease-out sm:w-[400px]"
-    onclick={() => (isOpen = !isOpen)}
-  >
-    {#if currentEvent}
-      <div class="flex w-full items-center justify-between gap-2">
-        <div class="flex flex-col gap-2">
-          <span>{currentEvent.EventName} {currentEvent.Name}</span>
-          <Badge variant={statusVariants[currentEvent.Status] || "default"}>
-            {eventStatusLabel[currentEvent.Status] || currentEvent.Status}
-          </Badge>
-        </div>
-        <div
-          class="flex min-w-[90px] flex-col items-end gap-2 text-muted-foreground text-xs"
-        >
-          <span class="flex items-center gap-1"
-            >{formatTime(currentEvent.BeginDateTimeWithTZ)}
-            <Clock class="size-3" /></span
-          >
-          <span class="flex items-center gap-1"
-            >{currentEvent.date} <Calendar class="size-3" /></span
-          >
-        </div>
-      </div>
-    {/if}
-  </button>
-
-  {#if isOpen}
-    <div
-      class="fixed inset-0 z-40"
-      role="button"
-      tabindex="-1"
-      aria-label="Sulje valikko"
-      onclick={() => (isOpen = false)}
-      onkeydown={handleOverlayKeydown}
-      transition:fly={{ duration: 150, opacity: 0 }}
-    ></div>
-
-    <div
-      class="absolute left-0 right-0 z-50 mt-1 max-h-96 min-w-32 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md sm:w-[400px]"
-      role="listbox"
-      transition:fly={{ y: -6, duration: 180, opacity: 0 }}
-    >
-      {#each sortedEvents as event, i (`${event.EventId}-${event.Name}`)}
-        <button
-          class={cn(
-            "flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
-            event.EventId === Number(currentEventId) &&
-              event.Name === currentEvent?.Name &&
-              "bg-accent",
-          )}
-          onclick={() => handleSelect(i.toString())}
-        >
-          <div class="flex w-full items-center justify-between gap-2">
-            <div class="flex flex-col gap-1">
-              <span>{event.EventName} {event.Name}</span>
-              <Badge variant={statusVariants[event.Status] || "default"}>
-                {eventStatusLabel[event.Status] || event.Status}
-              </Badge>
-            </div>
-            <div
-              class="flex min-w-[90px] flex-col items-end gap-1 text-muted-foreground text-xs"
-            >
-              <span class="flex items-center gap-1"
-                >{formatTime(event.BeginDateTimeWithTZ)}
-                <Clock class="size-3" /></span
-              >
-              <span class="flex items-center gap-1"
-                >{event.date} <Calendar class="size-3" /></span
-              >
-            </div>
+<Popover.Root>
+  <Popover.Trigger>
+    <Button variant="outline" class="h-auto px-4 py-2 w-full sm:w-[400px]">
+      {#if currentEvent}
+        <div class="flex w-full items-center justify-between gap-2">
+          <div class="flex flex-col gap-2">
+            <span>{currentEvent.EventName} {currentEvent.Name}</span>
+            <Badge variant={statusVariants[currentEvent.Status] || "default"}>
+              {eventStatusLabel[currentEvent.Status] || currentEvent.Status}
+            </Badge>
           </div>
-        </button>
-      {/each}
-    </div>
-  {/if}
-</div>
+          <div
+            class="flex min-w-[90px] flex-col items-end gap-2 text-muted-foreground text-xs"
+          >
+            <span class="flex items-center gap-1"
+              >{formatTime(currentEvent.BeginDateTimeWithTZ)}
+              <Clock class="size-3" /></span
+            >
+            <span class="flex items-center gap-1"
+              >{currentEvent.date} <Calendar class="size-3" /></span
+            >
+          </div>
+        </div>
+      {/if}
+    </Button>
+  </Popover.Trigger>
+  <Popover.Content
+    class="w-[var(--radix-popover-trigger-width)] max-h-96 overflow-auto p-1"
+    align="start"
+  >
+    {#each sortedEvents as event, i (`${event.EventId}-${event.Name}`)}
+      <button
+        class={cn(
+          "flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
+          event.EventId === Number(currentEventId) &&
+            event.Name === currentEvent?.Name &&
+            "bg-accent",
+        )}
+        onclick={() => handleSelect(i.toString())}
+      >
+        <div class="flex w-full items-center justify-between gap-2">
+          <div class="flex flex-col gap-1">
+            <span>{event.EventName} {event.Name}</span>
+            <Badge variant={statusVariants[event.Status] || "default"}>
+              {eventStatusLabel[event.Status] || event.Status}
+            </Badge>
+          </div>
+          <div
+            class="flex min-w-[90px] flex-col items-end gap-1 text-muted-foreground text-xs"
+          >
+            <span class="flex items-center gap-1"
+              >{formatTime(event.BeginDateTimeWithTZ)}
+              <Clock class="size-3" /></span
+            >
+            <span class="flex items-center gap-1"
+              >{event.date} <Calendar class="size-3" /></span
+            >
+          </div>
+        </div>
+      </button>
+    {/each}
+  </Popover.Content>
+</Popover.Root>

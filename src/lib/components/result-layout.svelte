@@ -1,5 +1,8 @@
 <script lang="ts">
   import * as Table from "$lib/components/ui/table";
+  import * as ToggleGroup from "$lib/components/ui/toggle-group";
+  import * as Empty from "$lib/components/ui/empty";
+  import { Badge } from "$lib/components/ui/badge";
   import { getRoundContext } from "./round-provider.svelte";
   import { getResultContext } from "./result-provider.svelte";
   import { sortByResult } from "$lib/results";
@@ -24,27 +27,24 @@
   );
 </script>
 
-<div class="space-y-6">
+<div class="flex flex-col gap-6">
   {#if ctx.showHeatNumbers && ctx.heats.length > 0}
     <div
       class="mb-4 flex overflow-x-auto flex-nowrap gap-2 [-ms-overflow-style:none] scrollbar-none [&::-webkit-scrollbar]:hidden"
     >
-      <div
-        class="sticky left-0 z-10 shrink-0 self-center rounded-md bg-muted px-2 py-1 text-muted-foreground text-xs"
+      <ToggleGroup.Root
+        type="single"
+        value={String(ctx.selectedHeat)}
+        onValueChange={(v) => ctx.handleHeatChange(Number(v))}
+        variant="outline"
+        size="sm"
       >
-        Erä:
-      </div>
-      {#each [...ctx.heats].sort((a, b) => a.Index - b.Index) as heat (heat.Index)}
-        <button
-          class="shrink-0 inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 {ctx.selectedHeat ===
-          heat.Index
-            ? 'bg-primary text-primary-foreground shadow-xs'
-            : 'border border-input bg-background hover:bg-accent hover:text-accent-foreground'}"
-          onclick={() => ctx.handleHeatChange(heat.Index)}
-        >
-          Erä {heat.Index}
-        </button>
-      {/each}
+        {#each [...ctx.heats].sort((a, b) => a.Index - b.Index) as heat (heat.Index)}
+          <ToggleGroup.Item value={String(heat.Index)}>
+            Erä {heat.Index}
+          </ToggleGroup.Item>
+        {/each}
+      </ToggleGroup.Root>
     </div>
   {/if}
 
@@ -71,9 +71,8 @@
               <div class="flex flex-col">
                 <div class="flex items-center">
                   {#if alloc.Number}
-                    <span
-                      class="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200"
-                      >{alloc.Number}</span
+                    <Badge class="mr-2 bg-primary/10 text-primary"
+                      >{alloc.Number}</Badge
                     >
                   {/if}
                   <span class="font-medium">{alloc.Name}</span>
@@ -150,9 +149,9 @@
       {/each}
     </ul>
   {:else}
-    <div class="py-8 text-center">
-      <p class="text-muted-foreground">Tuloksia ei ole saatavilla vielä...</p>
-    </div>
+    <Empty.Root>
+      <Empty.Description>Tuloksia ei ole saatavilla vielä...</Empty.Description>
+    </Empty.Root>
   {/if}
 
   {#if ctx.heats.length > 1 && sortedTotal.length > 0}
@@ -181,9 +180,8 @@
               <div class="flex flex-col">
                 <div class="flex items-center">
                   {#if tr.Number}
-                    <span
-                      class="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200"
-                      >{tr.Number}</span
+                    <Badge class="mr-2 bg-primary/10 text-primary"
+                      >{tr.Number}</Badge
                     >
                   {/if}
                   <span class="font-medium">{tr.Name}</span>
@@ -227,9 +225,8 @@
               <div class="flex items-center justify-between gap-4">
                 <div class="min-w-0">
                   {#if tr.Number}
-                    <span
-                      class="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200"
-                      >{tr.Number}</span
+                    <Badge class="mr-2 bg-primary/10 text-primary"
+                      >{tr.Number}</Badge
                     >
                   {/if}
                   <span class="truncate font-medium text-sm">{tr.Name}</span>

@@ -22,7 +22,7 @@
     CommandItem,
     CommandList,
   } from "$lib/components/ui/command";
-  import { cn } from "../utils";
+  import { cn } from "$lib/utils.js";
 
   type EventData = {
     Id: number;

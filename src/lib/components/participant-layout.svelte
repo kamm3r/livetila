@@ -1,6 +1,8 @@
 <script lang="ts">
   import { CheckCircle } from "@lucide/svelte";
   import * as Table from "$lib/components/ui/table";
+  import * as Empty from "$lib/components/ui/empty";
+  import { Badge } from "$lib/components/ui/badge";
   import type { Enrollment } from "~/types/comp";
 
   let {
@@ -42,9 +44,8 @@
             <div class="flex flex-col">
               <div class="flex items-center">
                 {#if enrollment.Number}
-                  <span
-                    class="mr-2 rounded bg-blue-100 px-2 py-1 font-medium text-blue-800 text-xs dark:bg-blue-800 dark:text-blue-200"
-                    >{enrollment.Number}</span
+                  <Badge class="mr-2 bg-primary/10 text-primary"
+                    >{enrollment.Number}</Badge
                   >
                 {/if}
                 <span class="font-medium">{enrollment.Name}</span>
@@ -89,7 +90,7 @@
     {/each}
   </ul>
 {:else}
-  <div class="py-8 text-center">
-    <p class="text-muted-foreground">Ei ilmoittautuneita.</p>
-  </div>
+  <Empty.Root>
+    <Empty.Description>Ei ilmoittautuneita.</Empty.Description>
+  </Empty.Root>
 {/if}

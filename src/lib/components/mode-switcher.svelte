@@ -1,6 +1,6 @@
 <script lang="ts">
   import { toggleMode } from "mode-watcher";
-  import Button from "$lib/components/ui/button/button.svelte";
+  import { Button } from "$lib/components/ui/button";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import * as Kbd from "$lib/components/ui/kbd/index.js";
   import { cn } from "$lib/utils.js";

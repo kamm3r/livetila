@@ -4,6 +4,7 @@
   import { api } from "$lib/api";
   import { sortByResult } from "$lib/results";
   import { cn } from "$lib/utils";
+  import { Skeleton } from "$lib/components/ui/skeleton";
   import type { Competition, CompetitionProperties } from "~/types/comp";
 
   type Attempt = {
@@ -102,7 +103,7 @@
         {#if rounds?.Name}
           {rounds.Name}
         {:else}
-          <div class="my-1 h-4 w-28 animate-pulse rounded bg-gray-700/60"></div>
+          <Skeleton class="my-1 h-4 w-28" />
         {/if}
       </h2>
 
@@ -111,7 +112,7 @@
           {#if competition?.Name}
             {competition.Name}
           {:else}
-            <div class="my-1 h-4 w-24 animate-pulse rounded bg-black/20"></div>
+            <Skeleton class="my-1 h-4 w-24" />
           {/if}
         </h3>
 
@@ -125,12 +126,8 @@
           {#each Array.from({ length: 8 }) as _, i (i)}
             <li class="border-black/50 border-t-2">
               <div class="flex flex-[1_1_100%] justify-between px-4 py-2">
-                <div
-                  class="h-4 w-40 animate-pulse rounded bg-gray-700/60"
-                ></div>
-                <div
-                  class="h-4 w-16 animate-pulse rounded bg-gray-700/60"
-                ></div>
+                <Skeleton class="h-4 w-40" />
+                <Skeleton class="h-4 w-16" />
               </div>
             </li>
           {/each}
@@ -179,7 +176,7 @@
       {#if compDetails?.Competition?.Name}
         {compDetails.Competition.Name}
       {:else}
-        <div class="my-1 h-4 w-24 animate-pulse rounded bg-gray-700/60"></div>
+        <Skeleton class="my-1 h-4 w-24" />
       {/if}
     </h1>
   </div>
