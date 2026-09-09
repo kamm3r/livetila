@@ -126,3 +126,159 @@
     @apply font-sans;
   }
 }
+
+/* Motion is feedback: frequent search/keyboard actions stay immediate. */
+:root {
+  --motion-fast: 120ms;
+  --motion-enter: 180ms;
+  --motion-exit: 100ms;
+  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-ease-move: cubic-bezier(0.22, 0.68, 0, 1);
+}
+
+.motion-control {
+  transition:
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    scale var(--motion-fast) var(--motion-ease-out);
+}
+
+html[data-input="pointer"] .motion-control:active:not(:disabled) {
+  scale: 0.98;
+}
+
+.motion-search-surface {
+  transition:
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+.motion-search-glow {
+  transition: opacity var(--motion-fast) ease;
+}
+
+.motion-tabs {
+  position: relative;
+  isolation: isolate;
+}
+
+.motion-tab-indicator {
+  position: absolute;
+  inset-block: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / var(--tab-count));
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--background);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+  transform: translateX(calc(var(--tab-index) * 100%));
+  transition: transform var(--motion-enter) var(--motion-ease-move);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.motion-tabs .motion-tab-trigger {
+  /* Equal widths keep the indicator aligned across mobile and desktop. */
+  flex: 1 1 0;
+  min-width: 0;
+  transition: none;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.motion-copy-icon {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity var(--motion-fast) ease,
+    transform var(--motion-fast) var(--motion-ease-out);
+}
+
+.motion-copy-icon[data-visible="true"] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.motion-popover {
+  transform-origin: var(--bits-popover-content-transform-origin);
+}
+
+.motion-popover[data-state="open"] {
+  animation: surface-enter var(--motion-enter) var(--motion-ease-out);
+}
+
+.motion-popover[data-state="closed"] {
+  animation: surface-exit var(--motion-exit) ease-out;
+}
+
+.motion-tooltip {
+  transform-origin: var(--bits-tooltip-content-transform-origin);
+}
+
+.motion-tooltip[data-state="delayed-open"] {
+  animation: surface-enter var(--motion-fast) var(--motion-ease-out);
+}
+
+/* Keep Vaul's native direction and drag behavior; shorten the settling motion. */
+[data-vaul-drawer][data-slot="drawer-content"],
+[data-vaul-overlay][data-slot="drawer-overlay"] {
+  animation-duration: 280ms;
+  transition-duration: 280ms;
+}
+
+@keyframes surface-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes surface-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+html[data-input="keyboard"]
+  :is(
+    .motion-control,
+    .motion-search-surface,
+    .motion-search-glow,
+    .motion-tab-indicator,
+    .motion-copy-icon,
+    .motion-popover,
+    .motion-tooltip,
+    [data-slot="drawer-content"],
+    [data-slot="drawer-overlay"]
+  ) {
+  transition: none;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  html[data-input="pointer"] .motion-control:active:not(:disabled) {
+    scale: 1;
+  }
+}

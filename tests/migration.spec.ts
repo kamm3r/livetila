@@ -206,3 +206,97 @@ test("theme toggles without reacting to typing in search", async ({ page }) => {
   await page.getByRole("button", { name: "Toggle theme" }).click();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
 });
+
+test("tab indicator follows pointer selection but keyboard navigation stays immediate", async ({
+  page,
+}) => {
+  await page.goto("/competition/1-10");
+  const results = page.getByRole("tab", { name: "Tulokset" });
+  const indicator = page.locator(".motion-tab-indicator");
+  await results.click();
+  await expect(results).toHaveAttribute("aria-selected", "true");
+  await expect(indicator).toHaveCSS("transition-duration", "0.18s");
+  await expect
+    .poll(async () => {
+      const tab = await results.boundingBox();
+      const highlight = await indicator.boundingBox();
+      return Math.abs(tab!.x - highlight!.x);
+    })
+    .toBeLessThan(2);
+  // Panel content is available immediately, without outgoing/incoming panel animations.
+  await expect(
+    page.getByRole("cell", { name: "10,20", exact: true }),
+  ).toBeVisible();
+  await results.press("ArrowLeft");
+  await expect(page.getByRole("tab", { name: "Pöytäkirjat" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(indicator).toHaveCSS("transition-duration", "0s");
+  // Rapid reversal ends at the most recent selection.
+  await results.click();
+  await page.getByRole("tab", { name: "Ilmoittautuneet" }).click();
+  await expect
+    .poll(async () => {
+      const tab = await page
+        .getByRole("tab", { name: "Ilmoittautuneet" })
+        .boundingBox();
+      const highlight = await indicator.boundingBox();
+      return Math.abs(tab!.x - highlight!.x);
+    })
+    .toBeLessThan(2);
+});
+
+test("reduced motion keeps tabs, popovers, copy feedback, and mobile drawers usable", async ({
+  page,
+  context,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/competition/1-10");
+  await page.getByRole("tab", { name: "Tulokset" }).click();
+  await expect(page.locator(".motion-tab-indicator")).toHaveCSS(
+    "transition-duration",
+    "0s",
+  );
+  await page.getByRole("button", { name: "OBS Overlay" }).click();
+  await expect(page.locator("[data-slot=popover-content]")).toHaveCSS(
+    "animation-duration",
+    "0s",
+  );
+  await page.getByRole("button", { name: "Kopioi linkki" }).click();
+  await expect(page.getByRole("button", { name: "Kopioitu!" })).toBeVisible();
+  await expect(page.locator(".motion-copy-icon").first()).toHaveCSS(
+    "transition-duration",
+    "0s",
+  );
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "OBS Overlay" }).click();
+  await expect(page.locator("[data-slot=drawer-content]")).toBeVisible();
+  await expect(page.locator("[data-slot=drawer-content]")).toHaveCSS(
+    "animation-duration",
+    "0s",
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.locator("[data-slot=drawer-content]")).toHaveCount(0);
+});
+
+test("search options appear together with no stagger or focus zoom", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const input = page.getByRole("combobox");
+  await input.fill("Test Games");
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await expect(page.getByRole("option")).toHaveCount(2);
+  await expect(page.getByRole("option").last()).toBeVisible();
+  const animations = await page
+    .getByRole("listbox")
+    .evaluate((list) => list.getAnimations({ subtree: true }).length);
+  expect(animations).toBe(0);
+  await expect(page.locator(".motion-search-surface")).toHaveCSS(
+    "scale",
+    "none",
+  );
+});

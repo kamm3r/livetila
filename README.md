@@ -88,6 +88,14 @@ static/                     # Static assets
 tests/                     # Browser regression tests
 ```
 
+## Motion and dependency maintenance
+
+Motion uses Svelte and CSS. Pointer-operated tabs have a 180 ms selection indicator; popovers enter in 180 ms and leave in 100 ms; copy/press feedback takes 120 ms. Search results and tab content appear immediately. Keyboard actions skip decorative transitions, and reduced-motion preferences disable CSS motion and OBS row movement. Live overlays only animate rows when their positions change.
+
+The motion rules live in `src/app.css`. Keep controls responsive during transitions and avoid replaying entrance animations during data refreshes.
+
+TypeScript stays on 6.0.3 because the current Svelte check and ESLint toolchain do not support TypeScript 7 as a drop-in replacement. Other direct dependencies were updated to their latest registry releases during the animation pass; the unused React-era `motion` dependency was removed.
+
 ## License
 
 TBD

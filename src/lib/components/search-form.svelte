@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { fly, fade, slide, scale } from "svelte/transition";
-  import { cubicOut, cubicInOut } from "svelte/easing";
   import {
     ArrowRight,
     Calendar,
@@ -190,8 +188,8 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class={cn(
-        "relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl transition-all duration-300 ease-out",
-        isFocused && "focused",
+        "relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl motion-search-surface",
+        isFocused && "border-primary/40",
       )}
       style="box-shadow: {showDropdown
         ? '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)'
@@ -201,7 +199,7 @@
     >
       <div
         class={cn(
-          "pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300",
+          "pointer-events-none absolute inset-0 rounded-2xl motion-search-glow",
           isFocused ? "opacity-100" : "opacity-0",
         )}
         style="background: linear-gradient(135deg, rgba(113, 180, 255, 0.15) 0%, rgba(113, 180, 255, 0.05) 50%, rgba(113, 180, 255, 0.15) 100%)"
@@ -213,8 +211,8 @@
         >
           <span
             class={cn(
-              "inline-flex transition-all duration-300 ease-out",
-              isFocused && "scale-110 text-primary",
+              "inline-flex",
+              isFocused && "text-primary",
               !isFocused && "text-muted-foreground",
             )}
           >
@@ -235,10 +233,7 @@
           />
 
           {#if isLoading}
-            <div
-              in:scale={{ duration: 150, start: 0.8 }}
-              out:scale={{ duration: 150, start: 0.8 }}
-            >
+            <div>
               <LoaderCircle class="size-5 animate-spin text-primary" />
             </div>
           {/if}
@@ -247,30 +242,18 @@
 
       {#if showDropdown}
         <div
-          in:scale={{ duration: 200, start: 0 }}
-          out:scale={{ duration: 200, start: 0 }}
           class="mx-4 h-px bg-linear-to-r from-transparent via-border to-transparent"
         ></div>
       {/if}
 
       {#key step}
         {#if showDropdown}
-          <div
-            in:slide={{ duration: 200, easing: cubicOut }}
-            out:slide={{ duration: 200, easing: cubicInOut }}
-            class="overflow-hidden"
-          >
+          <div class="overflow-hidden">
             <div class="p-2">
               <CommandList class="max-h-80 overflow-y-auto">
                 {#if isLoading}
-                  <div
-                    in:fade={{ duration: 150 }}
-                    class="flex flex-col items-center gap-3 py-8"
-                  >
+                  <div class="flex flex-col items-center gap-3 py-8">
                     <div class="relative">
-                      <div
-                        class="absolute inset-0 animate-ping rounded-full bg-primary/20"
-                      ></div>
                       <LoaderCircle
                         class="relative size-6 animate-spin text-primary"
                       />
@@ -293,7 +276,7 @@
                     >
                   </div>
                 {:else if !hasResults}
-                  <div in:fly={{ y: 10, duration: 200 }}>
+                  <div>
                     <CommandEmpty
                       class="flex flex-col items-center gap-2 py-8 text-center"
                     >
@@ -312,14 +295,10 @@
                     class={groupHeadingClassName}
                     heading="Kilpailut"
                   >
-                    {#each filteredCompetitions.slice(0, 10) as comp, i (comp.Id)}
-                      <div
-                        in:fly={{ y: 8, duration: 250, delay: i * 35 }}
-                        out:fly={{ y: -4, duration: 150 }}
-                        class="active-press"
-                      >
+                    {#each filteredCompetitions.slice(0, 10) as comp (comp.Id)}
+                      <div>
                         <CommandItem
-                          class="group cursor-pointer rounded-xl px-2 py-2 transition-colors data-selected:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
+                          class="group cursor-pointer rounded-xl px-2 py-2 data-selected:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
                           onmousedown={(e) => {
                             e.preventDefault();
                           }}
@@ -331,7 +310,7 @@
                           >
                             <div class="flex items-center gap-2 sm:gap-3">
                               <div
-                                class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
+                                class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
                               >
                                 <Calendar class="size-4" />
                               </div>
@@ -353,7 +332,7 @@
                               </div>
                             </div>
                             <ArrowRight
-                              class="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-selected:translate-x-0.5 group-data-selected:text-primary group-data-selected:opacity-100"
+                              class="size-4 text-muted-foreground opacity-0 group-data-selected:text-primary group-data-selected:opacity-100"
                             />
                           </div>
                         </CommandItem>
@@ -362,16 +341,13 @@
                   </CommandGroup>
                 {:else if step === "events" && hasResults}
                   <CommandGroup class={groupHeadingClassName} heading="Lajit">
-                    {#each filteredEvents.slice(0, 15) as evt, i (evt.RowId)}
+                    {#each filteredEvents.slice(0, 15) as evt (evt.RowId)}
                       {@const isNavigating = navigatingTo === evt.Id}
                       {@const isDisabled =
                         navigatingTo !== null && !isNavigating}
-                      <div
-                        in:fly={{ y: 8, duration: 250, delay: i * 35 }}
-                        out:fly={{ y: -4, duration: 150 }}
-                      >
+                      <div>
                         <CommandItem
-                          class="group cursor-pointer rounded-xl px-2 py-2 transition-all data-selected:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none sm:px-3 sm:py-2.5"
+                          class="group cursor-pointer rounded-xl px-2 py-2 data-selected:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none sm:px-3 sm:py-2.5"
                           disabled={isDisabled}
                           onmousedown={(e) => {
                             e.preventDefault();
@@ -386,7 +362,7 @@
                           >
                             <div class="flex items-center gap-2 sm:gap-3">
                               <div
-                                class="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
+                                class="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
                               >
                                 {#if isNavigating}
                                   <LoaderCircle class="size-4 animate-spin" />
@@ -399,11 +375,7 @@
                                   class="font-medium text-foreground text-sm sm:text-base"
                                   >{evt.EventName}</span
                                 >
-                                <span
-                                  in:fly={{ y: 4, duration: 150, delay: 50 }}
-                                  out:fly={{ y: -4, duration: 150 }}
-                                  class="text-muted-foreground text-xs"
-                                >
+                                <span class="text-muted-foreground text-xs">
                                   {isNavigating ? "Siirrytään..." : evt.Name}
                                 </span>
                               </div>
@@ -426,7 +398,7 @@
                                 <div class="size-4"></div>
                               {:else}
                                 <ChevronRight
-                                  class="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-selected:translate-x-0.5 group-data-selected:text-primary group-data-selected:opacity-100"
+                                  class="size-4 text-muted-foreground opacity-0 group-data-selected:text-primary group-data-selected:opacity-100"
                                 />
                               {/if}
                             </div>
@@ -445,21 +417,8 @@
   </Command>
 
   {#if !showDropdown}
-    <p
-      in:fly={{ y: 5, duration: 200, delay: 100 }}
-      out:fly={{ y: -5, duration: 150 }}
-      class="mt-3 text-center text-muted-foreground/60 text-xs"
-    >
+    <p class="mt-3 text-center text-muted-foreground/60 text-xs">
       Vinkki: valitse kilpailu ja rajaa laji kirjoittamalla "/"
     </p>
   {/if}
 </div>
-
-<style>
-  .focused {
-    scale: 1.01;
-  }
-  .active-press:active {
-    scale: 0.97;
-  }
-</style>

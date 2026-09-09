@@ -58,7 +58,7 @@
 {#if isMobile}
   <Drawer {open} onOpenChange={handleOpenChange}>
     <DrawerTrigger
-      class="sm:hidden inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded border border-border bg-background bg-clip-padding px-2.5 font-medium text-sm shadow-xs outline-none select-none hover:border-primary/50 hover:bg-muted hover:text-foreground active:scale-[0.97] motion-reduce:active:scale-100 transition-transform duration-100 ease-out dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
+      class="sm:hidden inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded border border-border bg-background bg-clip-padding px-2.5 font-medium text-sm shadow-xs outline-none select-none hover:border-primary/50 hover:bg-muted hover:text-foreground motion-control dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
     >
       <InfoIcon class="size-4" />
       <span class="sr-only">OBS Overlay</span>
@@ -88,7 +88,7 @@
 {:else}
   <Popover {open} onOpenChange={handleOpenChange}>
     <PopoverTrigger
-      class="hidden sm:inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded border border-border bg-background bg-clip-padding px-2.5 font-medium text-sm shadow-xs outline-none select-none hover:border-primary/50 hover:bg-muted hover:text-foreground active:scale-[0.97] motion-reduce:active:scale-100 transition-transform duration-100 ease-out dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
+      class="hidden sm:inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded border border-border bg-background bg-clip-padding px-2.5 font-medium text-sm shadow-xs outline-none select-none hover:border-primary/50 hover:bg-muted hover:text-foreground motion-control dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
     >
       <InfoIcon class="size-4" />
       <span class="sr-only sm:not-sr-only">OBS Overlay</span>
