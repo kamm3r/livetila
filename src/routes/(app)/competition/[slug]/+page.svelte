@@ -28,6 +28,7 @@
     queryKey: ["events", compId],
     queryFn: () => api.getEvents(compId),
     enabled: Boolean(compId),
+    refetchInterval: 30000,
   }));
 
   const compEventsRaw = $derived(eventsQuery.data ?? null);
@@ -37,8 +38,14 @@
   const selectedEvent = $derived(
     compEvents.find((e) => e.EventId === Number(eventId)),
   );
-  const isTrack = $derived(selectedEvent?.Category === "Track");
-  const isProgress = $derived(selectedEvent?.Status === "Progress");
+  const isTrack = $derived(
+    selectedEvent?.Category === "Track" || selectedEvent?.Category === "Relay",
+  );
+  const isProgress = $derived(
+    compEvents.some(
+      (e) => e.EventId === Number(eventId) && e.Status === "Progress",
+    ),
+  );
 
   const athletesQuery = createQuery<Competition>(() => ({
     queryKey: ["athletes", compId, eventId],
@@ -69,7 +76,9 @@
     athletesQuery.isPending || detailsQuery.isPending || eventsQuery.isPending,
   );
   const error = $derived(
-    athletesQuery.isError ? "Failed to load competition data" : null,
+    athletesQuery.isError || eventsQuery.isError || detailsQuery.isError
+      ? "Kilpailutietojen lataaminen epäonnistui"
+      : null,
   );
 </script>
 
@@ -78,7 +87,7 @@
 </svelte:head>
 
 <main class="container relative mx-auto flex grow flex-col px-4 py-4 sm:p-8">
-  {#if !compId || !eventId}
+  {#if !/^\d+-\d+$/.test(slug)}
     <div class="flex flex-col items-center justify-center py-20">
       <h2 class="font-bold text-2xl">Virheellinen linkki</h2>
       <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
@@ -114,11 +123,12 @@
           competitionId={compId}
           currentEventId={eventId}
           events={compEvents}
-          {roundFromUrl}
+          roundFromUrl={competition.Rounds.find((r) => r.Index === initialRound)
+            ?.RoundTypeCategory ?? competition.Rounds.at(-1)?.RoundTypeCategory}
         />
       </div>
 
-      {#key eventId}
+      {#key slug}
         <RoundProvider rounds={competition.Rounds} {initialRound}>
           <div
             class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"

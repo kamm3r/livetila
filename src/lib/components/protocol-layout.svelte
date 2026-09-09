@@ -55,7 +55,7 @@
       <Table.Body>
         {#each heatAllocs as alloc (alloc.Id)}
           <Table.Row>
-            <Table.Cell><span>{alloc.Number || ""}</span></Table.Cell>
+            <Table.Cell><span>{alloc.Position || ""}</span></Table.Cell>
             <Table.Cell class="w-full">
               <div class="flex flex-col">
                 <div class="flex items-center">
@@ -88,7 +88,7 @@
             <div
               class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-medium text-muted-foreground"
             >
-              {alloc.Number || "-"}
+              {alloc.Position || "-"}
             </div>
             <div class="min-w-0 flex-1">
               <span class="truncate font-medium text-sm">{alloc.Name}</span>

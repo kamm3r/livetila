@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
+  import { buttonVariants } from "$lib/components/ui/button";
   import * as Popover from "$lib/components/ui/popover";
   import { Calendar, Clock } from "@lucide/svelte";
   import { createWebHaptics } from "web-haptics/svelte";
@@ -92,6 +92,8 @@
   const { trigger, destroy } = createWebHaptics();
   onDestroy(destroy);
 
+  let open = $state(false);
+
   function handleSelect(value: string) {
     trigger("selection");
     const event = sortedEvents[Number(value)];
@@ -103,41 +105,45 @@
     if (hasMultiple && roundCase) {
       url += `?round=${roundCase}`;
     }
-    goto(url);
+    open = false;
+    void goto(url);
   }
 </script>
 
-<Popover.Root>
-  <Popover.Trigger>
-    <Button variant="outline" class="h-auto px-4 py-2 w-full sm:w-[400px]">
-      {#if currentEvent}
-        <div class="flex w-full items-center justify-between gap-2">
-          <div class="flex flex-col gap-2">
-            <span>{currentEvent.EventName} {currentEvent.Name}</span>
-            <Badge variant={statusVariants[currentEvent.Status] || "default"}>
-              {eventStatusLabel[currentEvent.Status] || currentEvent.Status}
-            </Badge>
-          </div>
-          <div
-            class="flex min-w-[90px] flex-col items-end gap-2 text-muted-foreground text-xs"
-          >
-            <span class="flex items-center gap-1"
-              >{formatTime(currentEvent.BeginDateTimeWithTZ)}
-              <Clock class="size-3" /></span
-            >
-            <span class="flex items-center gap-1"
-              >{currentEvent.date} <Calendar class="size-3" /></span
-            >
-          </div>
+<Popover.Root bind:open>
+  <Popover.Trigger
+    class={cn(
+      buttonVariants({ variant: "outline" }),
+      "h-auto px-4 py-2 w-full sm:w-[400px]",
+    )}
+  >
+    {#if currentEvent}
+      <div class="flex w-full items-center justify-between gap-2">
+        <div class="flex flex-col gap-2">
+          <span>{currentEvent.EventName} {currentEvent.Name}</span>
+          <Badge variant={statusVariants[currentEvent.Status] || "default"}>
+            {eventStatusLabel[currentEvent.Status] || currentEvent.Status}
+          </Badge>
         </div>
-      {/if}
-    </Button>
+        <div
+          class="flex min-w-[90px] flex-col items-end gap-2 text-muted-foreground text-xs"
+        >
+          <span class="flex items-center gap-1"
+            >{formatTime(currentEvent.BeginDateTimeWithTZ)}
+            <Clock class="size-3" /></span
+          >
+          <span class="flex items-center gap-1"
+            >{currentEvent.date} <Calendar class="size-3" /></span
+          >
+        </div>
+      </div>
+    {/if}
   </Popover.Trigger>
   <Popover.Content
-    class="w-[var(--radix-popover-trigger-width)] max-h-96 overflow-auto p-1"
+    class="w-[var(--bits-popover-anchor-width)] max-h-96 overflow-auto p-1"
     align="start"
   >
-    {#each sortedEvents as event, i (`${event.EventId}-${event.Name}`)}
+    {#each sortedEvents as event, i (`${event.Id}-${event.BeginDateTimeWithTZ}`)}
       <button
         class={cn(
           "flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",

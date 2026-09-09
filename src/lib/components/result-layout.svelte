@@ -83,7 +83,9 @@
               </div>
             </Table.Cell>
             <Table.Cell>
-              {#if alloc.Attempts}
+              {#if !alloc.Attempts?.length}
+                <span class="tabular-nums">{alloc.Result || "-"}</span>
+              {:else}
                 <ul class="flex gap-2">
                   {#each alloc.Attempts as attempt, i (i)}
                     <li
@@ -126,7 +128,7 @@
                   >
                 {/if}
               </div>
-              {#if alloc.Attempts}
+              {#if alloc.Attempts?.length}
                 <ul class="mt-2 flex flex-wrap gap-1.5">
                   {#each alloc.Attempts as attempt, i (i)}
                     <li
@@ -192,7 +194,9 @@
               </div>
             </Table.Cell>
             <Table.Cell>
-              {#if tr.Attempts}
+              {#if !tr.Attempts?.length}
+                <span class="tabular-nums">{tr.Result || "-"}</span>
+              {:else}
                 <ul class="flex gap-2">
                   {#each tr.Attempts as attempt, i (i)}
                     <li
@@ -240,7 +244,7 @@
                   >
                 {/if}
               </div>
-              {#if tr.Attempts}
+              {#if tr.Attempts?.length}
                 <ul class="mt-2 flex flex-wrap gap-1.5">
                   {#each tr.Attempts as attempt, i (i)}
                     <li

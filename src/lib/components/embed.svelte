@@ -1,19 +1,22 @@
 <script lang="ts">
   import { CheckIcon, CopyIcon } from "@lucide/svelte";
-  import { page } from "$app/state";
+
   import { fade } from "svelte/transition";
   import { toast } from "svelte-sonner";
   import { Button } from "$lib/components/ui/button";
 
-  let { slug }: { slug: string } = $props();
+  let { url }: { url: string } = $props();
 
   let copy = $state(false);
   let copyTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  function copyUrlToClipboard() {
-    const round = page.url.searchParams.get("round");
-    const url = `${window.location.origin}/obs/${slug}?${!round ? "" : "round=1&"}${round === "Final" ? "" : "heat=1"}`;
-    void navigator.clipboard.writeText(url);
+  async function copyUrlToClipboard() {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      toast.error("Linkin kopiointi epäonnistui");
+      return;
+    }
     copy = true;
     if (copyTimeout !== null) clearTimeout(copyTimeout);
     toast.info("Linkki kopioitu leikepöydälle");
@@ -32,8 +35,6 @@
     };
   });
 </script>
-
-s
 
 <Button
   variant="secondary"

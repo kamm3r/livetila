@@ -12,6 +12,8 @@
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy } from "svelte";
   import { goto } from "$app/navigation";
+  import { Command as CommandPrimitive } from "bits-ui";
+  import { createQuery } from "@tanstack/svelte-query";
   import { api } from "$lib/api";
   import type { CompetitionList, Events } from "~/types/comp";
 
@@ -26,6 +28,8 @@
 
   type EventData = {
     Id: number;
+    RowId: number;
+    StartsAt: string;
     EventName: string;
     Name: string;
     Date: string;
@@ -43,6 +47,8 @@
           const compDate = new Date(event.BeginDateTimeWithTZ);
           results.push({
             Id: event.EventId,
+            RowId: event.Id,
+            StartsAt: event.BeginDateTimeWithTZ,
             EventName: event.EventName,
             Name: event.Name,
             Date: `${String(compDate.getDate()).padStart(2, "0")}.${String(compDate.getMonth() + 1).padStart(2, "0")}.`,
@@ -55,7 +61,7 @@
   }
 
   const groupHeadingClassName =
-    "**:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:pb-2 **:[[cmdk-group-heading]]:font-semibold **:[[cmdk-group-heading]]:text-muted-foreground/70 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:uppercase **:[[cmdk-group-heading]]:tracking-wider";
+    "**:data-[command-group-heading]:px-2 **:data-[command-group-heading]:pb-2 **:data-[command-group-heading]:font-semibold **:data-[command-group-heading]:text-muted-foreground/70 **:data-[command-group-heading]:text-xs **:data-[command-group-heading]:uppercase **:data-[command-group-heading]:tracking-wider";
 
   let query = $state("");
   let isOpen = $state(false);
@@ -63,41 +69,26 @@
   let selectedComp = $state<CompetitionList | null>(null);
   let navigatingTo = $state<number | null>(null);
 
-  let inputEl: HTMLInputElement | undefined = $state(undefined);
+  let inputEl = $state<HTMLInputElement | null>(null);
   let blurTimeout: ReturnType<typeof setTimeout> | undefined =
     $state(undefined);
 
-  let competitions = $state.raw<CompetitionList[]>([]);
-  let events = $state.raw<Events>({});
-  let isLoadingComps = $state.raw(true);
-  let isLoadingEvents = $state.raw(false);
-
-  $effect(() => {
-    api
-      .getCompetitions()
-      .then((data) => {
-        competitions = data;
-        isLoadingComps = false;
-      })
-      .catch(() => {
-        isLoadingComps = false;
-      });
-  });
-
-  $effect(() => {
-    if (selectedComp) {
-      isLoadingEvents = true;
-      api
-        .getEvents(selectedComp.Id.toString())
-        .then((data) => {
-          events = data;
-          isLoadingEvents = false;
-        })
-        .catch(() => {
-          isLoadingEvents = false;
-        });
-    }
-  });
+  const competitionsQuery = createQuery(() => ({
+    queryKey: ["competitions"],
+    queryFn: () => api.getCompetitions(),
+  }));
+  const eventsQuery = createQuery(() => ({
+    queryKey: ["events", selectedComp?.Id.toString()],
+    queryFn: () => api.getEvents(selectedComp!.Id.toString()),
+    enabled: selectedComp !== null,
+  }));
+  const competitions = $derived(competitionsQuery.data ?? []);
+  const events = $derived(eventsQuery.data ?? {});
+  const isLoadingComps = $derived(competitionsQuery.isPending);
+  const isLoadingEvents = $derived(eventsQuery.isPending);
+  const loadError = $derived(
+    selectedComp ? eventsQuery.isError : competitionsQuery.isError,
+  );
 
   const step = $derived<SearchStep>(selectedComp ? "events" : "competitions");
 
@@ -115,7 +106,7 @@
   const filteredEvents = $derived.by<EventData[]>(() => {
     if (!events) return [];
     const allEvents = extractEvents(events).sort((a, b) =>
-      a.Time.localeCompare(b.Time),
+      a.StartsAt.localeCompare(b.StartsAt),
     );
     const eventQuery = query.includes("/")
       ? (query.split("/").pop()?.trim() ?? "")
@@ -134,13 +125,8 @@
   );
   const hasResults = $derived(results.length > 0);
   const showDropdown = $derived(
-    isOpen && (isLoading || hasResults || query.length > 0),
+    isOpen && (isLoading || loadError || hasResults || query.length > 0),
   );
-
-  let dropdownKey = $derived.by(() => {
-    void step;
-    return Date.now();
-  });
 
   function handleInput(value: string) {
     query = value;
@@ -152,7 +138,10 @@
   }
 
   const { trigger, destroy } = createWebHaptics();
-  onDestroy(destroy);
+  onDestroy(() => {
+    destroy();
+    if (blurTimeout) clearTimeout(blurTimeout);
+  });
 
   function handleCompetitionSelect(comp: CompetitionList) {
     trigger();
@@ -165,7 +154,17 @@
     if (!selectedComp || navigatingTo !== null) return;
     trigger();
     navigatingTo = evt.Id;
-    goto(`/competition/${selectedComp.Id}-${evt.Id}`);
+    const round =
+      evt.Name === "Alkuerät"
+        ? "Qualify"
+        : evt.Name === "Loppukilpailu"
+          ? "Final"
+          : null;
+    void goto(
+      `/competition/${selectedComp.Id}-${evt.Id}${round ? `?round=${round}` : ""}`,
+    ).finally(() => {
+      navigatingTo = null;
+    });
   }
 
   function handleFocus() {
@@ -222,17 +221,17 @@
             <Search class="size-5" />
           </span>
 
-          <input
-            bind:this={inputEl}
+          <CommandPrimitive.Input
+            bind:ref={inputEl}
             class="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:text-base"
             onblur={handleBlur}
-            oninput={(e) => handleInput((e.target as HTMLInputElement).value)}
+            aria-label="Hae kilpailuja tai lajeja"
             onfocus={handleFocus}
             placeholder={step === "events"
               ? "Hae lajeja..."
               : "Hae kilpailuja nimellä..."}
             type="text"
-            value={query}
+            bind:value={() => query, handleInput}
           />
 
           {#if isLoading}
@@ -254,7 +253,7 @@
         ></div>
       {/if}
 
-      {#key dropdownKey}
+      {#key step}
         {#if showDropdown}
           <div
             in:slide={{ duration: 200, easing: cubicOut }}
@@ -281,6 +280,17 @@
                         ? "Ladataan lajeja..."
                         : "Ladataan kilpailuja..."}
                     </p>
+                  </div>
+                {:else if loadError}
+                  <div role="alert" class="py-8 text-center text-sm">
+                    <p>Tietojen lataaminen epäonnistui.</p>
+                    <button
+                      class="mt-2 text-primary underline"
+                      onclick={() =>
+                        selectedComp
+                          ? eventsQuery.refetch()
+                          : competitionsQuery.refetch()}>Yritä uudelleen</button
+                    >
                   </div>
                 {:else if !hasResults}
                   <div in:fly={{ y: 10, duration: 200 }}>
@@ -352,7 +362,7 @@
                   </CommandGroup>
                 {:else if step === "events" && hasResults}
                   <CommandGroup class={groupHeadingClassName} heading="Lajit">
-                    {#each filteredEvents.slice(0, 15) as evt, i (evt.Id + evt.Time)}
+                    {#each filteredEvents.slice(0, 15) as evt, i (evt.RowId)}
                       {@const isNavigating = navigatingTo === evt.Id}
                       {@const isDisabled =
                         navigatingTo !== null && !isNavigating}
@@ -369,7 +379,7 @@
                           }}
                           onSelect={() => handleEventSelect(evt)}
                           style="opacity: {isDisabled ? 0.4 : 1}"
-                          value={`${evt.EventName}-${evt.Id}`}
+                          value={`${evt.EventName}-${evt.RowId}`}
                         >
                           <div
                             class="flex w-full items-center justify-between gap-2 sm:gap-3"

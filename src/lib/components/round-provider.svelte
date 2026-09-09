@@ -33,36 +33,17 @@
     children: Snippet;
   } = $props();
 
-  let selectedRound = $state(-1);
-  let selectedHeat = $state(-1);
-
-  $effect(() => {
-    if (rounds.length > 0 && (selectedRound === -1 || selectedHeat === -1)) {
-      if (selectedRound === -1) {
-        selectedRound =
-          initialRound ?? rounds.at(-1)?.Index ?? rounds[0]?.Index ?? -1;
-      }
-      const round = rounds.find((r) => r.Index === selectedRound);
-      if (round && selectedHeat === -1) {
-        selectedHeat = round.Heats[0]?.Index ?? -1;
-      }
-    }
-  });
-
   const currentRound = $derived(
-    rounds.find((r) => r.Index === selectedRound) ?? rounds[0],
+    rounds.find((r) => r.Index === initialRound) ?? rounds.at(-1),
   );
-
-  $effect(() => {
-    const round = currentRound;
-    if (round?.RoundTypeCategory && rounds.length > 1) {
-      const url = new URL(window.location.href);
-      if (url.searchParams.get("round") !== round.RoundTypeCategory) {
-        url.searchParams.set("round", round.RoundTypeCategory);
-        goto(url, { replaceState: true, noScroll: true, keepFocus: true });
-      }
-    }
-  });
+  const selectedRound = $derived(currentRound?.Index ?? -1);
+  let heatSelection = $state<{ round: number; heat: number } | null>(null);
+  const selectedHeat = $derived(
+    heatSelection?.round === selectedRound &&
+      currentRound?.Heats.some((h) => h.Index === heatSelection?.heat)
+      ? heatSelection.heat
+      : (currentRound?.Heats[0]?.Index ?? -1),
+  );
 
   const heats = $derived(currentRound?.Heats ?? []);
   const currentHeat = $derived(
@@ -75,15 +56,17 @@
 
   function handleRoundChange(index: number) {
     trigger();
-    selectedRound = index;
     const round = rounds.find((r) => r.Index === index);
-    selectedHeat = round?.Heats?.[0]?.Index ?? -1;
+    if (!round) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("round", round.RoundTypeCategory);
+    void goto(url, { noScroll: true, keepFocus: true });
   }
 
   function handleHeatChange(index: number) {
     if (heats.some((h) => h.Index === index)) {
       trigger("selection");
-      selectedHeat = index;
+      heatSelection = { round: selectedRound, heat: index };
     }
   }
 

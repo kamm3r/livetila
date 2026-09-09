@@ -2,6 +2,7 @@
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy } from "svelte";
   import { InfoIcon } from "@lucide/svelte";
+  import { getRoundContext } from "./round-provider.svelte";
   import Embed from "./embed.svelte";
   import {
     Popover,
@@ -21,6 +22,16 @@
   } from "$lib/components/ui/drawer";
 
   let { slug }: { slug: string } = $props();
+
+  const ctx = getRoundContext();
+  const overlayUrl = $derived.by(() => {
+    const params = new URLSearchParams();
+    const round = ctx.rounds.findIndex((r) => r.Index === ctx.selectedRound);
+    const heat = ctx.heats.findIndex((h) => h.Index === ctx.selectedHeat);
+    if (round >= 0) params.set("round", String(round + 1));
+    if (heat >= 0) params.set("heat", String(heat + 1));
+    return `${origin}/obs/${slug}?${params}`;
+  });
 
   let open = $state(false);
   let origin = $state("");
@@ -56,7 +67,7 @@
       <DrawerHeader>
         <DrawerTitle>OBS Overlay</DrawerTitle>
         <DrawerDescription>
-          jos haluut näyttää vain tietyn erän tulokset niin tee näin
+          Linkki näyttää valitun kierroksen ja erän tulokset.
         </DrawerDescription>
       </DrawerHeader>
       <div class="flex flex-col gap-4 px-4 pt-2 pb-8">
@@ -64,16 +75,13 @@
           <div
             class="break-all rounded-lg border bg-muted/90 p-3 font-mono text-sm"
           >
-            {origin}/obs/{slug}<br />
-            <span class="rounded bg-primary/20 px-1 py-0.5 text-primary"
-              >?round=1&heat=1</span
-            >
+            {overlayUrl}
           </div>
           <div class="text-muted-foreground text-xs">
             Vaihda <code>round</code> ja <code>heat</code> arvoja tarpeen mukaan.
           </div>
         </div>
-        <Embed {slug} />
+        <Embed url={overlayUrl} />
       </div>
     </DrawerContent>
   </Drawer>
@@ -89,7 +97,7 @@
       <PopoverHeader class="p-4 pb-0">
         <PopoverTitle>OBS Overlay</PopoverTitle>
         <PopoverDescription>
-          jos haluut näyttää vain tietyn erän tulokset niin tee näin
+          Linkki näyttää valitun kierroksen ja erän tulokset.
         </PopoverDescription>
       </PopoverHeader>
       <div class="flex flex-col gap-4 p-4 pt-2">
@@ -97,16 +105,13 @@
           <div
             class="break-all rounded-lg border bg-muted/90 p-3 font-mono text-sm"
           >
-            {origin}/obs/{slug}<br />
-            <span class="rounded bg-primary/20 px-1 py-0.5 text-primary"
-              >?round=1&heat=1</span
-            >
+            {overlayUrl}
           </div>
           <div class="text-muted-foreground text-xs">
             Vaihda <code>round</code> ja <code>heat</code> arvoja tarpeen mukaan.
           </div>
         </div>
-        <Embed {slug} />
+        <Embed url={overlayUrl} />
       </div>
     </PopoverContent>
   </Popover>

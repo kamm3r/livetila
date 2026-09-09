@@ -24,7 +24,7 @@
   const { trigger, destroy } = createWebHaptics();
   onDestroy(destroy);
 
-  function handleTabChange(value: string) {
+  function handleTabChange() {
     trigger("selection");
   }
 </script>
@@ -35,7 +35,7 @@
       {#each tabs as tab (tab.value)}
         <Tabs.Trigger value={tab.value} class="gap-2">
           {@render tab.icon()}
-          <span class="hidden sm:block">{tab.label}</span>
+          <span class="sr-only sm:not-sr-only">{tab.label}</span>
         </Tabs.Trigger>
       {/each}
     </Tabs.List>

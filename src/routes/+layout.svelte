@@ -20,8 +20,6 @@
     name="description"
     content="live.tuloslista API, live result overlay for Live streams"
   />
-
-  <link rel="icon" href="/favicon.ico" />
 </svelte:head>
 
 <QueryClientProvider client={queryClient}>

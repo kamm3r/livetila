@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { flip } from "svelte/animate";
+  import { prefersReducedMotion } from "svelte/motion";
   import { page } from "$app/state";
   import { createQuery } from "@tanstack/svelte-query";
   import { api } from "$lib/api";
@@ -23,7 +25,7 @@
     queryFn: () => api.getAthletes(`${compId}/${eventId}`),
     enabled: Boolean(compId && eventId),
     refetchInterval: 30000,
-    refetchIntervalInBackground: false,
+    refetchIntervalInBackground: true,
   }));
 
   const detailsQuery = createQuery<CompetitionProperties>(() => ({
@@ -65,7 +67,7 @@
   const allocations = $derived(
     (selectedHeat ? (heat?.Allocations ?? []) : (rounds?.TotalResults ?? []))
       .slice()
-      .sort((a, b) => sortByResult(a, b, "Field")),
+      .sort((a, b) => sortByResult(a, b, eventCategory)),
   );
 
   const MAX_ATTEMPTS = 6;
@@ -87,7 +89,9 @@
   }
 </script>
 
-{#if rounds && selectedHeat && !heatExists}
+{#if !/^\d+-\d+$/.test(slug)}
+  <p class="bg-black/90 p-2 text-cyan-300">Virheellinen linkki</p>
+{:else if rounds && selectedHeat && !heatExists}
   <div class="flex min-h-screen items-center justify-center">
     <div class="max-w-md rounded-lg bg-black/90 p-6 text-center">
       <p class="text-cyan-300 text-xl">Erä {selectedHeat} ei ole olemassa</p>
@@ -138,6 +142,9 @@
         <ul class="flex flex-col gap-1">
           {#each allocations as a (a.Id)}
             <li
+              animate:flip={{
+                duration: prefersReducedMotion.current ? 0 : 250,
+              }}
               class="flex flex-wrap justify-between border-black/50 border-t-2"
             >
               <div class="flex flex-[1_1_100%] justify-between px-4 py-1">

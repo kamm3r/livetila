@@ -37,3 +37,5 @@ yarn-error.log*
 
 # idea files
 .idea
+/test-results/
+/playwright-report/

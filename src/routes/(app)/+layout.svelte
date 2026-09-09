@@ -1,8 +1,11 @@
 <script lang="ts">
+  import { Toaster } from "$lib/components/ui/sonner";
   import Navbar from "$lib/components/navbar.svelte";
   import { ModeWatcher } from "mode-watcher";
   let { children } = $props();
 </script>
+
+<Toaster />
 
 <ModeWatcher defaultMode="system" modeStorageKey="theme" disableTransitions />
 
