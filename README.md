@@ -65,6 +65,8 @@ The app uses SvelteKit's static adapter in client-rendered SPA mode. Run `pnpm b
 
 For example, an nginx location can use `try_files $uri $uri/ /index.html;`. This fallback is required by the chosen [SvelteKit SPA deployment configuration](https://svelte.dev/docs/kit/single-page-apps).
 
+On Vercel, the committed `vercel.json` overrides the old Next.js preset with `Other`, runs `pnpm build`, serves `build/`, and supplies the SPA fallback. Existing static assets take precedence over the fallback. No dashboard framework change is required for this branch. Use Node.js 24 in the Vercel project settings. If retrying a deployment manually, deploy the latest migration commit rather than an older Next.js-configured commit.
+
 API requests run directly in the browser against `https://cached-public-api.tuloslista.com/live/v1`, so the upstream service must be reachable and permit cross-origin requests. There is no application server or tRPC layer.
 
 ## Stack and structure
