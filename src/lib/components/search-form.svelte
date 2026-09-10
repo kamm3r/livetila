@@ -175,7 +175,7 @@
     if (blurTimeout) clearTimeout(blurTimeout);
   });
 
-  export function selectCompetition(comp: CompetitionList) {
+  function selectCompetition(comp: CompetitionList) {
     trigger();
     selectedComp = comp;
     query = `${comp.Name} / `;
@@ -231,8 +231,10 @@
   >
     <div
       class={cn(
-        "relative overflow-hidden rounded-xl border bg-card motion-search-surface",
-        isFocused ? "border-primary ring-2 ring-primary/10" : "border-border",
+        "relative overflow-hidden rounded-2xl border bg-card motion-search-surface",
+        isFocused
+          ? "border-primary ring-2 ring-primary/10"
+          : "border-border shadow-sm",
       )}
     >
       <div class="relative z-10">
@@ -474,7 +476,7 @@
     </div>
   </Command>
 
-  <p class="mt-3 min-h-4 px-1 text-left text-xs text-muted-foreground/80">
+  <p class="mt-3 min-h-4 px-1 text-center text-xs text-muted-foreground/80">
     {selectedComp
       ? "Valitse laji tai rajaa hakua kirjoittamalla."
       : "Hae nimellä ja valitse kilpailu aloittaaksesi."}
