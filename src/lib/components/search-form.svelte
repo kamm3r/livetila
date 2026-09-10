@@ -6,6 +6,7 @@
     Clock,
     LoaderCircle,
     Search,
+    X,
   } from "@lucide/svelte";
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy, onMount } from "svelte";
@@ -33,6 +34,55 @@
     Date: string;
     Time: string;
   };
+
+  type RecentSearch = { id: string; label: string; url: string };
+  const historyKey = "livetila:recent-searches";
+  let recentSearches = $state<RecentSearch[]>([]);
+  function saveHistory() {
+    try {
+      localStorage.setItem(historyKey, JSON.stringify(recentSearches));
+    } catch {
+      /* Storage may be disabled. */
+    }
+  }
+  function rememberSearch(item: RecentSearch) {
+    recentSearches = [
+      item,
+      ...recentSearches.filter((previous) => previous.id !== item.id),
+    ].slice(0, 4);
+    saveHistory();
+  }
+  function removeRecent(id: string) {
+    recentSearches = recentSearches.filter((item) => item.id !== id);
+    saveHistory();
+    inputEl?.focus();
+  }
+  onMount(() => {
+    try {
+      const saved: unknown = JSON.parse(
+        localStorage.getItem(historyKey) ?? "[]",
+      );
+      if (Array.isArray(saved))
+        recentSearches = saved
+          .filter(
+            (item): item is RecentSearch =>
+              item &&
+              typeof item.id === "string" &&
+              typeof item.label === "string" &&
+              typeof item.url === "string" &&
+              /^\/competition\/\d+-\d+(\?round=(Qualify|Final))?$/.test(
+                item.url,
+              ),
+          )
+          .filter(
+            (item, index, all) =>
+              all.findIndex((other) => other.id === item.id) === index,
+          )
+          .slice(0, 4);
+    } catch {
+      /* Ignore invalid or unavailable history. */
+    }
+  });
 
   type SearchStep = "competitions" | "events";
 
@@ -66,6 +116,13 @@
   let animateOpen = $state(false);
   let isFocused = $state(false);
   let selectedComp = $state<CompetitionList | null>(null);
+  const matchingRecent = $derived(
+    selectedComp
+      ? []
+      : recentSearches.filter((item) =>
+          item.label.toLowerCase().includes(query.trim().toLowerCase()),
+        ),
+  );
   let navigatingTo = $state<number | null>(null);
 
   let inputEl = $state<HTMLInputElement | null>(null);
@@ -124,7 +181,12 @@
   );
   const hasResults = $derived(results.length > 0);
   const showDropdown = $derived(
-    isOpen && (isLoading || loadError || hasResults || query.length > 0),
+    isOpen &&
+      (isLoading ||
+        loadError ||
+        hasResults ||
+        matchingRecent.length > 0 ||
+        query.length > 0),
   );
 
   let listEl = $state<HTMLElement | null>(null);
@@ -189,9 +251,13 @@
         : evt.Name === "Loppukilpailu"
           ? "Final"
           : null;
-    void goto(
-      `/competition/${selectedComp.Id}-${evt.Id}${round ? `?round=${round}` : ""}`,
-    ).finally(() => {
+    const url = `/competition/${selectedComp.Id}-${evt.Id}${round ? `?round=${round}` : ""}`;
+    rememberSearch({
+      id: url,
+      url,
+      label: `${selectedComp.Name} / ${evt.EventName} / ${evt.Name}`,
+    });
+    void goto(url).finally(() => {
       navigatingTo = null;
     });
   }
@@ -314,6 +380,41 @@
                 class="overflow-y-auto overscroll-contain"
                 style={`max-height: ${listHeight}px`}
               >
+                {#if matchingRecent.length}
+                  <CommandGroup
+                    heading="Viimeisimmät haut"
+                    class={groupHeadingClassName}
+                  >
+                    {#each matchingRecent as item (item.id)}
+                      <div class="flex items-center gap-1">
+                        <CommandItem
+                          class="min-w-0 flex-1 cursor-pointer rounded-xl px-3 py-3"
+                          value={`recent-${item.id}`}
+                          onSelect={() => {
+                            rememberSearch(item);
+                            void goto(item.url);
+                          }}
+                          onmousedown={(event) => event.preventDefault()}
+                        >
+                          <Clock
+                            class="size-4 shrink-0 text-muted-foreground"
+                          />
+                          <span class="min-w-0 break-words text-sm"
+                            >{item.label}</span
+                          >
+                        </CommandItem>
+                        <button
+                          type="button"
+                          class="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
+                          aria-label={`Poista viimeisimmistä hauista: ${item.label}`}
+                          onkeydown={(event) => event.stopPropagation()}
+                          onclick={() => removeRecent(item.id)}
+                          ><X class="size-4" /></button
+                        >
+                      </div>
+                    {/each}
+                  </CommandGroup>
+                {/if}
                 {#if isLoading}
                   <div class="flex flex-col items-center gap-3 py-8">
                     <div class="relative">

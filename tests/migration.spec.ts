@@ -387,3 +387,50 @@ test("home suggestions open without shifting the page", async ({ page }) => {
   await expect(page.getByRole("option", { name: /Alkuerät/ })).toBeVisible();
   expect((await heading.boundingBox())?.y).toBe(before?.y);
 });
+
+test("recent searches persist, stay capped at four, and can be removed with keyboard", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.evaluate(() =>
+    localStorage.setItem(
+      "livetila:recent-searches",
+      JSON.stringify(
+        Array.from({ length: 4 }, (_, i) => ({
+          id: `/competition/2-${i + 20}`,
+          url: `/competition/2-${i + 20}`,
+          label: `Previous ${i + 1}`,
+        })),
+      ),
+    ),
+  );
+  await page.reload();
+  await page.getByRole("combobox").fill("Test Games");
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await page.getByRole("option", { name: /Alkuerät/ }).click();
+  await expect(page).toHaveURL(/round=Qualify/);
+  await page.goto("/");
+  await page.getByRole("combobox").click();
+  await expect(
+    page.getByRole("button", { name: /Poista viimeisimmistä/ }),
+  ).toHaveCount(4);
+  await expect(page.getByRole("option").first()).toContainText(
+    "Test Games / 100 m / Alkuerät",
+  );
+  const remove = page.getByRole("button", {
+    name: /Poista viimeisimmistä.*Test Games/,
+  });
+  await remove.focus();
+  await remove.press("Enter");
+  await expect(page.getByRole("combobox")).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: /Poista viimeisimmistä/ }),
+  ).toHaveCount(3);
+  await page.reload();
+  await page.getByRole("combobox").click();
+  await expect(
+    page.getByRole("button", { name: /Poista viimeisimmistä/ }),
+  ).toHaveCount(3);
+  await page.getByRole("option", { name: "Previous 1", exact: true }).click();
+  await expect(page).toHaveURL(/competition\/2-20$/);
+});
