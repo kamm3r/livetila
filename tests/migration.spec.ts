@@ -365,33 +365,9 @@ test("event search can reach events beyond the first batch", async ({
   await expect(page).toHaveURL(/competition\/1-131\?round=Qualify/);
 });
 
-test("all five home concepts provide working search and mobile layouts", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  for (let variant = 1; variant <= 5; variant++) {
-    await page.goto(`/designs?v=${variant}`);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    if (variant === 5) {
-      await page.getByRole("button", { name: /Test Games/ }).click();
-    } else {
-      await page.getByRole("combobox").fill("Test Games");
-      await page.getByRole("option", { name: /Test Games/ }).click();
-    }
-    await expect(page.getByRole("option", { name: /Alkuerät/ })).toBeVisible();
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth,
-      ),
-    ).toBe(true);
-  }
-});
-
-test("home suggestions overlay recent competitions without shifting the page", async ({
-  page,
-}) => {
+test("home suggestions open without shifting the page", async ({ page }) => {
   await page.goto("/");
-  const heading = page.getByRole("heading", { name: "Viimeisimmät kilpailut" });
+  const heading = page.getByRole("heading", { level: 1 });
   const input = page.getByRole("combobox");
   const before = await heading.boundingBox();
   const inputBefore = await input.boundingBox();
@@ -405,7 +381,8 @@ test("home suggestions overlay recent competitions without shifting the page", a
   await expect(page.getByRole("option", { name: /Test Games/ })).toBeVisible();
   await page.getByRole("heading", { level: 1 }).click();
   await expect(page.getByRole("option")).toHaveCount(0);
-  await page.getByRole("button", { name: /Test Games/ }).click();
+  await input.click();
+  await page.getByRole("option", { name: /Test Games/ }).click();
   await expect(input).toBeFocused();
   await expect(page.getByRole("option", { name: /Alkuerät/ })).toBeVisible();
   expect((await heading.boundingBox())?.y).toBe(before?.y);
