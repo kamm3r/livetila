@@ -14,10 +14,10 @@
   <div class="home-content">
     <section class="home-search" aria-labelledby="home-title">
       <h1 id="home-title">Kilpailun jokainen <span>hetki.</span></h1>
+      <div class="search-field"><SearchForm /></div>
       <p class="introduction">
         Yleisurheilun tulokset.<br />Kentän laidalta kotikatsomoon.
       </p>
-      <SearchForm />
     </section>
   </div>
 </main>
@@ -29,8 +29,31 @@
 
 <style>
   .home-page {
+    position: relative;
+    isolation: isolate;
     flex: 1;
     padding: 3.5rem 1.25rem 3rem;
+  }
+  .home-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--primary) 20%, transparent) 0.7px,
+      transparent 0.9px
+    );
+    background-size: 12px 12px;
+    mask-image: radial-gradient(
+      ellipse 70% 80% at 50% 30%,
+      #000 10%,
+      transparent 85%
+    );
+  }
+  .search-field {
+    margin-top: 2rem;
   }
   .home-content {
     max-width: 640px;
@@ -54,7 +77,7 @@
     color: var(--primary);
   }
   .introduction {
-    margin: 1.25rem 0 2rem;
+    margin: 1.75rem 0 0;
     color: var(--muted-foreground);
     font-size: 0.875rem;
     line-height: 1.7;
