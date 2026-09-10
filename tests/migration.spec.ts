@@ -364,3 +364,18 @@ test("event search can reach events beyond the first batch", async ({
   await page.getByRole("option", { name: /Event 32/ }).click();
   await expect(page).toHaveURL(/competition\/1-131\?round=Qualify/);
 });
+
+test("recent competition shortcut opens event search with keyboard focus", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const competition = page.getByRole("button", {
+    name: "Valitse kilpailu: Test Games",
+  });
+  await competition.focus();
+  await competition.press("Enter");
+  await expect(page.getByRole("combobox")).toBeFocused();
+  await expect(page.getByRole("combobox")).toHaveValue("Test Games / ");
+  await page.getByRole("option", { name: /Alkuerät/ }).click();
+  await expect(page).toHaveURL(/competition\/1-10\?round=Qualify/);
+});

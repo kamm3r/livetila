@@ -175,7 +175,7 @@
     if (blurTimeout) clearTimeout(blurTimeout);
   });
 
-  function handleCompetitionSelect(comp: CompetitionList) {
+  export function selectCompetition(comp: CompetitionList) {
     trigger();
     selectedComp = comp;
     query = `${comp.Name} / `;
@@ -231,10 +231,8 @@
   >
     <div
       class={cn(
-        "relative overflow-hidden rounded-2xl border bg-card motion-search-surface",
-        isFocused
-          ? "border-primary/45 shadow-lg shadow-primary/5"
-          : "border-border shadow-sm",
+        "relative overflow-hidden rounded-xl border bg-card motion-search-surface",
+        isFocused ? "border-primary ring-2 ring-primary/10" : "border-border",
       )}
     >
       <div class="relative z-10">
@@ -271,9 +269,7 @@
       </div>
 
       {#if showDropdown}
-        <div
-          class="mx-4 h-px bg-linear-to-r from-transparent via-border to-transparent"
-        ></div>
+        <div class="mx-4 h-px bg-border"></div>
       {/if}
 
       {#if showDropdown}
@@ -342,7 +338,7 @@
                           onmousedown={(e) => {
                             e.preventDefault();
                           }}
-                          onSelect={() => handleCompetitionSelect(comp)}
+                          onSelect={() => selectCompetition(comp)}
                           value={`${comp.Name}-${comp.Id}`}
                         >
                           <div
@@ -478,7 +474,7 @@
     </div>
   </Command>
 
-  <p class="mt-3 min-h-4 px-1 text-center text-xs text-muted-foreground/80">
+  <p class="mt-3 min-h-4 px-1 text-left text-xs text-muted-foreground/80">
     {selectedComp
       ? "Valitse laji tai rajaa hakua kirjoittamalla."
       : "Hae nimellä ja valitse kilpailu aloittaaksesi."}

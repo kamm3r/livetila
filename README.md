@@ -47,7 +47,7 @@ The regression tests use API fixtures so they do not depend on live competitions
 
 ## Routes and overlays
 
-- `/`: competition and event search.
+- `/`: competition and event search, plus recent competitions with direct access to the event picker.
 - `/competition/[competitionId]-[eventId]`: competition viewer; `?round=Qualify` or `?round=Final` selects a round.
 - `/obs/[competitionId]-[eventId]`: transparent OBS overlay.
 
