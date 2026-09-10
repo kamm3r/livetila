@@ -113,7 +113,6 @@
 
   let query = $state("");
   let isOpen = $state(false);
-  let animateOpen = $state(false);
   let isFocused = $state(false);
   let selectedComp = $state<CompetitionList | null>(null);
   const matchingRecent = $derived(
@@ -286,8 +285,6 @@
 
   function handleFocus() {
     measureSpace();
-    if (!isOpen)
-      animateOpen = document.documentElement.dataset.input !== "keyboard";
     if (blurTimeout) clearTimeout(blurTimeout);
     isOpen = true;
     isFocused = true;
@@ -313,10 +310,8 @@
     onkeydown={(event) => {
       if (event.key === "Escape") {
         isOpen = false;
-        animateOpen = false;
       }
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        animateOpen = false;
         isOpen = true;
       }
     }}
@@ -371,7 +366,7 @@
       {/if}
 
       {#if showDropdown}
-        <div class="search-reveal overflow-hidden" data-animate={animateOpen}>
+        <div class="search-reveal overflow-hidden">
           {#key step}
             <div class="p-2">
               <CommandList
@@ -606,20 +601,5 @@
   .recent-row:focus-within .recent-icon {
     background: var(--primary);
     color: var(--primary-foreground);
-  }
-
-  .search-reveal[data-animate="true"] {
-    transition: opacity 150ms var(--motion-ease-out);
-    @starting-style {
-      opacity: 0;
-    }
-  }
-  :global(html[data-input="keyboard"]) .search-reveal {
-    transition: none;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .search-reveal {
-      transition: none;
-    }
   }
 </style>

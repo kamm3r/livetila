@@ -434,3 +434,27 @@ test("recent searches persist, stay capped at four, and can be removed with keyb
   await page.getByRole("option", { name: "Previous 1", exact: true }).click();
   await expect(page).toHaveURL(/competition\/2-20$/);
 });
+
+test("popover uses CSS transitions and keyboard opening remains immediate", async ({
+  page,
+}) => {
+  await page.goto("/competition/1-10?round=Qualify");
+  const trigger = page.getByRole("button", { name: "OBS Overlay" });
+  await trigger.click();
+  const popover = page.locator('[data-slot="popover-content"]');
+  await expect(popover).toBeVisible();
+  expect(
+    await popover.evaluate((el) => ({
+      property: getComputedStyle(el).transitionProperty,
+      animation: getComputedStyle(el).animationName,
+    })),
+  ).toEqual({ property: "opacity, transform", animation: "none" });
+  await page.keyboard.press("Escape");
+  await expect(popover).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await trigger.press("Enter");
+  await expect(popover).toBeVisible();
+  expect(
+    await popover.evaluate((el) => getComputedStyle(el).transitionDuration),
+  ).toBe("0s");
+});
