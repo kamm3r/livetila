@@ -381,39 +381,38 @@
                 style={`max-height: ${listHeight}px`}
               >
                 {#if matchingRecent.length}
-                  <CommandGroup
-                    heading="Viimeisimmät haut"
-                    class={groupHeadingClassName}
-                  >
-                    {#each matchingRecent as item (item.id)}
-                      <div class="flex items-center gap-1">
-                        <CommandItem
-                          class="min-w-0 flex-1 cursor-pointer rounded-xl px-3 py-3"
-                          value={`recent-${item.id}`}
-                          onSelect={() => {
-                            rememberSearch(item);
-                            void goto(item.url);
-                          }}
-                          onmousedown={(event) => event.preventDefault()}
+                  {#each matchingRecent as item (item.id)}
+                    <div
+                      class="recent-row flex items-center rounded-xl pr-2 sm:pr-3"
+                    >
+                      <CommandItem
+                        class="group min-w-0 flex-1 cursor-pointer rounded-xl bg-transparent px-2 py-2 data-selected:bg-transparent sm:px-3 sm:py-2.5"
+                        value={`recent-${item.id}`}
+                        onSelect={() => {
+                          rememberSearch(item);
+                          void goto(item.url);
+                        }}
+                        onmousedown={(event) => event.preventDefault()}
+                      >
+                        <span
+                          class="recent-icon flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:size-9"
+                          ><Clock class="size-4" /></span
                         >
-                          <Clock
-                            class="size-4 shrink-0 text-muted-foreground"
-                          />
-                          <span class="min-w-0 break-words text-sm"
-                            >{item.label}</span
-                          >
-                        </CommandItem>
-                        <button
-                          type="button"
-                          class="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
-                          aria-label={`Poista viimeisimmistä hauista: ${item.label}`}
-                          onkeydown={(event) => event.stopPropagation()}
-                          onclick={() => removeRecent(item.id)}
-                          ><X class="size-4" /></button
+                        <span
+                          class="min-w-0 break-words font-medium text-foreground text-sm sm:text-base"
+                          >{item.label}</span
                         >
-                      </div>
-                    {/each}
-                  </CommandGroup>
+                      </CommandItem>
+                      <button
+                        type="button"
+                        class="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-primary/15 focus-visible:outline-2 focus-visible:outline-primary"
+                        aria-label={`Poista viimeisimmistä hauista: ${item.label}`}
+                        onkeydown={(event) => event.stopPropagation()}
+                        onclick={() => removeRecent(item.id)}
+                        ><X class="size-4" /></button
+                      >
+                    </div>
+                  {/each}
                 {/if}
                 {#if isLoading}
                   <div class="flex flex-col items-center gap-3 py-8">
@@ -455,54 +454,49 @@
                     </CommandEmpty>
                   </div>
                 {:else if step === "competitions" && hasResults}
-                  <CommandGroup
-                    class={groupHeadingClassName}
-                    heading="Kilpailut"
-                  >
-                    {#each filteredCompetitions.slice(0, visibleCount) as comp (comp.Id)}
-                      <div>
-                        <CommandItem
-                          class="group cursor-pointer rounded-xl px-2 py-2 data-selected:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
-                          onmousedown={(e) => {
-                            e.preventDefault();
-                          }}
-                          onSelect={() => selectCompetition(comp)}
-                          value={`${comp.Name}-${comp.Id}`}
+                  {#each filteredCompetitions.slice(0, visibleCount) as comp (comp.Id)}
+                    <div>
+                      <CommandItem
+                        class="group cursor-pointer rounded-xl px-2 py-2 data-selected:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
+                        onmousedown={(e) => {
+                          e.preventDefault();
+                        }}
+                        onSelect={() => selectCompetition(comp)}
+                        value={`${comp.Name}-${comp.Id}`}
+                      >
+                        <div
+                          class="flex flex-1 items-center justify-between gap-2 sm:gap-3"
                         >
-                          <div
-                            class="flex flex-1 items-center justify-between gap-2 sm:gap-3"
-                          >
-                            <div class="flex items-center gap-2 sm:gap-3">
-                              <div
-                                class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
-                              >
-                                <Calendar class="size-4" />
-                              </div>
-                              <div class="flex flex-col">
-                                <span
-                                  class="font-medium text-foreground text-sm sm:text-base"
-                                  >{comp.Name}</span
-                                >
-                                <span class="text-muted-foreground text-xs">
-                                  {new Date(comp.Date).toLocaleDateString(
-                                    "fi-FI",
-                                    {
-                                      day: "numeric",
-                                      month: "long",
-                                      year: "numeric",
-                                    },
-                                  )}
-                                </span>
-                              </div>
+                          <div class="flex items-center gap-2 sm:gap-3">
+                            <div
+                              class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
+                            >
+                              <Calendar class="size-4" />
                             </div>
-                            <ArrowRight
-                              class="size-4 text-muted-foreground opacity-0 group-data-selected:text-primary group-data-selected:opacity-100"
-                            />
+                            <div class="flex flex-col">
+                              <span
+                                class="font-medium text-foreground text-sm sm:text-base"
+                                >{comp.Name}</span
+                              >
+                              <span class="text-muted-foreground text-xs">
+                                {new Date(comp.Date).toLocaleDateString(
+                                  "fi-FI",
+                                  {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric",
+                                  },
+                                )}
+                              </span>
+                            </div>
                           </div>
-                        </CommandItem>
-                      </div>
-                    {/each}
-                  </CommandGroup>
+                          <ArrowRight
+                            class="size-4 text-muted-foreground opacity-0 group-data-selected:text-primary group-data-selected:opacity-100"
+                          />
+                        </div>
+                      </CommandItem>
+                    </div>
+                  {/each}
                 {:else if step === "events" && hasResults}
                   <CommandGroup class={groupHeadingClassName} heading="Lajit">
                     {#each filteredEvents.slice(0, visibleCount) as evt (evt.RowId)}
@@ -604,6 +598,16 @@
 </div>
 
 <style>
+  .recent-row:has(:global([data-selected])),
+  .recent-row:focus-within {
+    background: color-mix(in oklch, var(--primary) 10%, transparent);
+  }
+  .recent-row:has(:global([data-selected])) .recent-icon,
+  .recent-row:focus-within .recent-icon {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
   .search-reveal[data-animate="true"] {
     transition: opacity 150ms var(--motion-ease-out);
     @starting-style {
