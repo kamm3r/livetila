@@ -458,3 +458,46 @@ test("popover uses CSS transitions and keyboard opening remains immediate", asyn
     await popover.evaluate((el) => getComputedStyle(el).transitionDuration),
   ).toBe("0s");
 });
+
+test("drawer drag stays direct, settles at 280ms, and keyboard overrides inline transitions", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/competition/1-10?round=Qualify");
+  await page.getByRole("button", { name: "OBS Overlay", exact: true }).click();
+  const drawer = page.locator('[data-slot="drawer-content"]');
+  await expect(drawer).toBeVisible();
+  await expect
+    .poll(() =>
+      drawer.evaluate(
+        (el) =>
+          el.getAnimations().filter((a) => a.playState === "running").length,
+      ),
+    )
+    .toBe(0);
+  const box = (await drawer.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 16);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + 55, { steps: 10 });
+  await expect(drawer).toHaveClass(/vaul-dragging/);
+  expect(
+    await drawer.evaluate((el) => getComputedStyle(el).transitionProperty),
+  ).toBe("none");
+  await page.waitForTimeout(250); // Release slowly enough to settle, rather than dismiss.
+  await page.mouse.up();
+  await expect(drawer).toBeVisible();
+  expect(
+    await drawer.evaluate((el) => getComputedStyle(el).transitionDuration),
+  ).toBe("0.28s");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    await drawer.evaluate((el) => getComputedStyle(el).transitionDuration),
+  ).toBe("0s");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.keyboard.press("Tab");
+  expect(
+    await drawer.evaluate((el) => getComputedStyle(el).transitionDuration),
+  ).toBe("0s");
+  await page.keyboard.press("Escape");
+  await expect(drawer).toHaveCount(0);
+});

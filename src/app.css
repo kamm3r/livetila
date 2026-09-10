@@ -130,6 +130,8 @@
 /* Motion is feedback: frequent search/keyboard actions stay immediate. */
 :root {
   --motion-fast: 120ms;
+  --motion-press: 160ms;
+  --motion-drawer: 280ms;
   --motion-enter: 180ms;
   --motion-exit: 100ms;
   --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -141,11 +143,14 @@
     background-color var(--motion-fast) ease,
     border-color var(--motion-fast) ease,
     color var(--motion-fast) ease,
-    scale var(--motion-fast) var(--motion-ease-out);
+    scale var(--motion-exit) var(--motion-ease-out);
 }
 
 html[data-input="pointer"] .motion-control:active:not(:disabled) {
   scale: 0.98;
+  transition-duration:
+    var(--motion-fast), var(--motion-fast), var(--motion-fast),
+    var(--motion-press);
 }
 
 .motion-search-surface {
@@ -230,8 +235,10 @@ html[data-input="pointer"] .motion-control:active:not(:disabled) {
 /* Keep Vaul's native direction and drag behavior; shorten the settling motion. */
 [data-vaul-drawer][data-slot="drawer-content"],
 [data-vaul-overlay][data-slot="drawer-overlay"] {
-  animation-duration: 280ms;
-  transition-duration: 280ms;
+  animation-duration: var(--motion-drawer);
+  /* Vaul writes inline duration on release. Its transition:none while dragging
+     still wins for transition-property, so tracking the pointer stays immediate. */
+  transition-duration: var(--motion-drawer) !important;
 }
 
 @keyframes surface-enter {
@@ -261,7 +268,18 @@ html[data-input="keyboard"]
   animation: none;
 }
 
+/* Override Vaul's inline release transition for subsequent keyboard actions. */
+html[data-input="keyboard"] [data-slot="drawer-content"],
+html[data-input="keyboard"] [data-slot="drawer-overlay"] {
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  [data-vaul-drawer][data-slot="drawer-content"],
+  [data-vaul-overlay][data-slot="drawer-overlay"] {
+    transition-duration: 0s !important;
+  }
+
   *,
   *::before,
   *::after {
