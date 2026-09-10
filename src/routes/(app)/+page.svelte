@@ -13,8 +13,17 @@
 <main class="home-page">
   <section class="home-content" aria-labelledby="home-title">
     <div class="home-intro">
-      <p class="sport-label">Yleisurheilun tulokset</p>
       <h1 id="home-title">Kilpailun jokainen hetki.</h1>
+      <svg
+        class="track-accent"
+        viewBox="0 0 240 30"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d="M3 23H184C204 23 216 17 237 3" />
+        <path d="M3 16H181C201 16 213 11 230 1" />
+        <path d="M3 9H177C192 9 204 6 215 1" />
+      </svg>
       <p class="introduction">
         Löydä kilpailusi ja seuraa tuloksia reaaliajassa.<br
           class="desktop-break"
@@ -23,13 +32,6 @@
     </div>
 
     <div class="home-search">
-      <div class="search-heading">
-        <h2>Löydä kilpailusi</h2>
-        <span class="search-steps"
-          >Kilpailu <span aria-hidden="true">/</span> Laji
-          <span aria-hidden="true">/</span> Tulokset</span
-        >
-      </div>
       <SearchForm />
     </div>
 
@@ -57,12 +59,6 @@
   .home-intro {
     text-align: center;
   }
-  .sport-label {
-    margin-bottom: 1.5rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--muted-foreground);
-  }
   h1 {
     max-width: 12ch;
     margin-inline: auto;
@@ -71,6 +67,22 @@
     line-height: 1.05;
     letter-spacing: -0.055em;
     text-wrap: balance;
+  }
+  .track-accent {
+    display: block;
+    width: clamp(140px, 24vw, 210px);
+    height: auto;
+    margin: 1.125rem auto 0;
+    color: var(--primary);
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .track-accent path:nth-child(2) {
+    opacity: 0.6;
+  }
+  .track-accent path:nth-child(3) {
+    opacity: 0.3;
   }
   .introduction {
     margin-top: 1.5rem;
@@ -81,25 +93,6 @@
   }
   .home-search {
     margin-top: 2.75rem;
-  }
-  .search-heading {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    margin: 0 0.25rem 0.75rem;
-    font-size: 0.75rem;
-  }
-  .search-heading h2 {
-    font-weight: 600;
-  }
-  .search-steps {
-    display: flex;
-    gap: 0.625rem;
-    color: var(--muted-foreground);
-  }
-  .search-steps > span {
-    opacity: 0.5;
   }
   .overlay-note {
     max-width: 48ch;
@@ -127,9 +120,6 @@
     color: var(--foreground);
   }
   @media (max-width: 480px) {
-    .sport-label {
-      margin-bottom: 1.125rem;
-    }
     .introduction {
       font-size: 0.9375rem;
     }
@@ -138,10 +128,6 @@
     }
     .home-search {
       margin-top: 2rem;
-    }
-    .search-steps {
-      gap: 0.375rem;
-      font-size: 0.6875rem;
     }
     .home-footer {
       padding: 1.25rem;

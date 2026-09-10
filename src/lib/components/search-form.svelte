@@ -475,10 +475,4 @@
       {/if}
     </div>
   </Command>
-
-  <p class="mt-3 min-h-4 px-1 text-center text-xs text-muted-foreground/80">
-    {selectedComp
-      ? "Valitse laji tai rajaa hakua kirjoittamalla."
-      : "Hae nimellä ja valitse kilpailu aloittaaksesi."}
-  </p>
 </div>
