@@ -1,5 +1,19 @@
 <script lang="ts">
   import SearchForm from "$lib/components/search-form.svelte";
+  import { createQuery } from "@tanstack/svelte-query";
+  import { api } from "$lib/api";
+  import { ChevronRight } from "@lucide/svelte";
+
+  let search = $state<SearchForm>();
+  const competitions = createQuery(() => ({
+    queryKey: ["competitions"],
+    queryFn: () => api.getCompetitions(),
+  }));
+  const recent = $derived(
+    [...(competitions.data ?? [])]
+      .sort((a, b) => b.Date.localeCompare(a.Date))
+      .slice(0, 4),
+  );
 </script>
 
 <svelte:head>
@@ -11,127 +25,166 @@
 </svelte:head>
 
 <main class="home-page">
-  <section class="home-content" aria-labelledby="home-title">
-    <div class="home-intro">
-      <h1 id="home-title">Kilpailun jokainen hetki.</h1>
-      <svg
-        class="track-accent"
-        viewBox="0 0 240 30"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path d="M3 23H184C204 23 216 17 237 3" />
-        <path d="M3 16H181C201 16 213 11 230 1" />
-        <path d="M3 9H177C192 9 204 6 215 1" />
-      </svg>
+  <div class="home-content">
+    <section class="home-search" aria-labelledby="home-title">
+      <h1 id="home-title">Kilpailun jokainen <span>hetki.</span></h1>
       <p class="introduction">
-        Löydä kilpailusi ja seuraa tuloksia reaaliajassa.<br
-          class="desktop-break"
-        /> Kentän laidalta tai kotikatsomosta.
+        Yleisurheilun tulokset.<br />Kentän laidalta kotikatsomoon.
       </p>
-    </div>
-
-    <div class="home-search">
-      <SearchForm />
-    </div>
-
-    <p class="overlay-note">
-      Striimaatko kilpailua? Löydät OBS-overlayn lajin tulosnäkymästä.
-    </p>
-  </section>
+      <SearchForm bind:this={search} />
+    </section>
+    <section class="recent" aria-labelledby="recent-title">
+      <h2 id="recent-title">Viimeisimmät kilpailut</h2>
+      {#if competitions.isPending}<p role="status" class="status">
+          Ladataan kilpailuja…
+        </p>
+      {:else if competitions.isError}<div class="status">
+          <p>Kilpailuja ei voitu ladata.</p>
+          <button onclick={() => competitions.refetch()}
+            >Lataa kilpailut uudelleen</button
+          >
+        </div>
+      {:else if !recent.length}<p class="status">
+          Kilpailuja ei ole vielä saatavilla.
+        </p>
+      {:else}<ul>
+          {#each recent as competition (competition.Id)}<li>
+              <button onclick={() => search?.selectCompetition(competition)}
+                ><span
+                  ><strong>{competition.Name}</strong><time
+                    datetime={competition.Date}
+                    >{new Date(competition.Date).toLocaleDateString("fi-FI", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}</time
+                  ></span
+                ><ChevronRight
+                  class="size-4 shrink-0"
+                  aria-hidden="true"
+                /></button
+              >
+            </li>{/each}
+        </ul>{/if}
+    </section>
+  </div>
 </main>
-
 <footer class="home-footer">
-  <span>Eräjaot ja tulokset samassa näkymässä.</span>
-  <span>Tulostiedot: <a href="https://live.tuloslista.com">Tuloslista</a></span>
+  <span>Livetila</span><a href="https://live.tuloslista.com"
+    >Tulostiedot: Tuloslista</a
+  >
 </footer>
 
 <style>
   .home-page {
     flex: 1;
-    padding: clamp(3rem, 9vh, 6rem) 1.25rem 4rem;
+    padding: clamp(2.5rem, 8vh, 5rem) 1.25rem 3rem;
   }
   .home-content {
-    width: 100%;
     max-width: 640px;
     margin-inline: auto;
   }
-  .home-intro {
+  .home-search {
     text-align: center;
+    position: relative;
+    z-index: 2;
   }
   h1 {
-    max-width: 12ch;
-    margin-inline: auto;
-    font-size: clamp(2.75rem, 6vw, 4.25rem);
+    max-width: 15ch;
+    margin: 0 auto;
+    font-size: clamp(2.5rem, 5vw, 3.75rem);
     font-weight: 600;
-    line-height: 1.05;
     letter-spacing: -0.055em;
+    line-height: 1.08;
     text-wrap: balance;
   }
-  .track-accent {
-    display: block;
-    width: clamp(140px, 24vw, 210px);
-    height: auto;
-    margin: 1.125rem auto 0;
+  h1 span {
     color: var(--primary);
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-  }
-  .track-accent path:nth-child(2) {
-    opacity: 0.6;
-  }
-  .track-accent path:nth-child(3) {
-    opacity: 0.3;
   }
   .introduction {
-    margin-top: 1.5rem;
-    font-size: 1rem;
-    line-height: 1.75;
+    margin: 1.25rem 0 2rem;
     color: var(--muted-foreground);
-    text-wrap: pretty;
+    font-size: 0.9375rem;
+    line-height: 1.7;
   }
-  .home-search {
-    margin-top: 2.75rem;
+  .recent {
+    margin: 2.75rem 0.5rem 0;
   }
-  .overlay-note {
-    max-width: 48ch;
-    margin: 2rem auto 0;
-    text-align: center;
+  h2 {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+    margin-bottom: 0.75rem;
+  }
+  .recent li + li {
+    border-top: 1px solid var(--border);
+  }
+  .recent li button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    text-align: left;
+    padding: 0.875rem 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  strong {
+    display: block;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  time {
+    display: block;
+    margin-top: 0.125rem;
     color: var(--muted-foreground);
     font-size: 0.75rem;
-    line-height: 1.7;
+  }
+  .recent :global(svg) {
+    color: var(--muted-foreground);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .recent li button:hover {
+      background: var(--muted);
+    }
+  }
+  button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+  }
+  .status {
+    padding-block: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  .status button {
+    margin-top: 0.5rem;
+    text-decoration: underline;
   }
   .home-footer {
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 0.75rem 2rem;
+    gap: 1rem;
     padding: 1.25rem 2rem;
-    border-top: 1px solid var(--border);
-    color: var(--muted-foreground);
     font-size: 0.75rem;
+    color: var(--muted-foreground);
   }
   .home-footer a {
     text-decoration: underline;
     text-underline-offset: 3px;
   }
-  .home-footer a:hover {
-    color: var(--foreground);
-  }
   @media (max-width: 480px) {
-    .introduction {
-      font-size: 0.9375rem;
+    .home-page {
+      padding-top: 2rem;
     }
-    .desktop-break {
-      display: none;
-    }
-    .home-search {
+    .recent {
       margin-top: 2rem;
     }
     .home-footer {
       padding: 1.25rem;
-      font-size: 0.6875rem;
     }
   }
 </style>

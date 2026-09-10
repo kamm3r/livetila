@@ -1,7 +1,4 @@
 <script lang="ts">
-  import { slide } from "svelte/transition";
-  import { cubicOut } from "svelte/easing";
-  import { prefersReducedMotion } from "svelte/motion";
   import {
     ArrowRight,
     Calendar,
@@ -11,7 +8,7 @@
     Search,
   } from "@lucide/svelte";
   import { createWebHaptics } from "web-haptics/svelte";
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { Command as CommandPrimitive } from "bits-ui";
   import { createQuery } from "@tanstack/svelte-query";
@@ -199,7 +196,30 @@
     });
   }
 
+  let listHeight = $state(320);
+  function measureSpace() {
+    if (!inputEl) return;
+    const viewport = window.visualViewport;
+    const bottom =
+      (viewport?.height ?? window.innerHeight) + (viewport?.offsetTop ?? 0);
+    listHeight = Math.max(
+      96,
+      Math.min(320, bottom - inputEl.getBoundingClientRect().bottom - 88),
+    );
+  }
+  onMount(() => {
+    window.addEventListener("resize", measureSpace);
+    window.visualViewport?.addEventListener("resize", measureSpace);
+    window.visualViewport?.addEventListener("scroll", measureSpace);
+    return () => {
+      window.removeEventListener("resize", measureSpace);
+      window.visualViewport?.removeEventListener("resize", measureSpace);
+      window.visualViewport?.removeEventListener("scroll", measureSpace);
+    };
+  });
+
   function handleFocus() {
+    measureSpace();
     if (!isOpen)
       animateOpen = document.documentElement.dataset.input !== "keyboard";
     if (blurTimeout) clearTimeout(blurTimeout);
@@ -221,9 +241,19 @@
   }
 </script>
 
-<div class="relative mx-auto w-full max-w-2xl">
+<div class="relative mx-auto h-16 w-full max-w-2xl">
   <Command
-    class="overflow-visible bg-transparent"
+    class="absolute inset-x-0 top-0 z-30 h-auto overflow-visible bg-transparent p-0 text-left"
+    onkeydown={(event) => {
+      if (event.key === "Escape") {
+        isOpen = false;
+        animateOpen = false;
+      }
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        animateOpen = false;
+        isOpen = true;
+      }
+    }}
     role="search"
     shouldFilter={false}
     onfocusin={handleFocus}
@@ -231,16 +261,15 @@
   >
     <div
       class={cn(
-        "relative overflow-hidden rounded-2xl border bg-card motion-search-surface",
+        "relative overflow-hidden rounded-[28px] border bg-card motion-search-surface",
+        showDropdown && "shadow-xl shadow-black/10",
         isFocused
           ? "border-primary ring-2 ring-primary/10"
           : "border-border shadow-sm",
       )}
     >
       <div class="relative z-10">
-        <div
-          class="flex items-center gap-2 px-4 py-4 sm:gap-3 sm:px-5 sm:py-4.5"
-        >
+        <div class="flex h-[62px] items-center gap-2 px-5 sm:gap-3">
           <span
             class={cn(
               "inline-flex",
@@ -253,6 +282,7 @@
 
           <CommandPrimitive.Input
             bind:ref={inputEl}
+            onclick={handleFocus}
             class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:text-base"
             aria-label="Hae kilpailuja tai lajeja"
             placeholder={step === "events"
@@ -275,19 +305,14 @@
       {/if}
 
       {#if showDropdown}
-        <div
-          class="search-reveal overflow-hidden"
-          transition:slide={{
-            duration: prefersReducedMotion.current || !animateOpen ? 0 : 180,
-            easing: cubicOut,
-          }}
-        >
+        <div class="search-reveal overflow-hidden" data-animate={animateOpen}>
           {#key step}
             <div class="p-2">
               <CommandList
                 bind:ref={listEl}
                 onscroll={handleScroll}
-                class="max-h-80 overflow-y-auto"
+                class="overflow-y-auto overscroll-contain"
+                style={`max-height: ${listHeight}px`}
               >
                 {#if isLoading}
                   <div class="flex flex-col items-center gap-3 py-8">
@@ -476,3 +501,20 @@
     </div>
   </Command>
 </div>
+
+<style>
+  .search-reveal[data-animate="true"] {
+    transition: opacity 150ms var(--motion-ease-out);
+    @starting-style {
+      opacity: 0;
+    }
+  }
+  :global(html[data-input="keyboard"]) .search-reveal {
+    transition: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .search-reveal {
+      transition: none;
+    }
+  }
+</style>

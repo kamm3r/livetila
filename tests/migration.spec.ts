@@ -386,3 +386,27 @@ test("all five home concepts provide working search and mobile layouts", async (
     ).toBe(true);
   }
 });
+
+test("home suggestions overlay recent competitions without shifting the page", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const heading = page.getByRole("heading", { name: "Viimeisimmät kilpailut" });
+  const input = page.getByRole("combobox");
+  const before = await heading.boundingBox();
+  const inputBefore = await input.boundingBox();
+  await input.click();
+  await expect(page.getByRole("option", { name: /Test Games/ })).toBeVisible();
+  expect((await heading.boundingBox())?.y).toBe(before?.y);
+  expect((await input.boundingBox())?.y).toBe(inputBefore?.y);
+  await input.press("Escape");
+  await expect(page.getByRole("option")).toHaveCount(0);
+  await input.press("ArrowDown");
+  await expect(page.getByRole("option", { name: /Test Games/ })).toBeVisible();
+  await page.getByRole("heading", { level: 1 }).click();
+  await expect(page.getByRole("option")).toHaveCount(0);
+  await page.getByRole("button", { name: /Test Games/ }).click();
+  await expect(input).toBeFocused();
+  await expect(page.getByRole("option", { name: /Alkuerät/ })).toBeVisible();
+  expect((await heading.boundingBox())?.y).toBe(before?.y);
+});
