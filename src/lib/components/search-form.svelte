@@ -175,7 +175,7 @@
     if (blurTimeout) clearTimeout(blurTimeout);
   });
 
-  function selectCompetition(comp: CompetitionList) {
+  export function selectCompetition(comp: CompetitionList) {
     trigger();
     selectedComp = comp;
     query = `${comp.Name} / `;
