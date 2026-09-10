@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { slide } from "svelte/transition";
+  import { cubicOut } from "svelte/easing";
+  import { prefersReducedMotion } from "svelte/motion";
   import {
     ArrowRight,
     Calendar,
@@ -63,6 +66,7 @@
 
   let query = $state("");
   let isOpen = $state(false);
+  let animateOpen = $state(false);
   let isFocused = $state(false);
   let selectedComp = $state<CompetitionList | null>(null);
   let navigatingTo = $state<number | null>(null);
@@ -126,6 +130,36 @@
     isOpen && (isLoading || loadError || hasResults || query.length > 0),
   );
 
+  let listEl = $state<HTMLElement | null>(null);
+  const batchSize = $derived(step === "competitions" ? 10 : 15);
+  let visibleCount = $derived.by(() => {
+    void query;
+    void selectedComp;
+    return batchSize;
+  });
+  const hasMore = $derived(visibleCount < results.length);
+
+  $effect(() => {
+    void query;
+    void selectedComp;
+    if (listEl) listEl.scrollTop = 0;
+  });
+
+  function loadMore() {
+    visibleCount = Math.min(visibleCount + batchSize, results.length);
+  }
+
+  function handleScroll(event: Event) {
+    const list = event.currentTarget as HTMLElement;
+    if (
+      hasMore &&
+      list.scrollTop > 0 &&
+      list.scrollHeight - list.scrollTop - list.clientHeight < 80
+    ) {
+      loadMore();
+    }
+  }
+
   function handleInput(value: string) {
     query = value;
     if (!isOpen) isOpen = true;
@@ -166,12 +200,20 @@
   }
 
   function handleFocus() {
+    if (!isOpen)
+      animateOpen = document.documentElement.dataset.input !== "keyboard";
     if (blurTimeout) clearTimeout(blurTimeout);
     isOpen = true;
     isFocused = true;
   }
 
-  function handleBlur() {
+  function handleBlur(event: FocusEvent) {
+    const container = event.currentTarget as HTMLElement;
+    if (
+      event.relatedTarget instanceof Node &&
+      container.contains(event.relatedTarget)
+    )
+      return;
     blurTimeout = setTimeout(() => {
       isOpen = false;
       isFocused = false;
@@ -184,30 +226,20 @@
     class="overflow-visible bg-transparent"
     role="search"
     shouldFilter={false}
+    onfocusin={handleFocus}
+    onfocusout={handleBlur}
   >
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class={cn(
-        "relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl motion-search-surface",
-        isFocused && "border-primary/40",
+        "relative overflow-hidden rounded-2xl border bg-card motion-search-surface",
+        isFocused
+          ? "border-primary/45 shadow-lg shadow-primary/5"
+          : "border-border shadow-sm",
       )}
-      style="box-shadow: {showDropdown
-        ? '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-        : isFocused
-          ? '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-          : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}"
     >
-      <div
-        class={cn(
-          "pointer-events-none absolute inset-0 rounded-2xl motion-search-glow",
-          isFocused ? "opacity-100" : "opacity-0",
-        )}
-        style="background: linear-gradient(135deg, rgba(113, 180, 255, 0.15) 0%, rgba(113, 180, 255, 0.05) 50%, rgba(113, 180, 255, 0.15) 100%)"
-      ></div>
-
       <div class="relative z-10">
         <div
-          class="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-3.5"
+          class="flex items-center gap-2 px-4 py-4 sm:gap-3 sm:px-5 sm:py-4.5"
         >
           <span
             class={cn(
@@ -221,10 +253,8 @@
 
           <CommandPrimitive.Input
             bind:ref={inputEl}
-            class="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:text-base"
-            onblur={handleBlur}
+            class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:text-base"
             aria-label="Hae kilpailuja tai lajeja"
-            onfocus={handleFocus}
             placeholder={step === "events"
               ? "Hae lajeja..."
               : "Hae kilpailuja nimellä..."}
@@ -246,11 +276,21 @@
         ></div>
       {/if}
 
-      {#key step}
-        {#if showDropdown}
-          <div class="overflow-hidden">
+      {#if showDropdown}
+        <div
+          class="search-reveal overflow-hidden"
+          transition:slide={{
+            duration: prefersReducedMotion.current || !animateOpen ? 0 : 180,
+            easing: cubicOut,
+          }}
+        >
+          {#key step}
             <div class="p-2">
-              <CommandList class="max-h-80 overflow-y-auto">
+              <CommandList
+                bind:ref={listEl}
+                onscroll={handleScroll}
+                class="max-h-80 overflow-y-auto"
+              >
                 {#if isLoading}
                   <div class="flex flex-col items-center gap-3 py-8">
                     <div class="relative">
@@ -295,7 +335,7 @@
                     class={groupHeadingClassName}
                     heading="Kilpailut"
                   >
-                    {#each filteredCompetitions.slice(0, 10) as comp (comp.Id)}
+                    {#each filteredCompetitions.slice(0, visibleCount) as comp (comp.Id)}
                       <div>
                         <CommandItem
                           class="group cursor-pointer rounded-xl px-2 py-2 data-selected:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
@@ -341,7 +381,7 @@
                   </CommandGroup>
                 {:else if step === "events" && hasResults}
                   <CommandGroup class={groupHeadingClassName} heading="Lajit">
-                    {#each filteredEvents.slice(0, 15) as evt (evt.RowId)}
+                    {#each filteredEvents.slice(0, visibleCount) as evt (evt.RowId)}
                       {@const isNavigating = navigatingTo === evt.Id}
                       {@const isDisabled =
                         navigatingTo !== null && !isNavigating}
@@ -409,16 +449,38 @@
                   </CommandGroup>
                 {/if}
               </CommandList>
+              {#if !isLoading && !loadError && hasResults}
+                <div
+                  class="mt-1 flex items-center justify-between gap-3 border-t border-border/60 px-2 pt-2 text-xs text-muted-foreground"
+                >
+                  <span aria-live="polite"
+                    >Näytetään {Math.min(visibleCount, results.length)} / {results.length}</span
+                  >
+                  {#if hasMore}
+                    <button
+                      type="button"
+                      class="rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      onkeydown={(event) => event.stopPropagation()}
+                      onclick={() => {
+                        loadMore();
+                        if (!hasMore) inputEl?.focus();
+                      }}
+                    >
+                      Näytä lisää
+                    </button>
+                  {/if}
+                </div>
+              {/if}
             </div>
-          </div>
-        {/if}
-      {/key}
+          {/key}
+        </div>
+      {/if}
     </div>
   </Command>
 
-  {#if !showDropdown}
-    <p class="mt-3 text-center text-muted-foreground/60 text-xs">
-      Vinkki: valitse kilpailu ja rajaa laji kirjoittamalla "/"
-    </p>
-  {/if}
+  <p class="mt-3 min-h-4 px-1 text-center text-xs text-muted-foreground/80">
+    {selectedComp
+      ? "Valitse laji tai rajaa hakua kirjoittamalla."
+      : "Hae nimellä ja valitse kilpailu aloittaaksesi."}
+  </p>
 </div>
