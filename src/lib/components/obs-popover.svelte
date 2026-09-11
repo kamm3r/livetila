@@ -21,20 +21,21 @@
     DrawerDescription,
   } from "$lib/components/ui/drawer";
 
+  import { overlayLink } from "$lib/competition-selection";
+
   let { slug }: { slug: string } = $props();
 
   const ctx = getRoundContext();
-  const overlayUrl = $derived.by(() => {
-    const params = new URLSearchParams();
-    const round = ctx.rounds.findIndex((r) => r.Index === ctx.selectedRound);
-    const heat = ctx.heats.findIndex((h) => h.Index === ctx.selectedHeat);
-    if (round >= 0) params.set("round", String(round + 1));
-    if (heat >= 0) params.set("heat", String(heat + 1));
-    return `${origin}/obs/${slug}?${params}`;
-  });
+  let origin = $state("");
+  const overlayUrl = $derived(
+    origin +
+      overlayLink(slug, ctx.rounds, {
+        round: ctx.selectedRound,
+        heat: ctx.selectedHeat,
+      }),
+  );
 
   let open = $state(false);
-  let origin = $state("");
   let isMobile = $state(false);
 
   $effect(() => {

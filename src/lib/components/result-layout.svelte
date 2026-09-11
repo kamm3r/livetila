@@ -4,16 +4,16 @@
   import * as Empty from "$lib/components/ui/empty";
   import { Badge } from "$lib/components/ui/badge";
   import { getRoundContext } from "./round-provider.svelte";
-  import { getResultContext } from "./result-provider.svelte";
   import { sortByResult } from "$lib/results";
 
   const ctx = getRoundContext();
-  const resultCtx = getResultContext();
+  let { eventCategory }: { eventCategory: "Track" | "Field" | "Relay" } =
+    $props();
 
   const sortedAllocs = $derived(
     ctx.currentHeat && ctx.heats.length > 0
       ? [...ctx.currentHeat.Allocations].sort((a, b) =>
-          sortByResult(a, b, resultCtx.eventCategory),
+          sortByResult(a, b, eventCategory),
         )
       : [],
   );
@@ -21,7 +21,7 @@
   const sortedTotal = $derived(
     ctx.currentRound?.TotalResults
       ? [...ctx.currentRound.TotalResults].sort((a, b) =>
-          sortByResult(a, b, resultCtx.eventCategory),
+          sortByResult(a, b, eventCategory),
         )
       : [],
   );

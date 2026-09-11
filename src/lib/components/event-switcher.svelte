@@ -9,6 +9,11 @@
   import { cn } from "$lib/utils";
   import type { EventWithDate } from "$lib/events";
 
+  import {
+    competitionEventLink,
+    findSelectedEvent,
+  } from "$lib/competition-selection";
+
   let {
     competitionId,
     events = [],
@@ -20,13 +25,6 @@
     currentEventId: string;
     roundFromUrl?: string | null;
   } = $props();
-
-  const roundMapping = {
-    Qualify: "Alkuerät",
-    Final: "Loppukilpailu",
-  } as const;
-
-  type RoundKey = keyof typeof roundMapping;
 
   const statusVariants: Record<string, BadgeVariant> = {
     Unallocated: "unallocated",
@@ -41,26 +39,6 @@
     Progress: "Käynnissä",
     Official: "Tulokset valmiit",
   };
-
-  function eventNameToRoundCase(name: string): RoundKey | undefined {
-    return (Object.entries(roundMapping) as [string, string][]).find(
-      ([, v]) => v === name,
-    )?.[0] as RoundKey | undefined;
-  }
-
-  function hasMultipleRoundsForEvent(eventName: string): boolean {
-    const rounds = new Set<string>();
-    for (const event of events) {
-      if (event.EventName === eventName) {
-        const round = eventNameToRoundCase(event.Name);
-        if (round) {
-          rounds.add(round);
-          if (rounds.size > 1) return true;
-        }
-      }
-    }
-    return false;
-  }
 
   const timeFormatter = new Intl.DateTimeFormat("fi-FI", {
     hour: "2-digit",
@@ -80,13 +58,7 @@
   );
 
   const currentEvent = $derived(
-    roundFromUrl
-      ? (events.find(
-          (e) =>
-            e.EventId === Number(currentEventId) &&
-            eventNameToRoundCase(e.Name) === roundFromUrl,
-        ) ?? events.find((e) => e.EventId === Number(currentEventId)))
-      : events.find((e) => e.EventId === Number(currentEventId)),
+    findSelectedEvent(events, currentEventId, roundFromUrl),
   );
 
   const { trigger, destroy } = createWebHaptics();
@@ -98,13 +70,7 @@
     trigger("selection");
     const event = sortedEvents[Number(value)];
     if (!event) return;
-    const roundCase = eventNameToRoundCase(event.Name);
-    const hasMultiple = hasMultipleRoundsForEvent(event.EventName);
-
-    let url = `/competition/${competitionId}-${event.EventId}`;
-    if (hasMultiple && roundCase) {
-      url += `?round=${roundCase}`;
-    }
+    const url = competitionEventLink(competitionId, event);
     open = false;
     void goto(url);
   }

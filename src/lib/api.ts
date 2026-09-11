@@ -7,8 +7,8 @@ import type {
 
 const API_URL = "https://cached-public-api.tuloslista.com/live/v1";
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, { cache: "no-store" });
+async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(url, { cache: "no-store", signal });
   if (!response.ok) {
     throw new Error(`API error: ${response.status} ${response.statusText}`);
   }
@@ -16,23 +16,25 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 export const api = {
-  getCompetitions(): Promise<CompetitionList[]> {
-    return fetchJson<CompetitionList[]>(`${API_URL}/competition`);
+  getCompetitions(signal?: AbortSignal): Promise<CompetitionList[]> {
+    return fetchJson<CompetitionList[]>(`${API_URL}/competition`, signal);
   },
 
-  getEvents(compId: string): Promise<Events> {
-    return fetchJson<Events>(`${API_URL}/competition/${compId}`);
+  getEvents(compId: string, signal?: AbortSignal): Promise<Events> {
+    return fetchJson<Events>(`${API_URL}/competition/${compId}`, signal);
   },
 
-  getAthletes(compId: string): Promise<Competition> {
-    return fetchJson<Competition>(`${API_URL}/results/${compId}`);
+  getAthletes(compId: string, signal?: AbortSignal): Promise<Competition> {
+    return fetchJson<Competition>(`${API_URL}/results/${compId}`, signal);
   },
 
   getCompetitionDetails(
     competitionDetailsId: string,
+    signal?: AbortSignal,
   ): Promise<CompetitionProperties> {
     return fetchJson<CompetitionProperties>(
       `${API_URL}/competition/${competitionDetailsId}/properties`,
+      signal,
     );
   },
 };
