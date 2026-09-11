@@ -206,3 +206,298 @@ test("theme toggles without reacting to typing in search", async ({ page }) => {
   await page.getByRole("button", { name: "Toggle theme" }).click();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
 });
+
+test("tab indicator follows pointer selection but keyboard navigation stays immediate", async ({
+  page,
+}) => {
+  await page.goto("/competition/1-10");
+  const results = page.getByRole("tab", { name: "Tulokset" });
+  const indicator = page.locator(".motion-tab-indicator");
+  await results.click();
+  await expect(results).toHaveAttribute("aria-selected", "true");
+  await expect(indicator).toHaveCSS("transition-duration", "0.18s");
+  await expect
+    .poll(async () => {
+      const tab = await results.boundingBox();
+      const highlight = await indicator.boundingBox();
+      return Math.abs(tab!.x - highlight!.x);
+    })
+    .toBeLessThan(2);
+  // Panel content is available immediately, without outgoing/incoming panel animations.
+  await expect(
+    page.getByRole("cell", { name: "10,20", exact: true }),
+  ).toBeVisible();
+  await results.press("ArrowLeft");
+  await expect(page.getByRole("tab", { name: "Pöytäkirjat" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(indicator).toHaveCSS("transition-duration", "0s");
+  // Rapid reversal ends at the most recent selection.
+  await results.click();
+  await page.getByRole("tab", { name: "Ilmoittautuneet" }).click();
+  await expect
+    .poll(async () => {
+      const tab = await page
+        .getByRole("tab", { name: "Ilmoittautuneet" })
+        .boundingBox();
+      const highlight = await indicator.boundingBox();
+      return Math.abs(tab!.x - highlight!.x);
+    })
+    .toBeLessThan(2);
+});
+
+test("reduced motion keeps tabs, popovers, copy feedback, and mobile drawers usable", async ({
+  page,
+  context,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/competition/1-10");
+  await page.getByRole("tab", { name: "Tulokset" }).click();
+  await expect(page.locator(".motion-tab-indicator")).toHaveCSS(
+    "transition-duration",
+    "0s",
+  );
+  await page.getByRole("button", { name: "OBS Overlay" }).click();
+  await expect(page.locator("[data-slot=popover-content]")).toHaveCSS(
+    "animation-duration",
+    "0s",
+  );
+  await page.getByRole("button", { name: "Kopioi linkki" }).click();
+  await expect(page.getByRole("button", { name: "Kopioitu!" })).toBeVisible();
+  await expect(page.locator(".motion-copy-icon").first()).toHaveCSS(
+    "transition-duration",
+    "0s",
+  );
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "OBS Overlay" }).click();
+  await expect(page.locator("[data-slot=drawer-content]")).toBeVisible();
+  await expect(page.locator("[data-slot=drawer-content]")).toHaveCSS(
+    "animation-duration",
+    "0s",
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.locator("[data-slot=drawer-content]")).toHaveCount(0);
+});
+
+test("search options appear together with no stagger or focus zoom", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const input = page.getByRole("combobox");
+  await input.fill("Test Games");
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await expect(page.getByRole("option")).toHaveCount(2);
+  await expect(page.getByRole("option").last()).toBeVisible();
+  const animations = await page
+    .getByRole("listbox")
+    .evaluate((list) => list.getAnimations({ subtree: true }).length);
+  expect(animations).toBe(0);
+  await expect(page.locator(".motion-search-surface")).toHaveCSS(
+    "scale",
+    "none",
+  );
+});
+
+test("search reveals more competitions on scroll and resets after filtering", async ({
+  page,
+}) => {
+  await page.route("**/live/v1/competition", (route) =>
+    route.fulfill({
+      json: Array.from({ length: 26 }, (_, i) => ({
+        Id: i + 1,
+        Name: `Games ${String(i + 1).padStart(2, "0")}`,
+        Date: "2026-09-09",
+      })),
+    }),
+  );
+  await page.goto("/");
+  const input = page.getByRole("combobox");
+  await input.click();
+  await expect(page.getByRole("option")).toHaveCount(10);
+  await page.getByRole("listbox").evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+  });
+  await expect(page.getByRole("option")).toHaveCount(20);
+  // The explicit control also works with keyboard focus without closing the panel.
+  await page.getByRole("button", { name: "Näytä lisää" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("option")).toHaveCount(26);
+  await expect(page.getByRole("button", { name: "Näytä lisää" })).toHaveCount(
+    0,
+  );
+  await input.fill("Games 26");
+  await expect(page.getByRole("option")).toHaveCount(1);
+  await expect(page.getByRole("option")).toContainText("Games 26");
+  await input.fill("Games");
+  await expect(page.getByRole("option")).toHaveCount(10);
+  await expect
+    .poll(() => page.getByRole("listbox").evaluate((el) => el.scrollTop))
+    .toBe(0);
+});
+
+test("event search can reach events beyond the first batch", async ({
+  page,
+}) => {
+  await page.route("**/live/v1/competition/1", (route) =>
+    route.fulfill({
+      json: {
+        "09.09.2026": Array.from({ length: 32 }, (_, i) => ({
+          ...events["09.09.2026"][0],
+          Id: i + 1,
+          EventId: i + 100,
+          EventName: `Event ${String(i + 1).padStart(2, "0")}`,
+        })),
+      },
+    }),
+  );
+  await page.goto("/");
+  await page.getByRole("combobox").fill("Test Games");
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await expect(page.getByRole("option")).toHaveCount(15);
+  await page.getByRole("button", { name: "Näytä lisää" }).click();
+  await expect(page.getByRole("option")).toHaveCount(30);
+  await page.getByRole("button", { name: "Näytä lisää" }).click();
+  await expect(page.getByRole("option")).toHaveCount(32);
+  await page.getByRole("option", { name: /Event 32/ }).click();
+  await expect(page).toHaveURL(/competition\/1-131\?round=Qualify/);
+});
+
+test("home suggestions open without shifting the page", async ({ page }) => {
+  await page.goto("/");
+  const heading = page.getByRole("heading", { level: 1 });
+  const input = page.getByRole("combobox");
+  const before = await heading.boundingBox();
+  const inputBefore = await input.boundingBox();
+  await input.click();
+  await expect(page.getByRole("option", { name: /Test Games/ })).toBeVisible();
+  expect((await heading.boundingBox())?.y).toBe(before?.y);
+  expect((await input.boundingBox())?.y).toBe(inputBefore?.y);
+  await input.press("Escape");
+  await expect(page.getByRole("option")).toHaveCount(0);
+  await input.press("ArrowDown");
+  await expect(page.getByRole("option", { name: /Test Games/ })).toBeVisible();
+  await page.getByRole("heading", { level: 1 }).click();
+  await expect(page.getByRole("option")).toHaveCount(0);
+  await input.click();
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await expect(input).toBeFocused();
+  await expect(page.getByRole("option", { name: /Alkuerät/ })).toBeVisible();
+  expect((await heading.boundingBox())?.y).toBe(before?.y);
+});
+
+test("recent searches persist, stay capped at four, and can be removed with keyboard", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.evaluate(() =>
+    localStorage.setItem(
+      "livetila:recent-searches",
+      JSON.stringify(
+        Array.from({ length: 4 }, (_, i) => ({
+          id: `/competition/2-${i + 20}`,
+          url: `/competition/2-${i + 20}`,
+          label: `Previous ${i + 1}`,
+        })),
+      ),
+    ),
+  );
+  await page.reload();
+  await page.getByRole("combobox").fill("Test Games");
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await page.getByRole("option", { name: /Alkuerät/ }).click();
+  await expect(page).toHaveURL(/round=Qualify/);
+  await page.goto("/");
+  await page.getByRole("combobox").click();
+  await expect(
+    page.getByRole("button", { name: /Poista viimeisimmistä/ }),
+  ).toHaveCount(4);
+  await expect(page.getByRole("option").first()).toContainText(
+    "Test Games / 100 m / Alkuerät",
+  );
+  const remove = page.getByRole("button", {
+    name: /Poista viimeisimmistä.*Test Games/,
+  });
+  await remove.focus();
+  await remove.press("Enter");
+  await expect(page.getByRole("combobox")).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: /Poista viimeisimmistä/ }),
+  ).toHaveCount(3);
+  await page.reload();
+  await page.getByRole("combobox").click();
+  await expect(
+    page.getByRole("button", { name: /Poista viimeisimmistä/ }),
+  ).toHaveCount(3);
+  await page.getByRole("option", { name: "Previous 1", exact: true }).click();
+  await expect(page).toHaveURL(/competition\/2-20$/);
+});
+
+test("popover uses CSS transitions and keyboard opening remains immediate", async ({
+  page,
+}) => {
+  await page.goto("/competition/1-10?round=Qualify");
+  const trigger = page.getByRole("button", { name: "OBS Overlay" });
+  await trigger.click();
+  const popover = page.locator('[data-slot="popover-content"]');
+  await expect(popover).toBeVisible();
+  expect(
+    await popover.evaluate((el) => ({
+      property: getComputedStyle(el).transitionProperty,
+      animation: getComputedStyle(el).animationName,
+    })),
+  ).toEqual({ property: "opacity, transform", animation: "none" });
+  await page.keyboard.press("Escape");
+  await expect(popover).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await trigger.press("Enter");
+  await expect(popover).toBeVisible();
+  expect(
+    await popover.evaluate((el) => getComputedStyle(el).transitionDuration),
+  ).toBe("0s");
+});
+
+test("drawer drag stays direct, settles at 280ms, and keyboard overrides inline transitions", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/competition/1-10?round=Qualify");
+  await page.getByRole("button", { name: "OBS Overlay", exact: true }).click();
+  const drawer = page.locator('[data-slot="drawer-content"]');
+  await expect(drawer).toBeVisible();
+  await expect
+    .poll(() =>
+      drawer.evaluate(
+        (el) =>
+          el.getAnimations().filter((a) => a.playState === "running").length,
+      ),
+    )
+    .toBe(0);
+  const box = (await drawer.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 16);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + 55, { steps: 10 });
+  await expect(drawer).toHaveClass(/vaul-dragging/);
+  expect(
+    await drawer.evaluate((el) => getComputedStyle(el).transitionProperty),
+  ).toBe("none");
+  await page.waitForTimeout(250); // Release slowly enough to settle, rather than dismiss.
+  await page.mouse.up();
+  await expect(drawer).toBeVisible();
+  expect(
+    await drawer.evaluate((el) => getComputedStyle(el).transitionDuration),
+  ).toBe("0.28s");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    await drawer.evaluate((el) => getComputedStyle(el).transitionDuration),
+  ).toBe("0s");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.keyboard.press("Tab");
+  expect(
+    await drawer.evaluate((el) => getComputedStyle(el).transitionDuration),
+  ).toBe("0s");
+  await page.keyboard.press("Escape");
+  await expect(drawer).toHaveCount(0);
+});

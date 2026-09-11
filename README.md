@@ -4,7 +4,7 @@ Live athletics results and OBS streaming overlays powered by the public Tuloslis
 
 ## Features
 
-- Search competitions and events, including qualifying and final rounds.
+- Search competitions and events, including qualifying and final rounds. Results appear in batches as you scroll, with a keyboard-accessible “Show more” control. Filtering searches the complete fetched list.
 - View entrants, start lists, heat results, and overall results.
 - Refresh results every second while an event is in progress; refresh event status every 30 seconds.
 - Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every 30 seconds, including in the background.
@@ -87,6 +87,14 @@ src/
 static/                     # Static assets
 tests/                     # Browser regression tests
 ```
+
+## Motion and dependency maintenance
+
+Motion uses Svelte and CSS. Pointer-operated tabs have a 180 ms selection indicator; popovers enter in 180 ms and leave in 100 ms; copy feedback takes 120 ms; button presses take 160 ms and releases take 100 ms. The home search suggestions overlay the page without shifting surrounding content, with immediate opening and dismissal; individual search results, filtering, and tab content appear immediately. Keyboard actions skip decorative transitions, and reduced-motion preferences disable CSS motion and OBS row movement. Live overlays only animate rows when their positions change.
+
+The motion rules live in `src/app.css`. Keep controls responsive during transitions and avoid replaying entrance animations during data refreshes.
+
+TypeScript stays on 6.0.3 because the current Svelte check and ESLint toolchain do not support TypeScript 7 as a drop-in replacement. Other direct dependencies were updated to their latest registry releases during the animation pass; the unused React-era `motion` dependency was removed.
 
 ## License
 

@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { fly, fade, slide, scale } from "svelte/transition";
-  import { cubicOut, cubicInOut } from "svelte/easing";
   import {
     ArrowRight,
     Calendar,
@@ -8,9 +6,10 @@
     Clock,
     LoaderCircle,
     Search,
+    X,
   } from "@lucide/svelte";
   import { createWebHaptics } from "web-haptics/svelte";
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { Command as CommandPrimitive } from "bits-ui";
   import { createQuery } from "@tanstack/svelte-query";
@@ -35,6 +34,55 @@
     Date: string;
     Time: string;
   };
+
+  type RecentSearch = { id: string; label: string; url: string };
+  const historyKey = "livetila:recent-searches";
+  let recentSearches = $state<RecentSearch[]>([]);
+  function saveHistory() {
+    try {
+      localStorage.setItem(historyKey, JSON.stringify(recentSearches));
+    } catch {
+      /* Storage may be disabled. */
+    }
+  }
+  function rememberSearch(item: RecentSearch) {
+    recentSearches = [
+      item,
+      ...recentSearches.filter((previous) => previous.id !== item.id),
+    ].slice(0, 4);
+    saveHistory();
+  }
+  function removeRecent(id: string) {
+    recentSearches = recentSearches.filter((item) => item.id !== id);
+    saveHistory();
+    inputEl?.focus();
+  }
+  onMount(() => {
+    try {
+      const saved: unknown = JSON.parse(
+        localStorage.getItem(historyKey) ?? "[]",
+      );
+      if (Array.isArray(saved))
+        recentSearches = saved
+          .filter(
+            (item): item is RecentSearch =>
+              item &&
+              typeof item.id === "string" &&
+              typeof item.label === "string" &&
+              typeof item.url === "string" &&
+              /^\/competition\/\d+-\d+(\?round=(Qualify|Final))?$/.test(
+                item.url,
+              ),
+          )
+          .filter(
+            (item, index, all) =>
+              all.findIndex((other) => other.id === item.id) === index,
+          )
+          .slice(0, 4);
+    } catch {
+      /* Ignore invalid or unavailable history. */
+    }
+  });
 
   type SearchStep = "competitions" | "events";
 
@@ -67,6 +115,13 @@
   let isOpen = $state(false);
   let isFocused = $state(false);
   let selectedComp = $state<CompetitionList | null>(null);
+  const matchingRecent = $derived(
+    selectedComp
+      ? []
+      : recentSearches.filter((item) =>
+          item.label.toLowerCase().includes(query.trim().toLowerCase()),
+        ),
+  );
   let navigatingTo = $state<number | null>(null);
 
   let inputEl = $state<HTMLInputElement | null>(null);
@@ -125,8 +180,43 @@
   );
   const hasResults = $derived(results.length > 0);
   const showDropdown = $derived(
-    isOpen && (isLoading || loadError || hasResults || query.length > 0),
+    isOpen &&
+      (isLoading ||
+        loadError ||
+        hasResults ||
+        matchingRecent.length > 0 ||
+        query.length > 0),
   );
+
+  let listEl = $state<HTMLElement | null>(null);
+  const batchSize = $derived(step === "competitions" ? 10 : 15);
+  let visibleCount = $derived.by(() => {
+    void query;
+    void selectedComp;
+    return batchSize;
+  });
+  const hasMore = $derived(visibleCount < results.length);
+
+  $effect(() => {
+    void query;
+    void selectedComp;
+    if (listEl) listEl.scrollTop = 0;
+  });
+
+  function loadMore() {
+    visibleCount = Math.min(visibleCount + batchSize, results.length);
+  }
+
+  function handleScroll(event: Event) {
+    const list = event.currentTarget as HTMLElement;
+    if (
+      hasMore &&
+      list.scrollTop > 0 &&
+      list.scrollHeight - list.scrollTop - list.clientHeight < 80
+    ) {
+      loadMore();
+    }
+  }
 
   function handleInput(value: string) {
     query = value;
@@ -143,7 +233,7 @@
     if (blurTimeout) clearTimeout(blurTimeout);
   });
 
-  function handleCompetitionSelect(comp: CompetitionList) {
+  function selectCompetition(comp: CompetitionList) {
     trigger();
     selectedComp = comp;
     query = `${comp.Name} / `;
@@ -160,20 +250,53 @@
         : evt.Name === "Loppukilpailu"
           ? "Final"
           : null;
-    void goto(
-      `/competition/${selectedComp.Id}-${evt.Id}${round ? `?round=${round}` : ""}`,
-    ).finally(() => {
+    const url = `/competition/${selectedComp.Id}-${evt.Id}${round ? `?round=${round}` : ""}`;
+    rememberSearch({
+      id: url,
+      url,
+      label: `${selectedComp.Name} / ${evt.EventName} / ${evt.Name}`,
+    });
+    void goto(url).finally(() => {
       navigatingTo = null;
     });
   }
 
+  let listHeight = $state(320);
+  function measureSpace() {
+    if (!inputEl) return;
+    const viewport = window.visualViewport;
+    const bottom =
+      (viewport?.height ?? window.innerHeight) + (viewport?.offsetTop ?? 0);
+    listHeight = Math.max(
+      96,
+      Math.min(320, bottom - inputEl.getBoundingClientRect().bottom - 88),
+    );
+  }
+  onMount(() => {
+    window.addEventListener("resize", measureSpace);
+    window.visualViewport?.addEventListener("resize", measureSpace);
+    window.visualViewport?.addEventListener("scroll", measureSpace);
+    return () => {
+      window.removeEventListener("resize", measureSpace);
+      window.visualViewport?.removeEventListener("resize", measureSpace);
+      window.visualViewport?.removeEventListener("scroll", measureSpace);
+    };
+  });
+
   function handleFocus() {
+    measureSpace();
     if (blurTimeout) clearTimeout(blurTimeout);
     isOpen = true;
     isFocused = true;
   }
 
-  function handleBlur() {
+  function handleBlur(event: FocusEvent) {
+    const container = event.currentTarget as HTMLElement;
+    if (
+      event.relatedTarget instanceof Node &&
+      container.contains(event.relatedTarget)
+    )
+      return;
     blurTimeout = setTimeout(() => {
       isOpen = false;
       isFocused = false;
@@ -181,40 +304,37 @@
   }
 </script>
 
-<div class="relative mx-auto w-full max-w-2xl">
+<div class="relative mx-auto h-16 w-full max-w-2xl">
   <Command
-    class="overflow-visible bg-transparent"
+    class="absolute inset-x-0 top-0 z-30 h-auto overflow-visible bg-transparent p-0 text-left"
+    onkeydown={(event) => {
+      if (event.key === "Escape") {
+        isOpen = false;
+      }
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        isOpen = true;
+      }
+    }}
     role="search"
     shouldFilter={false}
+    onfocusin={handleFocus}
+    onfocusout={handleBlur}
   >
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class={cn(
-        "relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl transition-all duration-300 ease-out",
-        isFocused && "focused",
+        "relative overflow-hidden rounded-[28px] border bg-card motion-search-surface",
+        showDropdown && "shadow-xl shadow-black/10",
+        isFocused
+          ? "border-primary ring-2 ring-primary/10"
+          : "border-border shadow-sm",
       )}
-      style="box-shadow: {showDropdown
-        ? '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-        : isFocused
-          ? '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-          : '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}"
     >
-      <div
-        class={cn(
-          "pointer-events-none absolute inset-0 rounded-2xl transition-opacity duration-300",
-          isFocused ? "opacity-100" : "opacity-0",
-        )}
-        style="background: linear-gradient(135deg, rgba(113, 180, 255, 0.15) 0%, rgba(113, 180, 255, 0.05) 50%, rgba(113, 180, 255, 0.15) 100%)"
-      ></div>
-
       <div class="relative z-10">
-        <div
-          class="flex items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-3.5"
-        >
+        <div class="flex h-[62px] items-center gap-2 px-5 sm:gap-3">
           <span
             class={cn(
-              "inline-flex transition-all duration-300 ease-out",
-              isFocused && "scale-110 text-primary",
+              "inline-flex",
+              isFocused && "text-primary",
               !isFocused && "text-muted-foreground",
             )}
           >
@@ -223,10 +343,9 @@
 
           <CommandPrimitive.Input
             bind:ref={inputEl}
-            class="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:text-base"
-            onblur={handleBlur}
+            onclick={handleFocus}
+            class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:text-base"
             aria-label="Hae kilpailuja tai lajeja"
-            onfocus={handleFocus}
             placeholder={step === "events"
               ? "Hae lajeja..."
               : "Hae kilpailuja nimellä..."}
@@ -235,10 +354,7 @@
           />
 
           {#if isLoading}
-            <div
-              in:scale={{ duration: 150, start: 0.8 }}
-              out:scale={{ duration: 150, start: 0.8 }}
-            >
+            <div>
               <LoaderCircle class="size-5 animate-spin text-primary" />
             </div>
           {/if}
@@ -246,31 +362,56 @@
       </div>
 
       {#if showDropdown}
-        <div
-          in:scale={{ duration: 200, start: 0 }}
-          out:scale={{ duration: 200, start: 0 }}
-          class="mx-4 h-px bg-linear-to-r from-transparent via-border to-transparent"
-        ></div>
+        <div class="mx-4 h-px bg-border"></div>
       {/if}
 
-      {#key step}
-        {#if showDropdown}
-          <div
-            in:slide={{ duration: 200, easing: cubicOut }}
-            out:slide={{ duration: 200, easing: cubicInOut }}
-            class="overflow-hidden"
-          >
+      {#if showDropdown}
+        <div class="search-reveal overflow-hidden">
+          {#key step}
             <div class="p-2">
-              <CommandList class="max-h-80 overflow-y-auto">
+              <CommandList
+                bind:ref={listEl}
+                onscroll={handleScroll}
+                class="overflow-y-auto overscroll-contain"
+                style={`max-height: ${listHeight}px`}
+              >
+                {#if matchingRecent.length}
+                  {#each matchingRecent as item (item.id)}
+                    <div
+                      class="recent-row flex items-center rounded-xl pr-2 sm:pr-3"
+                    >
+                      <CommandItem
+                        class="group min-w-0 flex-1 cursor-pointer rounded-xl bg-transparent px-2 py-2 data-selected:bg-transparent sm:px-3 sm:py-2.5"
+                        value={`recent-${item.id}`}
+                        onSelect={() => {
+                          rememberSearch(item);
+                          void goto(item.url);
+                        }}
+                        onmousedown={(event) => event.preventDefault()}
+                      >
+                        <span
+                          class="recent-icon flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:size-9"
+                          ><Clock class="size-4" /></span
+                        >
+                        <span
+                          class="min-w-0 break-words font-medium text-foreground text-sm sm:text-base"
+                          >{item.label}</span
+                        >
+                      </CommandItem>
+                      <button
+                        type="button"
+                        class="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-primary/15 focus-visible:outline-2 focus-visible:outline-primary"
+                        aria-label={`Poista viimeisimmistä hauista: ${item.label}`}
+                        onkeydown={(event) => event.stopPropagation()}
+                        onclick={() => removeRecent(item.id)}
+                        ><X class="size-4" /></button
+                      >
+                    </div>
+                  {/each}
+                {/if}
                 {#if isLoading}
-                  <div
-                    in:fade={{ duration: 150 }}
-                    class="flex flex-col items-center gap-3 py-8"
-                  >
+                  <div class="flex flex-col items-center gap-3 py-8">
                     <div class="relative">
-                      <div
-                        class="absolute inset-0 animate-ping rounded-full bg-primary/20"
-                      ></div>
                       <LoaderCircle
                         class="relative size-6 animate-spin text-primary"
                       />
@@ -293,7 +434,7 @@
                     >
                   </div>
                 {:else if !hasResults}
-                  <div in:fly={{ y: 10, duration: 200 }}>
+                  <div>
                     <CommandEmpty
                       class="flex flex-col items-center gap-2 py-8 text-center"
                     >
@@ -308,70 +449,58 @@
                     </CommandEmpty>
                   </div>
                 {:else if step === "competitions" && hasResults}
-                  <CommandGroup
-                    class={groupHeadingClassName}
-                    heading="Kilpailut"
-                  >
-                    {#each filteredCompetitions.slice(0, 10) as comp, i (comp.Id)}
-                      <div
-                        in:fly={{ y: 8, duration: 250, delay: i * 35 }}
-                        out:fly={{ y: -4, duration: 150 }}
-                        class="active-press"
+                  {#each filteredCompetitions.slice(0, visibleCount) as comp (comp.Id)}
+                    <div>
+                      <CommandItem
+                        class="group cursor-pointer rounded-xl px-2 py-2 data-selected:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
+                        onmousedown={(e) => {
+                          e.preventDefault();
+                        }}
+                        onSelect={() => selectCompetition(comp)}
+                        value={`${comp.Name}-${comp.Id}`}
                       >
-                        <CommandItem
-                          class="group cursor-pointer rounded-xl px-2 py-2 transition-colors data-selected:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
-                          onmousedown={(e) => {
-                            e.preventDefault();
-                          }}
-                          onSelect={() => handleCompetitionSelect(comp)}
-                          value={`${comp.Name}-${comp.Id}`}
+                        <div
+                          class="flex flex-1 items-center justify-between gap-2 sm:gap-3"
                         >
-                          <div
-                            class="flex flex-1 items-center justify-between gap-2 sm:gap-3"
-                          >
-                            <div class="flex items-center gap-2 sm:gap-3">
-                              <div
-                                class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
-                              >
-                                <Calendar class="size-4" />
-                              </div>
-                              <div class="flex flex-col">
-                                <span
-                                  class="font-medium text-foreground text-sm sm:text-base"
-                                  >{comp.Name}</span
-                                >
-                                <span class="text-muted-foreground text-xs">
-                                  {new Date(comp.Date).toLocaleDateString(
-                                    "fi-FI",
-                                    {
-                                      day: "numeric",
-                                      month: "long",
-                                      year: "numeric",
-                                    },
-                                  )}
-                                </span>
-                              </div>
+                          <div class="flex items-center gap-2 sm:gap-3">
+                            <div
+                              class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
+                            >
+                              <Calendar class="size-4" />
                             </div>
-                            <ArrowRight
-                              class="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-selected:translate-x-0.5 group-data-selected:text-primary group-data-selected:opacity-100"
-                            />
+                            <div class="flex flex-col">
+                              <span
+                                class="font-medium text-foreground text-sm sm:text-base"
+                                >{comp.Name}</span
+                              >
+                              <span class="text-muted-foreground text-xs">
+                                {new Date(comp.Date).toLocaleDateString(
+                                  "fi-FI",
+                                  {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric",
+                                  },
+                                )}
+                              </span>
+                            </div>
                           </div>
-                        </CommandItem>
-                      </div>
-                    {/each}
-                  </CommandGroup>
+                          <ArrowRight
+                            class="size-4 text-muted-foreground opacity-0 group-data-selected:text-primary group-data-selected:opacity-100"
+                          />
+                        </div>
+                      </CommandItem>
+                    </div>
+                  {/each}
                 {:else if step === "events" && hasResults}
                   <CommandGroup class={groupHeadingClassName} heading="Lajit">
-                    {#each filteredEvents.slice(0, 15) as evt, i (evt.RowId)}
+                    {#each filteredEvents.slice(0, visibleCount) as evt (evt.RowId)}
                       {@const isNavigating = navigatingTo === evt.Id}
                       {@const isDisabled =
                         navigatingTo !== null && !isNavigating}
-                      <div
-                        in:fly={{ y: 8, duration: 250, delay: i * 35 }}
-                        out:fly={{ y: -4, duration: 150 }}
-                      >
+                      <div>
                         <CommandItem
-                          class="group cursor-pointer rounded-xl px-2 py-2 transition-all data-selected:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none sm:px-3 sm:py-2.5"
+                          class="group cursor-pointer rounded-xl px-2 py-2 data-selected:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none sm:px-3 sm:py-2.5"
                           disabled={isDisabled}
                           onmousedown={(e) => {
                             e.preventDefault();
@@ -386,7 +515,7 @@
                           >
                             <div class="flex items-center gap-2 sm:gap-3">
                               <div
-                                class="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground transition-colors group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
+                                class="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
                               >
                                 {#if isNavigating}
                                   <LoaderCircle class="size-4 animate-spin" />
@@ -399,11 +528,7 @@
                                   class="font-medium text-foreground text-sm sm:text-base"
                                   >{evt.EventName}</span
                                 >
-                                <span
-                                  in:fly={{ y: 4, duration: 150, delay: 50 }}
-                                  out:fly={{ y: -4, duration: 150 }}
-                                  class="text-muted-foreground text-xs"
-                                >
+                                <span class="text-muted-foreground text-xs">
                                   {isNavigating ? "Siirrytään..." : evt.Name}
                                 </span>
                               </div>
@@ -426,7 +551,7 @@
                                 <div class="size-4"></div>
                               {:else}
                                 <ChevronRight
-                                  class="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-data-selected:translate-x-0.5 group-data-selected:text-primary group-data-selected:opacity-100"
+                                  class="size-4 text-muted-foreground opacity-0 group-data-selected:text-primary group-data-selected:opacity-100"
                                 />
                               {/if}
                             </div>
@@ -437,29 +562,44 @@
                   </CommandGroup>
                 {/if}
               </CommandList>
+              {#if !isLoading && !loadError && hasResults}
+                <div
+                  class="mt-1 flex items-center justify-between gap-3 border-t border-border/60 px-2 pt-2 text-xs text-muted-foreground"
+                >
+                  <span aria-live="polite"
+                    >Näytetään {Math.min(visibleCount, results.length)} / {results.length}</span
+                  >
+                  {#if hasMore}
+                    <button
+                      type="button"
+                      class="rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      onkeydown={(event) => event.stopPropagation()}
+                      onclick={() => {
+                        loadMore();
+                        if (!hasMore) inputEl?.focus();
+                      }}
+                    >
+                      Näytä lisää
+                    </button>
+                  {/if}
+                </div>
+              {/if}
             </div>
-          </div>
-        {/if}
-      {/key}
+          {/key}
+        </div>
+      {/if}
     </div>
   </Command>
-
-  {#if !showDropdown}
-    <p
-      in:fly={{ y: 5, duration: 200, delay: 100 }}
-      out:fly={{ y: -5, duration: 150 }}
-      class="mt-3 text-center text-muted-foreground/60 text-xs"
-    >
-      Vinkki: valitse kilpailu ja rajaa laji kirjoittamalla "/"
-    </p>
-  {/if}
 </div>
 
 <style>
-  .focused {
-    scale: 1.01;
+  .recent-row:has(:global([data-selected])),
+  .recent-row:focus-within {
+    background: color-mix(in oklch, var(--primary) 10%, transparent);
   }
-  .active-press:active {
-    scale: 0.97;
+  .recent-row:has(:global([data-selected])) .recent-icon,
+  .recent-row:focus-within .recent-icon {
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
 </style>

@@ -2,40 +2,87 @@
   import SearchForm from "$lib/components/search-form.svelte";
 </script>
 
-<main class="flex min-h-dvh flex-col items-center">
-  <section
-    class="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:py-24"
-  >
-    <div class="mx-auto max-w-3xl text-center">
-      <h1
-        class="scroll-m-20 text-balance font-extrabold text-3xl tracking-tight sm:text-4xl md:text-5xl lg:text-6xl"
-      >
-        Kilpailutulokset <span class="font-light text-primary"
-          >reaaliajassa</span
-        >
-      </h1>
-      <p
-        class="mx-auto mt-4 max-w-xl text-pretty text-base text-muted-foreground sm:mt-6 sm:text-lg"
-      >
-        Seuraa urheilukilpailuja livenä. Hae kilpailuja ja löydä lajit, joista
-        haluat nähdä tulokset.
-      </p>
-    </div>
+<svelte:head>
+  <title>Livetila – Yleisurheilun tulokset</title>
+  <meta
+    name="description"
+    content="Etsi yleisurheilukilpailu ja seuraa lajien eräjakoja ja tuloksia Livetilassa."
+  />
+</svelte:head>
 
-    <div class="mt-8 w-full max-w-xl px-2 sm:mt-10 sm:px-0">
-      <SearchForm />
-      <p class="mt-6 text-center text-muted-foreground text-xs sm:text-sm">
-        Powered by tuloslista.com
+<main class="home-page">
+  <div class="home-content">
+    <section class="home-search" aria-labelledby="home-title">
+      <h1 id="home-title">Kilpailun jokainen <span>hetki.</span></h1>
+      <div class="search-field"><SearchForm /></div>
+      <p class="introduction">
+        Yleisurheilun tulokset. Kentän laidalta kotikatsomoon.
       </p>
-    </div>
-  </section>
-</main>
-<footer
-  class="border-border/50 border-t py-4 pb-[env(safe-area-inset-bottom)] sm:py-6"
->
-  <div class="mx-auto max-w-5xl px-4 text-center">
-    <p class="text-muted-foreground text-xs sm:text-sm">
-      Livetila - Kilpailutulokset striimeihin
-    </p>
+    </section>
   </div>
+</main>
+<footer class="home-footer">
+  <span>Livetila</span><a href="https://live.tuloslista.com"
+    >Tulostiedot: Tuloslista</a
+  >
 </footer>
+
+<style>
+  .home-page {
+    position: relative;
+    isolation: isolate;
+    flex: 1;
+    padding: 3.5rem 1.25rem 3rem;
+  }
+  .search-field {
+    margin-top: 2rem;
+  }
+  .home-content {
+    max-width: 640px;
+    margin-inline: auto;
+  }
+  .home-search {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+  h1 {
+    max-width: 16ch;
+    margin: 0 auto;
+    font-size: clamp(2.25rem, 4vw, 3.25rem);
+    font-weight: 600;
+    letter-spacing: -0.055em;
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+  h1 span {
+    color: var(--primary);
+  }
+  .introduction {
+    margin: 1.75rem 0 0;
+    color: var(--muted-foreground);
+    font-size: clamp(0.625rem, 2.8vw, 0.875rem);
+    white-space: nowrap;
+    line-height: 1.7;
+  }
+  .home-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 2rem;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+  }
+  .home-footer a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  @media (max-width: 480px) {
+    .home-page {
+      padding-top: 2rem;
+    }
+    .home-footer {
+      padding: 1.25rem;
+    }
+  }
+</style>

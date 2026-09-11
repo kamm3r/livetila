@@ -21,7 +21,7 @@
         allocated:
           "border-cyan-500/20 bg-cyan-500/10 text-cyan-500 [a]:hover:bg-cyan-500/20",
         progress:
-          "animate-pulse border-blue-500/20 bg-blue-500/10 text-blue-500 [a]:hover:bg-blue-500/20",
+          "border-blue-500/20 bg-blue-500/10 text-blue-500 [a]:hover:bg-blue-500/20",
         official:
           "border-green-500/20 bg-green-500/10 text-green-500 [a]:hover:bg-green-500/20",
       },
