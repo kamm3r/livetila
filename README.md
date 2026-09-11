@@ -6,8 +6,8 @@ Live athletics results and OBS streaming overlays powered by the public Tuloslis
 
 - Search competitions and events, including qualifying and final rounds. Results appear in batches as you scroll, with a keyboard-accessible “Show more” control. Filtering searches the complete fetched list.
 - View entrants, start lists, heat results, and overall results.
-- Refresh results every second while an event is in progress; refresh event status every 30 seconds.
-- Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every 30 seconds, including in the background.
+- Refresh results and event status every second while viewing a competition, regardless of its reported status.
+- Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every second, including in the background.
 - Responsive layouts, light/dark/system themes, and haptic feedback on supported devices.
 
 ## Development
@@ -43,7 +43,7 @@ pnpm build
 pnpm test
 ```
 
-The regression tests use API fixtures so they do not depend on live competitions or network availability.
+The regression tests use API fixtures so they do not depend on live competitions or network availability. They cover selection rules through their module interface, plus browser search, navigation, motion and live-refresh behavior.
 
 ## Routes and overlays
 
@@ -58,6 +58,8 @@ Overlay parameters use one-based positions in the API's round and heat arrays:
 ```
 
 This shows the first heat of the second round. Omit `heat` for the round's overall results; omit `round` to use the first round. The OBS button in the viewer copies the current round and heat selection.
+
+Live result fetching is independent of event status. The competition viewer polls while visible; OBS also polls in the background. Shared query identities retain cached data across navigation, and abandoned requests are cancelled. The one-second polling interval does not bypass upstream caching or network latency. See [CONTEXT.md](CONTEXT.md) for selection and refresh conventions.
 
 ## Deployment
 
@@ -77,6 +79,9 @@ SvelteKit 2, Svelte 5 runes, TypeScript, TanStack Svelte Query, Tailwind CSS 4, 
 src/
 ├── lib/
 │   ├── api.ts              # Public API client
+│   ├── competition-selection.ts # Selection rules and competition/OBS links
+│   ├── competition-data.svelte.ts # Query identity, validation and polling
+│   ├── search-workflow.svelte.ts  # Search state, reveal limits and history
 │   ├── events.ts           # Event normalization
 │   ├── results.ts          # Result parsing and sorting
 │   └── components/         # App components and shadcn-svelte UI

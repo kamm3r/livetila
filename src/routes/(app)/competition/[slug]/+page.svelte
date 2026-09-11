@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { selectCompetitionRound } from "$lib/competition-selection";
   import { page } from "$app/state";
   import { ClipboardList, Trophy, Users } from "@lucide/svelte";
   import ObsPopover from "$lib/components/obs-popover.svelte";
@@ -6,79 +7,34 @@
   import RoundSwitcher from "$lib/components/round-switcher.svelte";
   import TabsWithHaptics from "$lib/components/tabs-haptics.svelte";
   import RoundProvider from "$lib/components/round-provider.svelte";
-  import ResultProvider from "$lib/components/result-provider.svelte";
   import ParticipantLayout from "$lib/components/participant-layout.svelte";
   import ProtocolLayout from "$lib/components/protocol-layout.svelte";
   import ResultLayout from "$lib/components/result-layout.svelte";
   import { Skeleton } from "$lib/components/ui/skeleton";
-  import { flattenEvents } from "$lib/events";
-  import { api } from "$lib/api";
-  import { createQuery } from "@tanstack/svelte-query";
-  import type {
-    Competition,
-    CompetitionProperties,
-    Events,
-  } from "~/types/comp";
+  import { createCompetitionData } from "$lib/competition-data.svelte";
+  import { findSelectedEvent } from "$lib/competition-selection";
 
   const slug = $derived(page.params.slug ?? "");
-  const compId = $derived(slug.split("-", 2)[0] ?? "");
-  const eventId = $derived(slug.split("-", 2)[1] ?? "");
-
-  const eventsQuery = createQuery<Events>(() => ({
-    queryKey: ["events", compId],
-    queryFn: () => api.getEvents(compId),
-    enabled: Boolean(compId),
-    refetchInterval: 30000,
-  }));
-
-  const compEventsRaw = $derived(eventsQuery.data ?? null);
-  const compEvents = $derived(
-    compEventsRaw ? flattenEvents(compEventsRaw) : [],
+  const data = createCompetitionData(() => slug, "competition");
+  const compId = $derived(data.identity?.competitionId ?? "");
+  const eventId = $derived(data.identity?.eventId ?? "");
+  const competition = $derived(data.competition);
+  const compDetails = $derived(data.details);
+  const compEvents = $derived(data.events);
+  const roundFromUrl = $derived(page.url.searchParams.get("round"));
+  const selectedRound = $derived(
+    selectCompetitionRound(competition?.Rounds ?? [], roundFromUrl).round,
   );
+
   const selectedEvent = $derived(
-    compEvents.find((e) => e.EventId === Number(eventId)),
+    findSelectedEvent(compEvents, eventId, selectedRound?.RoundTypeCategory),
   );
   const isTrack = $derived(
     selectedEvent?.Category === "Track" || selectedEvent?.Category === "Relay",
   );
-  const isProgress = $derived(
-    compEvents.some(
-      (e) => e.EventId === Number(eventId) && e.Status === "Progress",
-    ),
-  );
-
-  const athletesQuery = createQuery<Competition>(() => ({
-    queryKey: ["athletes", compId, eventId],
-    queryFn: () => api.getAthletes(`${compId}/${eventId}`),
-    enabled: Boolean(compId && eventId),
-    refetchInterval: isProgress ? 1000 : false,
-    refetchIntervalInBackground: false,
-  }));
-
-  const detailsQuery = createQuery<CompetitionProperties>(() => ({
-    queryKey: ["competition-details", compId],
-    queryFn: () => api.getCompetitionDetails(compId),
-    enabled: Boolean(compId),
-  }));
-
-  const competition = $derived(athletesQuery.data ?? null);
-  const compDetails = $derived(detailsQuery.data ?? null);
-
-  const roundFromUrl = $derived(page.url.searchParams.get("round"));
-  const initialRound = $derived(
-    competition && roundFromUrl
-      ? competition.Rounds.find((r) => r.RoundTypeCategory === roundFromUrl)
-          ?.Index
-      : undefined,
-  );
-
-  const isLoading = $derived(
-    athletesQuery.isPending || detailsQuery.isPending || eventsQuery.isPending,
-  );
+  const isLoading = $derived(data.isLoading);
   const error = $derived(
-    athletesQuery.isError || eventsQuery.isError || detailsQuery.isError
-      ? "Kilpailutietojen lataaminen epäonnistui"
-      : null,
+    data.isError ? "Kilpailutietojen lataaminen epäonnistui" : null,
   );
 </script>
 
@@ -87,7 +43,7 @@
 </svelte:head>
 
 <main class="container relative mx-auto flex grow flex-col px-4 py-4 sm:p-8">
-  {#if !/^\d+-\d+$/.test(slug)}
+  {#if !data.identity}
     <div class="flex flex-col items-center justify-center py-20">
       <h2 class="font-bold text-2xl">Virheellinen linkki</h2>
       <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
@@ -112,6 +68,10 @@
       <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
     </div>
   {:else if competition}
+    <div role="status" class="text-sm text-muted-foreground">
+      {#if data.isRefreshError}Päivitys viivästyy. Näytetään viimeisimmät saadut
+        tulokset.{/if}
+    </div>
     <div class="flex flex-col gap-4">
       <div class="flex flex-col items-start gap-3">
         <h2
@@ -123,13 +83,12 @@
           competitionId={compId}
           currentEventId={eventId}
           events={compEvents}
-          roundFromUrl={competition.Rounds.find((r) => r.Index === initialRound)
-            ?.RoundTypeCategory ?? competition.Rounds.at(-1)?.RoundTypeCategory}
+          roundFromUrl={selectedRound?.RoundTypeCategory}
         />
       </div>
 
       {#key slug}
-        <RoundProvider rounds={competition.Rounds} {initialRound}>
+        <RoundProvider rounds={competition.Rounds} roundCategory={roundFromUrl}>
           <div
             class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
           >
@@ -187,11 +146,5 @@
 {/snippet}
 
 {#snippet resultsContent()}
-  <ResultProvider
-    compId={`${compId}/${eventId}`}
-    {isProgress}
-    eventCategory={competition!.EventCategory}
-  >
-    <ResultLayout />
-  </ResultProvider>
+  <ResultLayout eventCategory={competition!.EventCategory} />
 {/snippet}

@@ -1,13 +1,12 @@
 <script lang="ts">
+  import { selectOverlayRound } from "$lib/competition-selection";
   import { flip } from "svelte/animate";
   import { prefersReducedMotion } from "svelte/motion";
   import { page } from "$app/state";
-  import { createQuery } from "@tanstack/svelte-query";
-  import { api } from "$lib/api";
+  import { createCompetitionData } from "$lib/competition-data.svelte";
   import { sortByResult } from "$lib/results";
   import { cn } from "$lib/utils";
   import { Skeleton } from "$lib/components/ui/skeleton";
-  import type { Competition, CompetitionProperties } from "~/types/comp";
 
   type Attempt = {
     Line1?: string | null;
@@ -15,57 +14,26 @@
   };
 
   const slug = $derived(page.params.slug ?? "");
-  const compId = $derived(slug.split("-", 2)[0] ?? "");
-  const eventId = $derived(slug.split("-", 2)[1] ?? "");
+  const data = createCompetitionData(() => slug, "overlay");
   const selectedHeat = $derived(page.url.searchParams.get("heat"));
-  const selectedRound = $derived(page.url.searchParams.get("round"));
-
-  const athletesQuery = createQuery<Competition>(() => ({
-    queryKey: ["athletes", compId, eventId],
-    queryFn: () => api.getAthletes(`${compId}/${eventId}`),
-    enabled: Boolean(compId && eventId),
-    refetchInterval: 30000,
-    refetchIntervalInBackground: true,
-  }));
-
-  const detailsQuery = createQuery<CompetitionProperties>(() => ({
-    queryKey: ["competition-details", compId],
-    queryFn: () => api.getCompetitionDetails(compId),
-    enabled: Boolean(compId),
-  }));
-
-  const competition = $derived(athletesQuery.data ?? null);
-  const compDetails = $derived(detailsQuery.data ?? null);
-  const isLoading = $derived(athletesQuery.isPending);
-  const isError = $derived(athletesQuery.isError);
+  const competition = $derived(data.competition);
+  const compDetails = $derived(data.details);
+  const isLoading = $derived(data.isLoading);
+  const isError = $derived(data.isError);
 
   const eventCategory = $derived(competition?.EventCategory ?? "Field");
   const isTrack = $derived(
     eventCategory === "Track" || eventCategory === "Relay",
   );
 
-  const roundIndex = $derived((Number(selectedRound) || 1) - 1);
-  const rounds = $derived(competition?.Rounds?.[roundIndex]);
+  const selection = $derived(
+    selectOverlayRound(competition?.Rounds ?? [], page.url.searchParams),
+  );
+  const rounds = $derived(selection.round);
   const heats = $derived(rounds?.Heats ?? []);
-
-  const heatIndex = $derived.by(() => {
-    if (!selectedHeat) return null;
-
-    const raw = Number(selectedHeat) - 1;
-
-    return Number.isInteger(raw) ? raw : null;
-  });
-
-  const heatExists = $derived(
-    heatIndex !== null && heatIndex >= 0 && heatIndex < heats.length,
-  );
-
-  const heat = $derived(
-    heatExists && heatIndex !== null ? heats[heatIndex] : null,
-  );
-
+  const heatExists = $derived(Boolean(selection.heat));
   const allocations = $derived(
-    (selectedHeat ? (heat?.Allocations ?? []) : (rounds?.TotalResults ?? []))
+    selection.allocations
       .slice()
       .sort((a, b) => sortByResult(a, b, eventCategory)),
   );
@@ -89,7 +57,7 @@
   }
 </script>
 
-{#if !/^\d+-\d+$/.test(slug)}
+{#if !data.identity}
   <p class="bg-black/90 p-2 text-cyan-300">Virheellinen linkki</p>
 {:else if rounds && selectedHeat && !heatExists}
   <div class="flex min-h-screen items-center justify-center">
@@ -123,6 +91,10 @@
         <h4 class="px-2 uppercase">Tulos</h4>
       </div>
 
+      <div role="status" class="px-2 text-xs text-cyan-300">
+        {#if data.isRefreshError}Päivitys viivästyy. Näytetään viimeisimmät
+          saadut tulokset.{/if}
+      </div>
       {#if isError}
         <p class="px-2 py-1 text-cyan-600 text-xl">Failed to load</p>
       {:else if isLoading}

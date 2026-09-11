@@ -154,7 +154,7 @@ test("search API failure offers a retry", async ({ page }) => {
   await expect(page.getByRole("option", { name: /Test Games/ })).toBeVisible();
 });
 
-test("scheduled events start polling results when their status changes", async ({
+test("results poll every second before live status arrives", async ({
   page,
 }) => {
   let live = false;
@@ -186,10 +186,10 @@ test("scheduled events start polling results when their status changes", async (
   await expect(
     page.getByRole("button", { name: /100 m Loppukilpailu/ }),
   ).toBeVisible();
-  await page.clock.runFor(2000);
-  expect(resultRequests).toBe(1);
+  await page.clock.runFor(1000);
+  await expect.poll(() => resultRequests).toBeGreaterThan(1);
   live = true;
-  await page.clock.runFor(30000);
+  await page.clock.runFor(1000);
   await expect(page.getByText("Käynnissä", { exact: true })).toBeVisible();
   await page.clock.runFor(2000);
   await expect.poll(() => resultRequests).toBeGreaterThan(1);
@@ -501,3 +501,197 @@ test("drawer drag stays direct, settles at 280ms, and keyboard overrides inline 
   await page.keyboard.press("Escape");
   await expect(drawer).toHaveCount(0);
 });
+
+for (const path of ["/competition/1-10", "/obs/1-10"]) {
+  test(`new results appear on the next one-second refresh: ${path}`, async ({
+    page,
+  }) => {
+    let result = "10,20";
+    await page.route("**/live/v1/results/1/10", (route) =>
+      route.fulfill({
+        json: {
+          Name: "100 m",
+          EventCategory: "Track",
+          Enrollments: [],
+          Rounds: rounds.map((round) => ({
+            ...round,
+            TotalResults: [{ ...runners[1], Result: result }],
+            Heats: [
+              { Index: 1, Allocations: [{ ...runners[1], Result: result }] },
+            ],
+          })),
+        },
+      }),
+    );
+    await page.clock.install();
+    await page.goto(path);
+    if (path.startsWith("/competition/")) {
+      await page.getByRole("tab", { name: "Tulokset" }).click();
+    }
+    await expect(
+      page
+        .getByText("10,20", { exact: true })
+        .filter({ visible: true })
+        .first(),
+    ).toBeVisible();
+    result = "09,99";
+    await page.clock.runFor(1000);
+    await expect(
+      page
+        .getByText("09,99", { exact: true })
+        .filter({ visible: true })
+        .first(),
+    ).toBeVisible();
+  });
+}
+
+for (const path of ["/competition/1-10", "/obs/1-10"]) {
+  test(`refresh visibility policy: ${path}`, async ({ page }) => {
+    let requests = 0;
+    page.on("request", (request) => {
+      if (request.url().endsWith("/results/1/10")) requests++;
+    });
+    await page.clock.install();
+    await page.goto(path);
+    await expect(
+      page.getByText("Test Games", { exact: true }).first(),
+    ).toBeVisible();
+    await expect.poll(() => requests).toBe(1);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        value: "hidden",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await page.clock.runFor(1000);
+    if (path.startsWith("/obs/")) {
+      await expect.poll(() => requests).toBeGreaterThan(1);
+    } else {
+      expect(requests).toBe(1);
+      await page.evaluate(() => {
+        Object.defineProperty(document, "visibilityState", {
+          configurable: true,
+          value: "visible",
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+      await expect.poll(() => requests).toBeGreaterThan(1);
+    }
+  });
+}
+
+test("malformed competition and OBS links never fetch competition data", async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/live/v1/")) requests.push(request.url());
+  });
+  await page.clock.install();
+  for (const path of ["/competition/1-10-extra", "/obs/a-b"]) {
+    await page.goto(path);
+    await expect(
+      page.getByText("Virheellinen linkki", { exact: true }),
+    ).toBeVisible();
+    await page.clock.runFor(2000);
+  }
+  expect(requests).toEqual([]);
+});
+
+test("search remains usable with unavailable history storage and competition names containing slashes", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const getItem = Storage.prototype.getItem;
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.getItem = function (key) {
+      if (key === "livetila:recent-searches")
+        throw new Error("Storage disabled");
+      return getItem.call(this, key);
+    };
+    Storage.prototype.setItem = function (key, value) {
+      if (key === "livetila:recent-searches")
+        throw new Error("Storage disabled");
+      return setItem.call(this, key, value);
+    };
+  });
+  await page.route("**/live/v1/competition", (route) =>
+    route.fulfill({
+      json: [{ Id: 1, Name: "Test / Games", Date: "2026-09-09" }],
+    }),
+  );
+  await page.goto("/");
+  const input = page.getByRole("combobox");
+  await input.fill("Test");
+  await page.getByRole("option", { name: /Test \/ Games/ }).click();
+  await input.fill("Test / Games / 100");
+  await expect(page.getByRole("option")).toHaveCount(2);
+  await input.fill("Test / Games");
+  await expect(input).toHaveValue("");
+  await page.getByRole("option", { name: /Test \/ Games/ }).click();
+  await page.getByRole("option", { name: /Alkuerät/ }).click();
+  await expect(page).toHaveURL(/competition\/1-10\?round=Qualify/);
+});
+
+for (const path of ["/competition/1-10", "/obs/1-10"]) {
+  test(`refresh failure preserves loaded results and recovers: ${path}`, async ({
+    page,
+  }) => {
+    let fail = false;
+    let result = "10,20";
+    let failures = 0;
+    await page.route("**/live/v1/results/1/10", (route) => {
+      if (fail) {
+        failures++;
+        return route.fulfill({ status: 503, body: "Unavailable" });
+      }
+      return route.fulfill({
+        json: {
+          Name: "100 m",
+          EventCategory: "Track",
+          Enrollments: [],
+          Rounds: rounds.map((round) => ({
+            ...round,
+            TotalResults: [{ ...runners[1], Result: result }],
+            Heats: [
+              { Index: 1, Allocations: [{ ...runners[1], Result: result }] },
+            ],
+          })),
+        },
+      });
+    });
+    await page.clock.install();
+    await page.goto(path);
+    if (path.startsWith("/competition/"))
+      await page.getByRole("tab", { name: "Tulokset" }).click();
+    const score = (value: string) =>
+      page.getByText(value, { exact: true }).filter({ visible: true }).first();
+    await expect(score("10,20")).toBeVisible();
+    fail = true;
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      await page.clock.runFor(attempt === 1 ? 1000 : 4000);
+      await expect.poll(() => failures).toBeGreaterThanOrEqual(attempt);
+    }
+    await expect(
+      page.getByText(
+        "Päivitys viivästyy. Näytetään viimeisimmät saadut tulokset.",
+      ),
+    ).toBeVisible();
+    await expect(score("10,20")).toBeVisible();
+    if (path.startsWith("/competition/"))
+      await expect(page.getByRole("tab", { name: "Tulokset" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+    fail = false;
+    result = "09,99";
+    await page.clock.runFor(1000);
+    await expect(score("09,99")).toBeVisible();
+    await expect(
+      page.getByText(
+        "Päivitys viivästyy. Näytetään viimeisimmät saadut tulokset.",
+      ),
+    ).toHaveCount(0);
+  });
+}
