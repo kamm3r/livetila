@@ -56,9 +56,27 @@ export function parseResult(
 export function sortByResult<
   T extends {
     Result: string | null;
-    Attempts?: { Line1: string; Line2: string }[];
+    Attempts?: { Line1: string; Line2: string }[] | null;
+    HeatRank?: number;
+    ResultRank?: number;
   },
->(a: T, b: T, eventCategory: "Track" | "Field" | "Relay"): number {
+>(
+  a: T,
+  b: T,
+  eventCategory: "Track" | "Field" | "Relay",
+  rankKey: "HeatRank" | "ResultRank" = "ResultRank",
+): number {
+  // Official ranks include tie-breaks that the displayed result cannot express.
+  const rank = (value?: number) =>
+    typeof value === "number" && Number.isFinite(value) && value > 0
+      ? value
+      : Infinity;
+  const aRank = rank(a[rankKey]);
+  const bRank = rank(b[rankKey]);
+  if (aRank !== Infinity || bRank !== Infinity) {
+    return aRank - bRank;
+  }
+
   const aResult = parseResult(a.Result, eventCategory);
   const bResult = parseResult(b.Result, eventCategory);
 

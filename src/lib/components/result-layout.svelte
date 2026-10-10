@@ -13,7 +13,7 @@
   const sortedAllocs = $derived(
     ctx.currentHeat && ctx.heats.length > 0
       ? [...ctx.currentHeat.Allocations].sort((a, b) =>
-          sortByResult(a, b, eventCategory),
+          sortByResult(a, b, eventCategory, "HeatRank"),
         )
       : [],
   );
@@ -24,6 +24,10 @@
           sortByResult(a, b, eventCategory),
         )
       : [],
+  );
+  const showTotal = $derived(
+    sortedTotal.length > 0 &&
+      (ctx.heats.length > 1 || sortedAllocs.length === 0),
   );
 </script>
 
@@ -150,13 +154,13 @@
         </li>
       {/each}
     </ul>
-  {:else}
+  {:else if !showTotal}
     <Empty.Root>
       <Empty.Description>Tuloksia ei ole saatavilla vielä...</Empty.Description>
     </Empty.Root>
   {/if}
 
-  {#if ctx.heats.length > 1 && sortedTotal.length > 0}
+  {#if showTotal}
     <h3 class="scroll-m-20 font-semibold text-2xl tracking-tight">
       Kokonaistulokset
     </h3>
