@@ -695,3 +695,99 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
     ).toHaveCount(0);
   });
 }
+
+for (const heatCount of [0, 1]) {
+  test(`overall results remain visible with ${heatCount} empty heats`, async ({
+    page,
+  }) => {
+    await page.route("**/live/v1/results/**", (route) =>
+      route.fulfill({
+        json: {
+          Name: "100 m",
+          EventCategory: "Track",
+          Enrollments: [],
+          Rounds: [
+            {
+              ...rounds[1],
+              Heats: Array.from({ length: heatCount }, (_, i) => ({
+                Index: i + 1,
+                Allocations: [],
+              })),
+              TotalResults: runners,
+            },
+          ],
+        },
+      }),
+    );
+    await page.goto("/competition/1-10?round=Final");
+    await page.getByRole("tab", { name: "Tulokset" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Kokonaistulokset" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: "10,20", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Tuloksia ei ole saatavilla vielä..."),
+    ).toHaveCount(0);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByText("10,20", { exact: true }).last()).toBeVisible();
+  });
+}
+
+for (const path of [
+  "/competition/1-10?round=Final",
+  "/obs/1-10?heat=1",
+  "/obs/1-10",
+]) {
+  test(`official ranks resolve tied field results: ${path}`, async ({
+    page,
+  }) => {
+    const athletes = [
+      {
+        ...runners[0],
+        Name: "Heat Second",
+        Result: "6,50",
+        HeatRank: 2,
+        ResultRank: 1,
+      },
+      {
+        ...runners[1],
+        Name: "Heat Winner",
+        Result: "6,50",
+        HeatRank: 1,
+        ResultRank: 2,
+      },
+    ];
+    await page.route("**/live/v1/results/**", (route) =>
+      route.fulfill({
+        json: {
+          Name: "Long jump",
+          EventCategory: "Field",
+          Enrollments: [],
+          Rounds: [
+            {
+              ...rounds[1],
+              Heats: [{ Index: 1, Allocations: athletes }],
+              TotalResults: athletes,
+            },
+          ],
+        },
+      }),
+    );
+    await page.goto(path);
+    if (path.startsWith("/competition")) {
+      await page.getByRole("tab", { name: "Tulokset" }).click();
+      await expect(
+        page
+          .getByRole("tabpanel", { name: "Tulokset" })
+          .locator("tbody tr")
+          .first(),
+      ).toContainText("Heat Winner");
+    } else {
+      await expect(page.getByRole("listitem").first()).toContainText(
+        path.includes("heat=") ? "Heat Winner" : "Heat Second",
+      );
+    }
+  });
+}

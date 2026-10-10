@@ -35,7 +35,14 @@
   const allocations = $derived(
     selection.allocations
       .slice()
-      .sort((a, b) => sortByResult(a, b, eventCategory)),
+      .sort((a, b) =>
+        sortByResult(
+          a,
+          b,
+          eventCategory,
+          selectedHeat ? "HeatRank" : "ResultRank",
+        ),
+      ),
   );
 
   const MAX_ATTEMPTS = 6;

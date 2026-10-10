@@ -18,7 +18,7 @@
   >
     <Table.Header class="sticky top-0 backdrop-blur-md">
       <Table.Row>
-        <Table.Head class="text-muted-foreground text-xs"></Table.Head>
+        <Table.Head class="text-muted-foreground text-xs">Vahvistus</Table.Head>
         <Table.Head class="text-muted-foreground text-xs w-full"
           >Nimi ja Seura</Table.Head
         >
@@ -35,9 +35,14 @@
         >
           <Table.Cell>
             {#if enrollment.Confirmed}
-              <div class="flex size-5 items-center justify-center">
-                <CheckCircle class="size-3 text-white" />
-              </div>
+              <span
+                class="inline-flex items-center gap-1 text-xs text-green-800 dark:text-green-300"
+              >
+                <CheckCircle class="size-4 shrink-0" aria-hidden="true" />
+                Vahvistettu
+              </span>
+            {:else}
+              <span class="text-xs text-muted-foreground">Ei vahvistettu</span>
             {/if}
           </Table.Cell>
           <Table.Cell class="w-full">
@@ -80,6 +85,16 @@
             <p class="text-muted-foreground text-xs">
               {enrollment.Organization?.Name ?? "-"}
             </p>
+            {#if enrollment.Confirmed}
+              <span
+                class="mt-1 inline-flex items-center gap-1 text-xs text-green-800 dark:text-green-300"
+              >
+                <CheckCircle class="size-4 shrink-0" aria-hidden="true" />
+                Vahvistettu
+              </span>
+            {:else}
+              <p class="mt-1 text-xs text-muted-foreground">Ei vahvistettu</p>
+            {/if}
           </div>
           <div class="flex gap-3 text-xs opacity-70">
             <span>PB {enrollment.PB || "-"}</span>
