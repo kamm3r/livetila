@@ -18,7 +18,9 @@
   >
     <Table.Header class="sticky top-0 backdrop-blur-md">
       <Table.Row>
-        <Table.Head class="text-muted-foreground text-xs">Vahvistus</Table.Head>
+        <Table.Head class="text-muted-foreground text-xs">
+          <span class="sr-only">Vahvistus</span>
+        </Table.Head>
         <Table.Head class="text-muted-foreground text-xs w-full"
           >Nimi ja Seura</Table.Head
         >
@@ -39,10 +41,10 @@
                 class="inline-flex items-center gap-1 text-xs text-green-800 dark:text-green-300"
               >
                 <CheckCircle class="size-4 shrink-0" aria-hidden="true" />
-                Vahvistettu
+                <span class="sr-only">Vahvistettu</span>
               </span>
             {:else}
-              <span class="text-xs text-muted-foreground">Ei vahvistettu</span>
+              <span class="sr-only">Ei vahvistettu</span>
             {/if}
           </Table.Cell>
           <Table.Cell class="w-full">
@@ -90,10 +92,10 @@
                 class="mt-1 inline-flex items-center gap-1 text-xs text-green-800 dark:text-green-300"
               >
                 <CheckCircle class="size-4 shrink-0" aria-hidden="true" />
-                Vahvistettu
+                <span class="sr-only">Vahvistettu</span>
               </span>
             {:else}
-              <p class="mt-1 text-xs text-muted-foreground">Ei vahvistettu</p>
+              <span class="sr-only">Ei vahvistettu</span>
             {/if}
           </div>
           <div class="flex gap-3 text-xs opacity-70">
