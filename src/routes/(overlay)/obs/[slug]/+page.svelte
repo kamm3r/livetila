@@ -7,6 +7,7 @@
   import { sortByResult } from "$lib/results";
   import { cn } from "$lib/utils";
   import { Skeleton } from "$lib/components/ui/skeleton";
+  import AthleteBadge from "$lib/components/athlete-badge.svelte";
 
   type Attempt = {
     Line1?: string | null;
@@ -126,9 +127,14 @@
               }}
               class="flex flex-wrap justify-between border-black/50 border-t-2"
             >
-              <div class="flex flex-[1_1_100%] justify-between px-4 py-1">
-                {a.Name}
-                <span class="tabular-nums">{a.Result}</span>
+              <div
+                class="flex flex-[1_1_100%] items-center justify-between gap-2 px-4 py-1"
+              >
+                <span class="flex min-w-0 items-center gap-2">
+                  <AthleteBadge entry={a} />
+                  <span>{a.Name}</span>
+                </span>
+                <span class="shrink-0 tabular-nums">{a.Result}</span>
               </div>
 
               {#if !isTrack}

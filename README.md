@@ -9,6 +9,8 @@ Live athletics results and OBS streaming overlays powered by the public Tuloslis
 - Refresh results and event status every second while viewing a competition, regardless of its reported status.
 - Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every second, including in the background.
 - Responsive layouts, light/dark/system themes, and haptic feedback on supported devices.
+- Open SFIM points and results from the navbar beside the theme switcher.
+- Athlete club logos from Tilastopaja and country flags for foreign athletes in entrants, start lists, results and OBS overlays. Unavailable images are hidden.
 
 ## Development
 
@@ -70,6 +72,10 @@ For example, an nginx location can use `try_files $uri $uri/ /index.html;`. This
 On Vercel, the committed `vercel.json` overrides the old Next.js preset with `Other`, runs `pnpm build`, serves `build/`, and supplies the SPA fallback. Existing static assets take precedence over the fallback. No dashboard framework change is required for this branch. Use Node.js 24 in the Vercel project settings. If retrying a deployment manually, deploy the latest migration commit rather than an older Next.js-configured commit.
 
 API requests run directly in the browser against `https://cached-public-api.tuloslista.com/live/v1`, so the upstream service must be reachable and permit cross-origin requests. There is no application server or tRPC layer.
+
+Club logos load from Tilastopaja's `https://www.tilastopaja.info/fi/db/pics/png/` directory. The lookup in `src/lib/club-logos.ts` resolves club names and abbreviations against 295 verified filenames from [Tilastopaja's Seuraliiga 2026 directory](https://www.tilastopaja.fi/seurakilpailut/seuraliiga/2026/kaikki), stored in `src/lib/data/club-logos.json`. This handles differences such as `IFÅsar` → `IFÅsarna`, `KUNPIR` → `KuntoP`, and capitalization mismatches. Clubs absent from the snapshot fall back to the API's abbreviation (`Organization.NameShort`). To add a club or update its filename, edit the JSON mapping; abbreviation aliases belong in `club-logos.ts`.
+
+Country flags load from Flagcdn using normalized nationality codes; Finnish athletes use their club logo, and mixed-nationality relay teams keep their club identity. Both image sources are external, and missing images do not prevent viewing results.
 
 ## Stack and structure
 
