@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { buttonVariants } from "$lib/components/ui/button";
   import * as Popover from "$lib/components/ui/popover";
-  import { Calendar, Clock } from "@lucide/svelte";
+  import { Calendar, ChevronsUpDown, Clock } from "@lucide/svelte";
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy } from "svelte";
   import { goto } from "$app/navigation";
@@ -78,35 +77,25 @@
 
 <Popover.Root bind:open>
   <Popover.Trigger
-    class={cn(
-      buttonVariants({ variant: "outline" }),
-      "h-auto px-4 py-2 w-full sm:w-[400px]",
-    )}
+    class="motion-control -ml-2 inline-flex h-9 min-w-0 max-w-full items-center gap-1.5 rounded-md px-2 text-[15px] hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
   >
     {#if currentEvent}
-      <div class="flex w-full items-center justify-between gap-2">
-        <div class="flex flex-col gap-2">
-          <span>{currentEvent.EventName} {currentEvent.Name}</span>
-          <Badge variant={statusVariants[currentEvent.Status] || "default"}>
-            {eventStatusLabel[currentEvent.Status] || currentEvent.Status}
-          </Badge>
-        </div>
-        <div
-          class="flex min-w-[90px] flex-col items-end gap-2 text-muted-foreground text-xs"
-        >
-          <span class="flex items-center gap-1"
-            >{formatTime(currentEvent.BeginDateTimeWithTZ)}
-            <Clock class="size-3" /></span
-          >
-          <span class="flex items-center gap-1"
-            >{currentEvent.date} <Calendar class="size-3" /></span
-          >
-        </div>
-      </div>
+      <span class="truncate font-semibold sm:overflow-visible"
+        >{currentEvent.EventName}</span
+      >
+      <span class="truncate text-muted-foreground sm:overflow-visible"
+        >{currentEvent.Name}</span
+      >
+    {:else}
+      <span class="truncate font-semibold">Valitse laji</span>
     {/if}
+    <ChevronsUpDown
+      class="size-3.5 shrink-0 text-muted-foreground"
+      aria-hidden="true"
+    />
   </Popover.Trigger>
   <Popover.Content
-    class="w-[var(--bits-popover-anchor-width)] max-h-96 overflow-auto p-1"
+    class="max-h-96 w-[min(400px,calc(100vw-2rem))] overflow-auto p-1"
     align="start"
   >
     {#each sortedEvents as event, i (`${event.Id}-${event.BeginDateTimeWithTZ}`)}

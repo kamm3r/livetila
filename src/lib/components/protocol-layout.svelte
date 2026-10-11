@@ -2,8 +2,9 @@
   import * as Table from "$lib/components/ui/table";
   import * as ToggleGroup from "$lib/components/ui/toggle-group";
   import * as Empty from "$lib/components/ui/empty";
-  import { Badge } from "$lib/components/ui/badge";
   import { getRoundContext } from "./round-provider.svelte";
+  import AthleteIdentity from "./athlete-identity.svelte";
+  import AthleteBadge from "./athlete-badge.svelte";
 
   let {
     isTrack = false,
@@ -46,7 +47,7 @@
             >{isTrack ? "Rata" : "Järjestys"}</Table.Head
           >
           <Table.Head class="text-muted-foreground text-xs w-full"
-            >Nimi ja Seura</Table.Head
+            >Nimi ja seura</Table.Head
           >
           <Table.Head class="text-muted-foreground text-xs">PB</Table.Head>
           <Table.Head class="text-muted-foreground text-xs">SB</Table.Head>
@@ -56,45 +57,34 @@
         {#each heatAllocs as alloc (alloc.Id)}
           <Table.Row>
             <Table.Cell><span>{alloc.Position || ""}</span></Table.Cell>
-            <Table.Cell class="w-full">
-              <div class="flex flex-col">
-                <div class="flex items-center">
-                  {#if alloc.Number}
-                    <Badge class="mr-2 bg-primary/10 text-primary"
-                      >{alloc.Number}</Badge
-                    >
-                  {/if}
-                  <span class="font-medium">{alloc.Name}</span>
-                </div>
-                <div class="mt-1 text-muted-foreground text-xs">
-                  {alloc.Organization?.Name ?? "-"}
-                </div>
-              </div>
+            <Table.Cell class="relative isolate w-full overflow-hidden pr-16">
+              <AthleteBadge entry={alloc} kind="club" watermark="row" />
+              <AthleteIdentity entry={alloc} showNumber />
             </Table.Cell>
             <Table.Cell
               ><span class="font-medium">{alloc.PB || "-"}</span></Table.Cell
             >
             <Table.Cell
               ><span class="font-medium">{alloc.SB || "-"}</span></Table.Cell
-            >
-          </Table.Row>
+            ></Table.Row
+          >
         {/each}
       </Table.Body>
     </Table.Root>
     <ul class="flex flex-col gap-3 lg:hidden">
       {#each heatAllocs as alloc (alloc.Id)}
-        <li class="rounded-xl border bg-card px-3 py-3 shadow-sm">
-          <div class="flex items-start gap-3">
+        <li
+          class="relative isolate overflow-hidden rounded-xl border bg-card px-3 py-3 shadow-sm"
+        >
+          <AthleteBadge entry={alloc} kind="club" watermark="card" />
+          <div class="relative z-10 flex items-start gap-3">
             <div
               class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-medium text-muted-foreground"
             >
               {alloc.Position || "-"}
             </div>
             <div class="min-w-0 flex-1">
-              <span class="truncate font-medium text-sm">{alloc.Name}</span>
-              <p class="mt-0.5 text-muted-foreground text-xs">
-                {alloc.Organization?.Name ?? "-"}
-              </p>
+              <AthleteIdentity entry={alloc} mobile />
               <div class="mt-1 flex gap-3 text-xs text-muted-foreground">
                 <span>PB {alloc.PB || "-"}</span>
                 <span>SB {alloc.SB || "-"}</span>

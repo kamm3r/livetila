@@ -1,8 +1,11 @@
 <script lang="ts">
   import { selectCompetitionRound } from "$lib/competition-selection";
   import { page } from "$app/state";
+  import { replaceState } from "$app/navigation";
   import { ClipboardList, Trophy, Users } from "@lucide/svelte";
+  import { createQuery } from "@tanstack/svelte-query";
   import ObsPopover from "$lib/components/obs-popover.svelte";
+  import LiveIndicator from "$lib/components/live-indicator.svelte";
   import EventSwitcher from "$lib/components/event-switcher.svelte";
   import RoundSwitcher from "$lib/components/round-switcher.svelte";
   import TabsWithHaptics from "$lib/components/tabs-haptics.svelte";
@@ -11,7 +14,10 @@
   import ProtocolLayout from "$lib/components/protocol-layout.svelte";
   import ResultLayout from "$lib/components/result-layout.svelte";
   import { Skeleton } from "$lib/components/ui/skeleton";
-  import { createCompetitionData } from "$lib/competition-data.svelte";
+  import {
+    competitionQueries,
+    createCompetitionData,
+  } from "$lib/competition-data.svelte";
   import { findSelectedEvent } from "$lib/competition-selection";
 
   const slug = $derived(page.params.slug ?? "");
@@ -33,6 +39,81 @@
     selectedEvent?.Category === "Track" || selectedEvent?.Category === "Relay",
   );
   const isLoading = $derived(data.isLoading);
+
+  // The venue is only listed in the competition index. It is optional, so it
+  // never delays or blocks the page.
+  const competitions = createQuery(() => ({
+    ...competitionQueries.competitions(),
+    enabled: data.identity !== null,
+  }));
+  const venue = $derived(
+    competitions.data?.find((comp) => String(comp.Id) === compId)?.Stadion
+      ?.Name,
+  );
+  const competitionDate = $derived.by(() => {
+    const date = new Date(compDetails?.Competition.BeginDate ?? "");
+    return Number.isNaN(date.getTime())
+      ? null
+      : date.toLocaleDateString("fi-FI");
+  });
+  const subline = $derived(
+    [competitionDate, venue].filter(Boolean).join(" · "),
+  );
+  const eventTime = $derived.by(() => {
+    const date = new Date(selectedEvent?.BeginDateTimeWithTZ ?? "");
+    return Number.isNaN(date.getTime())
+      ? null
+      : date.toLocaleTimeString("fi-FI", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+  });
+
+  // Open on the tab most relevant to the event's progress unless the link
+  // names one explicitly.
+  const tabs = ["participants", "protocol", "results"] as const;
+  const statusTab: Record<string, (typeof tabs)[number]> = {
+    Unallocated: "participants",
+    Allocated: "protocol",
+    Progress: "results",
+    Official: "results",
+  };
+  const initialTab = $derived.by(() => {
+    const fromUrl = page.url.searchParams.get("tab");
+    if (tabs.some((tab) => tab === fromUrl)) return fromUrl!;
+    return statusTab[selectedEvent?.Status ?? ""] ?? "participants";
+  });
+
+  function handleTabChange(tab: string) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tab);
+    replaceState(url, page.state);
+  }
+  const statusLabel: Record<string, string> = {
+    Unallocated: "Eräjaot puuttuvat",
+    Allocated: "Eräjaot tehty",
+    Official: "Tulokset valmiit",
+  };
+  const isLive = $derived(selectedEvent?.Status === "Progress");
+  const eventMeta = $derived(
+    [
+      !isLive && selectedEvent ? statusLabel[selectedEvent.Status] : null,
+      eventTime,
+      selectedEvent?.date,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+  );
+
+  const allocations = $derived(
+    selectedRound?.Heats.flatMap((heat) => heat.Allocations) ?? [],
+  );
+  const resultCount = $derived(
+    allocations.filter((entry) => entry.Result).length ||
+      (selectedRound?.TotalResults ?? []).filter((entry) => entry.Result)
+        .length,
+  );
+
   const error = $derived(
     data.isError ? "Kilpailutietojen lataaminen epäonnistui" : null,
   );
@@ -68,52 +149,80 @@
       <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
     </div>
   {:else if competition}
-    <div role="status" class="text-sm text-muted-foreground">
-      {#if data.isRefreshError}Päivitys viivästyy. Näytetään viimeisimmät saadut
-        tulokset.{/if}
-    </div>
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-col items-start gap-3">
-        <h2
-          class="scroll-m-20 border-b pb-2 font-semibold text-2xl tracking-tight first:mt-0 sm:text-3xl"
-        >
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
+        <h2 class="font-semibold text-xl tracking-tight sm:text-[22px]">
           {compDetails?.Competition.Name ?? ""}
         </h2>
-        <EventSwitcher
-          competitionId={compId}
-          currentEventId={eventId}
-          events={compEvents}
-          roundFromUrl={selectedRound?.RoundTypeCategory}
-        />
+        {#if subline}
+          <p class="text-muted-foreground text-xs sm:text-[13px]">
+            {subline}
+          </p>
+        {/if}
       </div>
 
       {#key slug}
         <RoundProvider rounds={competition.Rounds} roundCategory={roundFromUrl}>
-          <div
-            class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
-          >
-            <RoundSwitcher />
-            <ObsPopover slug={`${compId}-${eventId}`} />
+          <!-- Mobile: switcher and OBS on one line, status and rounds below. -->
+          <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
+            <div class="order-1 min-w-0 max-sm:flex-1 sm:shrink-0">
+              <EventSwitcher
+                competitionId={compId}
+                currentEventId={eventId}
+                events={compEvents}
+                roundFromUrl={selectedRound?.RoundTypeCategory}
+              />
+            </div>
+            <div class="order-2 sm:order-9">
+              <ObsPopover slug={`${compId}-${eventId}`} />
+            </div>
+            <div class="order-3 basis-full sm:hidden"></div>
+            <span
+              class="hidden h-4.5 w-px bg-border sm:order-4 sm:block"
+              aria-hidden="true"
+            ></span>
+            <div class="order-5 empty:hidden">
+              <LiveIndicator
+                live={isLive}
+                failingSince={data.refreshFailingSince}
+              />
+            </div>
+            {#if eventMeta}
+              <span
+                class="order-6 text-muted-foreground text-xs tabular-nums sm:text-[13px]"
+                >{eventMeta}</span
+              >
+            {/if}
+            <div class="order-7 flex-1"></div>
+            <div class="order-8">
+              <RoundSwitcher />
+            </div>
           </div>
 
           <TabsWithHaptics
-            defaultValue="participants"
+            defaultValue={initialTab}
+            onValueChange={handleTabChange}
             tabs={[
               {
                 value: "participants",
                 label: "Ilmoittautuneet",
+                shortLabel: "Ilmoitt.",
+                count: competition.Enrollments.length,
                 icon: usersIcon,
                 content: participantsContent,
               },
               {
                 value: "protocol",
                 label: "Pöytäkirjat",
+                shortLabel: "Pöytäk.",
+                count: allocations.length,
                 icon: clipboardIcon,
                 content: protocolContent,
               },
               {
                 value: "results",
                 label: "Tulokset",
+                count: resultCount,
                 icon: trophyIcon,
                 content: resultsContent,
               },
@@ -146,5 +255,5 @@
 {/snippet}
 
 {#snippet resultsContent()}
-  <ResultLayout eventCategory={competition!.EventCategory} />
+  <ResultLayout eventCategory={competition!.EventCategory} live={isLive} />
 {/snippet}

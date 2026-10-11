@@ -98,3 +98,77 @@ export function sortByResult<
 
   return 0;
 }
+
+const isTimed = (eventCategory: "Track" | "Field" | "Relay") =>
+  eventCategory === "Track" || eventCategory === "Relay";
+
+// Gap to the leading result, in the leader's own notation: "−0.13" for field
+// marks and "+0,13" (seconds) for times. The leader itself gets "—".
+export function gapToLeader(
+  result: string | null,
+  leader: string | null,
+  eventCategory: "Track" | "Field" | "Relay",
+): string | null {
+  const value = parseResult(result, eventCategory);
+  const best = parseResult(leader, eventCategory);
+  if (value <= 0 || best <= 0) return null;
+  if (value === best) return "—";
+  const timed = isTimed(eventCategory);
+  const diff = timed ? (value - best) / 1000 : best - value;
+  const separator = timed || leader?.includes(",") ? "," : ".";
+  return `${timed ? "+" : "−"}${diff.toFixed(2).replace(".", separator)}`;
+}
+
+// Whether a result equals or improves the athlete's personal or season best.
+export function recordTag(
+  entry: { Result: string | null; PB?: string | null; SB?: string | null },
+  eventCategory: "Track" | "Field" | "Relay",
+): "PB" | "SB" | null {
+  const value = parseResult(entry.Result, eventCategory);
+  if (value <= 0) return null;
+  const reaches = (record?: string | null) => {
+    const target = parseResult(record ?? null, eventCategory);
+    if (target <= 0) return false;
+    return isTimed(eventCategory) ? value <= target : value >= target;
+  };
+  if (reaches(entry.PB)) return "PB";
+  if (reaches(entry.SB)) return "SB";
+  return null;
+}
+
+type OrderedEntry = {
+  Position?: number;
+  Attempts?: { Line1: string; Line2: string }[] | null;
+};
+
+export const attemptCount = (entry: OrderedEntry) =>
+  entry.Attempts?.filter((attempt) => attempt.Line1).length ?? 0;
+
+// Vertical jumps record attempts per height ("XO"), so turn order does not
+// follow the horizontal round structure.
+const VERTICAL_MARKS = /^[xo–-]+$/i;
+export const isVerticalJump = (entries: OrderedEntry[]) =>
+  entries.some((entry) =>
+    entry.Attempts?.some((attempt) => VERTICAL_MARKS.test(attempt.Line2)),
+  );
+
+// Infers the previous and next athlete from the starting order. Finals often
+// reorder athletes by rank after the third round and the API does not expose
+// the new order, so nothing is inferred beyond that point.
+export function turnOrder<T extends OrderedEntry>(
+  entries: T[],
+): { previous: T | null; next: T | null } {
+  const none = { previous: null, next: null };
+  if (entries.length === 0 || isVerticalJump(entries)) return none;
+  const order = [...entries].sort(
+    (a, b) => (a.Position ?? 0) - (b.Position ?? 0),
+  );
+  const round = Math.max(...order.map(attemptCount));
+  if (round === 0 || round > 3) return none;
+  const done = order.filter((entry) => attemptCount(entry) === round);
+  // Athletes more than one attempt behind have most likely withdrawn.
+  const waiting = order.filter((entry) => attemptCount(entry) === round - 1);
+  const previous = done.at(-1) ?? null;
+  if (waiting.length > 0) return { previous, next: waiting[0] ?? null };
+  return { previous, next: round < 3 ? (order[0] ?? null) : null };
+}

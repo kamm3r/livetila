@@ -190,7 +190,7 @@ test("results poll every second before live status arrives", async ({
   await expect.poll(() => resultRequests).toBeGreaterThan(1);
   live = true;
   await page.clock.runFor(1000);
-  await expect(page.getByText("Käynnissä", { exact: true })).toBeVisible();
+  await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
   await page.clock.runFor(2000);
   await expect.poll(() => resultRequests).toBeGreaterThan(1);
 });
@@ -668,16 +668,21 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
     const score = (value: string) =>
       page.getByText(value, { exact: true }).filter({ visible: true }).first();
     await expect(score("10,20")).toBeVisible();
+    const delayNotice = page.getByText(
+      path.startsWith("/obs/")
+        ? "Päivitys viivästyy. Näytetään viimeisimmät saadut tulokset."
+        : "Päivitys viivästyy",
+      { exact: true },
+    );
     fail = true;
     for (let attempt = 1; attempt <= 4; attempt++) {
       await page.clock.runFor(attempt === 1 ? 1000 : 4000);
       await expect.poll(() => failures).toBeGreaterThanOrEqual(attempt);
+      // The app only warns once data has gone unrefreshed for a while.
+      if (attempt === 1 && path.startsWith("/competition/"))
+        await expect(delayNotice).toHaveCount(0);
     }
-    await expect(
-      page.getByText(
-        "Päivitys viivästyy. Näytetään viimeisimmät saadut tulokset.",
-      ),
-    ).toBeVisible();
+    await expect(delayNotice).toBeVisible();
     await expect(score("10,20")).toBeVisible();
     if (path.startsWith("/competition/"))
       await expect(page.getByRole("tab", { name: "Tulokset" })).toHaveAttribute(
@@ -688,11 +693,7 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
     result = "09,99";
     await page.clock.runFor(1000);
     await expect(score("09,99")).toBeVisible();
-    await expect(
-      page.getByText(
-        "Päivitys viivästyy. Näytetään viimeisimmät saadut tulokset.",
-      ),
-    ).toHaveCount(0);
+    await expect(delayNotice).toHaveCount(0);
   });
 }
 
@@ -791,3 +792,259 @@ for (const path of [
     }
   });
 }
+
+for (const path of ["/competition/1-10?round=Final", "/obs/1-10?heat=1"]) {
+  test(`athlete club logos and foreign flags render and survive refresh: ${path}`, async ({
+    page,
+  }) => {
+    const athletes = runners.map((runner, i) => ({
+      ...runner,
+      Organization: { Name: "Nakkilan Vire", NameShort: "NakkVire", Id: 51 },
+      Athletes: [{ Nationality: i === 0 ? "FIN" : "SWE" }],
+    }));
+    await page.route("https://www.tilastopaja.info/**", (route) =>
+      route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="20"><rect width="24" height="20" fill="blue"/></svg>',
+      }),
+    );
+    await page.route("https://flagcdn.com/**", (route) =>
+      route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="20"><rect width="24" height="20" fill="yellow"/></svg>',
+      }),
+    );
+    await page.route("**/live/v1/results/**", (route) =>
+      route.fulfill({
+        json: {
+          Name: "100 m",
+          EventCategory: "Track",
+          Enrollments: athletes,
+          Rounds: [
+            {
+              ...rounds[1],
+              Heats: [{ Index: 1, Allocations: athletes }],
+              TotalResults: athletes,
+            },
+          ],
+        },
+      }),
+    );
+    await page.goto(path);
+    if (path.startsWith("/competition")) {
+      for (const tab of ["Ilmoittautuneet", "Pöytäkirjat", "Tulokset"]) {
+        await page.getByRole("tab", { name: tab }).click();
+        const panel = page.getByRole("tabpanel", { name: tab });
+        await expect(
+          panel.locator('img[src*="NakkVire.png"]').first(),
+        ).toBeVisible();
+        await expect(
+          panel.getByRole("img", { name: "Ruotsi" }).first(),
+        ).toBeVisible();
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(
+        page
+          .getByRole("tabpanel", { name: "Tulokset" })
+          .getByRole("img", { name: "Ruotsi" })
+          .last(),
+      ).toBeVisible();
+    } else {
+      await expect(
+        page.getByRole("img", { name: "Nakkilan Vire" }),
+      ).toBeVisible();
+      await expect(page.getByRole("img", { name: "Ruotsi" })).toBeVisible();
+    }
+    const logo = page.locator('img[src*="NakkVire.png"]:visible');
+    await logo.dispatchEvent("error");
+    await expect(logo).toHaveCount(0);
+    await expect(
+      page.getByText("Slow Runner", { exact: true }).last(),
+    ).toBeVisible();
+    await page.waitForResponse("**/live/v1/results/**");
+    await expect(page.locator('img[src*="NakkVire.png"]:visible')).toHaveCount(
+      0,
+    );
+    await expect(
+      page.getByText("Slow Runner", { exact: true }).last(),
+    ).toBeVisible();
+  });
+}
+
+test("confirmation heading and checkmark stay visible while status labels are screen-reader-only", async ({
+  page,
+}) => {
+  await page.route("**/live/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "100 m",
+        EventCategory: "Track",
+        Rounds: rounds,
+        Enrollments: [
+          { ...runners[0], Confirmed: true },
+          { ...runners[1], Confirmed: false },
+        ],
+      },
+    }),
+  );
+  await page.goto("/competition/1-10?round=Final&tab=participants");
+  await expect(page.getByText("Vahvistus", { exact: true })).toHaveCSS(
+    "position",
+    "static",
+  );
+  const table = page
+    .getByRole("tabpanel", { name: "Ilmoittautuneet" })
+    .getByRole("table");
+  await expect(table.locator("tbody tr").first().locator("svg")).toBeVisible();
+  await expect(table.getByText("Vahvistettu", { exact: true })).toHaveClass(
+    "sr-only",
+  );
+  await expect(table.getByText("Ei vahvistettu", { exact: true })).toHaveClass(
+    "sr-only",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  const participants = page.getByRole("tabpanel", { name: "Ilmoittautuneet" });
+  await expect(
+    participants.getByRole("listitem").first().locator("svg"),
+  ).toBeVisible();
+});
+
+for (const [status, tab] of [
+  ["Unallocated", "Ilmoittautuneet"],
+  ["Allocated", "Pöytäkirjat"],
+  ["Progress", "Tulokset"],
+  ["Official", "Tulokset"],
+] as const) {
+  test(`competition opens on the tab matching event status: ${status}`, async ({
+    page,
+  }) => {
+    await page.route("**/live/v1/competition/1", (route) =>
+      route.fulfill({
+        json: {
+          "09.09.2026": events["09.09.2026"].map((event) => ({
+            ...event,
+            Status: status,
+          })),
+        },
+      }),
+    );
+    await page.goto("/competition/1-10?round=Final");
+    await expect(page.getByRole("tab", { name: tab })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+}
+
+test("chosen tab is kept in the URL across reloads and round changes", async ({
+  page,
+}) => {
+  await page.goto("/competition/1-10?round=Qualify");
+  await page.getByRole("tab", { name: "Pöytäkirjat" }).click();
+  await expect(page).toHaveURL(/tab=protocol/);
+  await page.reload();
+  await expect(page.getByRole("tab", { name: "Pöytäkirjat" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await page.getByRole("button", { name: "Loppukilpailu" }).click();
+  await expect(page).toHaveURL(
+    /round=Final.*tab=protocol|tab=protocol.*round=Final/,
+  );
+  await expect(page.getByRole("tab", { name: "Pöytäkirjat" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});
+
+test("field results show aligned attempts, records, gaps and live changes", async ({
+  page,
+}) => {
+  const jumper = (
+    id: number,
+    name: string,
+    marks: string[],
+    result: string,
+    rank: number,
+  ) => ({
+    ...runners[0],
+    Id: id,
+    Name: name,
+    Position: id,
+    Result: result,
+    HeatRank: rank,
+    ResultRank: rank,
+    PB: id === 2 ? "7,50" : "",
+    Attempts: marks.map((Line1) => ({ Line1, Line2: "" })),
+  });
+  let athletes = [
+    jumper(1, "First Jumper", ["7,10", "7,40"], "7,40", 1),
+    jumper(2, "Second Jumper", ["7,20", "x"], "7,20", 2),
+  ];
+  await page.route("**/live/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "Long jump",
+        EventCategory: "Field",
+        Enrollments: [],
+        Rounds: [
+          {
+            ...rounds[1],
+            Heats: [{ Index: 1, Allocations: athletes }],
+            TotalResults: athletes,
+          },
+        ],
+      },
+    }),
+  );
+  await page.clock.install();
+  await page.goto("/competition/1-10?round=Final");
+  const panel = page.getByRole("tabpanel", { name: "Tulokset" });
+  const table = panel.getByRole("table");
+  const latest = panel.getByRole("status");
+  await expect(table.getByRole("columnheader")).toHaveText([
+    "Sija",
+    "Seuran logo",
+    "Urheilija",
+    "Seura",
+    "1",
+    "2",
+    "Tulos",
+    "Ero",
+  ]);
+  const first = table.locator("tbody tr").first();
+  const second = table.locator("tbody tr").nth(1);
+  await expect(first.locator("td").nth(-2)).toHaveText("7,40");
+  await expect(first.locator("td").last()).toHaveText("—");
+  await expect(second.locator("td").last()).toHaveText("−0,20");
+  await expect(first).not.toHaveAttribute("data-changed");
+  // Round 2 is complete, so the first athlete in order starts round 3.
+  await expect(latest).toContainText("Second Jumper");
+  await expect(latest).toContainText("Seuraavana");
+  await expect(latest).toContainText("First Jumper");
+
+  athletes = [
+    jumper(1, "First Jumper", ["7,10", "7,40", "x"], "7,40", 1),
+    jumper(2, "Second Jumper", ["7,20", "x"], "7,20", 2),
+  ];
+  await page.clock.runFor(1000);
+  await expect(latest).toContainText(/Viimeisin.*First Jumper.*x/);
+  await expect(latest).toContainText(/Seuraavana.*Second Jumper/);
+
+  athletes = [
+    jumper(2, "Second Jumper", ["7,20", "x", "7,55"], "7,55", 1),
+    jumper(1, "First Jumper", ["7,10", "7,40", "x"], "7,40", 2),
+  ];
+  await page.clock.runFor(1000);
+  await expect(table.getByRole("columnheader")).toHaveCount(9);
+  await expect(first).toContainText("Second Jumper");
+  await expect(first).toHaveAttribute("data-changed");
+  await expect(first).toContainText("Noussut 1 sijaa");
+  await expect(first.locator("td").nth(-2)).toHaveText(/^7,55\s*PB\s*Ennätys$/);
+  await expect(second.locator("td").last()).toHaveText("−0,15");
+  await expect(latest).toContainText("▲ sijalle 1");
+  // After the third round the order may change, so no next athlete is shown.
+  await expect(latest).not.toContainText("Seuraavana");
+  await page.clock.runFor(5000);
+  await expect(first).not.toHaveAttribute("data-changed");
+});

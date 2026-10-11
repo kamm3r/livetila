@@ -192,6 +192,28 @@ html[data-input="pointer"] .motion-control:active:not(:disabled) {
   box-shadow: none;
 }
 
+/* Underline variant: the sliding indicator becomes a 2px bar under the
+   active tab. Desktop tabs keep equal widths but no longer fill the row. */
+.motion-tabs-underline .motion-tab-indicator {
+  inset-block: auto;
+  bottom: -1px;
+  left: 0;
+  width: calc(100% / var(--tab-count));
+  height: 2px;
+  border-radius: 0;
+  background: var(--primary);
+  box-shadow: none;
+  z-index: 1;
+}
+
+@media (min-width: 640px) {
+  .motion-tabs-underline {
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+  }
+}
+
 .motion-copy-icon {
   position: absolute;
   inset: 0;

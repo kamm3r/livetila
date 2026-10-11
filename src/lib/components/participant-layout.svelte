@@ -2,8 +2,9 @@
   import { CheckCircle } from "@lucide/svelte";
   import * as Table from "$lib/components/ui/table";
   import * as Empty from "$lib/components/ui/empty";
-  import { Badge } from "$lib/components/ui/badge";
   import type { Enrollment } from "~/types/comp";
+  import AthleteIdentity from "./athlete-identity.svelte";
+  import AthleteBadge from "./athlete-badge.svelte";
 
   let {
     enrollments = [],
@@ -18,11 +19,9 @@
   >
     <Table.Header class="sticky top-0 backdrop-blur-md">
       <Table.Row>
-        <Table.Head class="text-muted-foreground text-xs">
-          <span class="sr-only">Vahvistus</span>
-        </Table.Head>
+        <Table.Head class="text-muted-foreground text-xs">Vahvistus</Table.Head>
         <Table.Head class="text-muted-foreground text-xs w-full"
-          >Nimi ja Seura</Table.Head
+          >Nimi ja seura</Table.Head
         >
         <Table.Head class="text-muted-foreground text-xs">PB</Table.Head>
         <Table.Head class="text-muted-foreground text-xs">SB</Table.Head>
@@ -47,46 +46,31 @@
               <span class="sr-only">Ei vahvistettu</span>
             {/if}
           </Table.Cell>
-          <Table.Cell class="w-full">
-            <div class="flex flex-col">
-              <div class="flex items-center">
-                {#if enrollment.Number}
-                  <Badge class="mr-2 bg-primary/10 text-primary"
-                    >{enrollment.Number}</Badge
-                  >
-                {/if}
-                <span class="font-medium">{enrollment.Name}</span>
-              </div>
-              <div class="mt-1 text-muted-foreground text-xs">
-                {enrollment.Organization?.Name ?? "-"}
-              </div>
-            </div>
+          <Table.Cell class="relative isolate w-full overflow-hidden pr-16">
+            <AthleteBadge entry={enrollment} kind="club" watermark="row" />
+            <AthleteIdentity entry={enrollment} showNumber />
           </Table.Cell>
           <Table.Cell
             ><span class="font-medium">{enrollment.PB || "-"}</span></Table.Cell
           >
           <Table.Cell
             ><span class="font-medium">{enrollment.SB || "-"}</span></Table.Cell
-          >
-        </Table.Row>
+          ></Table.Row
+        >
       {/each}
     </Table.Body>
   </Table.Root>
   <ul class="flex flex-col gap-4 lg:hidden">
     {#each enrollments as enrollment (enrollment.Id)}
       <li
-        class="rounded-xl border bg-card px-3 py-3 shadow-sm sm:px-4 sm:py-4 {enrollment.Confirmed
+        class="relative isolate overflow-hidden rounded-xl border bg-card px-3 py-3 shadow-sm sm:px-4 sm:py-4 {enrollment.Confirmed
           ? 'bg-green-300/10'
           : ''}"
       >
-        <div class="flex flex-col gap-2">
+        <AthleteBadge entry={enrollment} kind="club" watermark="card" />
+        <div class="relative z-10 flex flex-col gap-2">
           <div>
-            <h3 class="font-semibold text-sm sm:text-base">
-              {enrollment.Name}
-            </h3>
-            <p class="text-muted-foreground text-xs">
-              {enrollment.Organization?.Name ?? "-"}
-            </p>
+            <AthleteIdentity entry={enrollment} mobile />
             {#if enrollment.Confirmed}
               <span
                 class="mt-1 inline-flex items-center gap-1 text-xs text-green-800 dark:text-green-300"

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy } from "svelte";
-  import { InfoIcon } from "@lucide/svelte";
+  import { Cast } from "@lucide/svelte";
   import { getRoundContext } from "./round-provider.svelte";
   import Embed from "./embed.svelte";
   import {
@@ -59,10 +59,10 @@
 {#if isMobile}
   <Drawer {open} onOpenChange={handleOpenChange}>
     <DrawerTrigger
-      class="sm:hidden inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded border border-border bg-background bg-clip-padding px-2.5 font-medium text-sm shadow-xs outline-none select-none hover:border-primary/50 hover:bg-muted hover:text-foreground motion-control dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
+      aria-label="OBS Overlay"
+      class="sm:hidden inline-flex size-9 items-center justify-center rounded-md text-muted-foreground outline-none select-none hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary motion-control"
     >
-      <InfoIcon class="size-4" />
-      <span class="sr-only">OBS Overlay</span>
+      <Cast class="size-4" aria-hidden="true" />
     </DrawerTrigger>
     <DrawerContent>
       <DrawerHeader>
@@ -89,10 +89,11 @@
 {:else}
   <Popover {open} onOpenChange={handleOpenChange}>
     <PopoverTrigger
-      class="hidden sm:inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap rounded border border-border bg-background bg-clip-padding px-2.5 font-medium text-sm shadow-xs outline-none select-none hover:border-primary/50 hover:bg-muted hover:text-foreground motion-control dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
+      aria-label="OBS Overlay"
+      class="hidden sm:inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 font-medium text-[13px] text-muted-foreground outline-none select-none hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary motion-control"
     >
-      <InfoIcon class="size-4" />
-      <span class="sr-only sm:not-sr-only">OBS Overlay</span>
+      <Cast class="size-4" aria-hidden="true" />
+      OBS
     </PopoverTrigger>
     <PopoverContent align="end" class="w-full max-w-96 p-0">
       <PopoverHeader class="p-4 pb-0">
