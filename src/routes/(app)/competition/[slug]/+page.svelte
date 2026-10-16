@@ -20,6 +20,7 @@
     createCompetitionData,
   } from "$lib/competition-data.svelte";
   import { findSelectedEvent } from "$lib/competition-selection";
+  import { onlineConfirmation } from "$lib/online-confirmation";
 
   const slug = $derived(page.params.slug ?? "");
   const data = createCompetitionData(() => slug, "competition");
@@ -111,6 +112,23 @@
   const confirmedCount = $derived(
     competition?.Enrollments.filter((entry) => entry.Confirmed).length ?? 0,
   );
+  // Offered until the deadline passes; heat allocation follows confirmation,
+  // so an allocated event no longer accepts it either.
+  let now = $state(Date.now());
+  $effect(() => {
+    const timer = setInterval(() => (now = Date.now()), 30_000);
+    return () => clearInterval(timer);
+  });
+  const confirmation = $derived.by(() => {
+    if (selectedEvent?.Status !== "Unallocated") return null;
+    const result = onlineConfirmation(
+      compDetails,
+      selectedEvent.BeginDateTimeWithTZ,
+    );
+    return result && (!result.deadline || result.deadline.getTime() > now)
+      ? result
+      : null;
+  });
   const allocations = $derived(
     selectedRound?.Heats.flatMap((heat) => heat.Allocations) ?? [],
   );
@@ -264,7 +282,7 @@
 {/snippet}
 
 {#snippet participantsContent()}
-  <ParticipantLayout enrollments={competition!.Enrollments} />
+  <ParticipantLayout enrollments={competition!.Enrollments} {confirmation} />
 {/snippet}
 
 {#snippet protocolContent()}

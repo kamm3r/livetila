@@ -1,15 +1,25 @@
 <script lang="ts">
-  import { Check } from "@lucide/svelte";
+  import { Check, ExternalLink } from "@lucide/svelte";
   import * as Empty from "$lib/components/ui/empty";
   import { cn } from "$lib/utils";
+  import type { OnlineConfirmation } from "$lib/online-confirmation";
   import type { Enrollment } from "~/types/comp";
   import AthleteBadge from "./athlete-badge.svelte";
 
   let {
     enrollments = [],
+    confirmation = null,
   }: {
     enrollments: Enrollment[];
+    confirmation?: OnlineConfirmation | null;
   } = $props();
+
+  const deadline = $derived(
+    confirmation?.deadline?.toLocaleTimeString("fi-FI", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  );
 
   // Confirmed athletes first; the API order is kept within each group.
   const sorted = $derived(
@@ -33,6 +43,26 @@
     <span class="sr-only">Ei vahvistettu</span>
   {/if}
 {/snippet}
+
+{#if confirmation}
+  <p class="mb-2 flex flex-wrap items-center gap-x-2 text-[13px]">
+    <a
+      href={confirmation.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="inline-flex items-center gap-1 font-medium text-primary underline underline-offset-2"
+    >
+      Verkkovarmistus
+      <ExternalLink class="size-3.5" aria-hidden="true" />
+      <span class="sr-only">(avautuu uuteen välilehteen)</span>
+    </a>
+    {#if deadline}
+      <span class="text-muted-foreground tabular-nums"
+        >viimeistään klo {deadline}</span
+      >
+    {/if}
+  </p>
+{/if}
 
 {#if enrollments.length > 0}
   <div class="hidden overflow-x-auto rounded-lg border lg:block">
