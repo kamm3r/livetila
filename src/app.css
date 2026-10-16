@@ -214,6 +214,16 @@ html[data-input="pointer"] .motion-control:active:not(:disabled) {
   }
 }
 
+/* Hatching marks slots and athletes that are out: attempts never taken
+   after elimination, or an entry still waiting for confirmation. */
+.hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--muted-foreground) 24%, transparent) 0 1px,
+    transparent 1px 6px
+  );
+}
+
 .motion-copy-icon {
   position: absolute;
   inset: 0;

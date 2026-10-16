@@ -81,20 +81,34 @@ test("round navigation, desktop results, and OBS clipboard link stay in sync", a
     .getByRole("button", { name: "Loppukilpailu", exact: true })
     .click();
   await expect(page).toHaveURL(/round=Final/);
-  await page.getByRole("button", { name: "OBS Overlay" }).click();
+  await page.getByRole("button", { name: "Lähetysgrafiikka" }).click();
   await page.getByRole("button", { name: "Kopioi linkki" }).click();
   await expect
     .poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe("http://127.0.0.1:4173/obs/1-10?round=2&heat=1");
+    .toBe("http://127.0.0.1:4173/obs/1-10?round=2&style=broadcast-trail-plain");
   await page.keyboard.press("Escape");
   await page.goBack();
   await expect(page).toHaveURL(/round=Qualify/);
-  await page.getByRole("button", { name: "OBS Overlay" }).click();
+  await page.getByRole("button", { name: "Lähetysgrafiikka" }).click();
+  const overlay = page.getByRole("link", { name: "Avaa grafiikka" });
+  await expect(overlay).toHaveAttribute(
+    "href",
+    "http://127.0.0.1:4173/obs/1-10?round=1&style=broadcast-trail-plain",
+  );
+  await page.getByText("Näytä erot").click();
   await expect(
-    page.getByText("http://127.0.0.1:4173/obs/1-10?round=1&heat=1", {
-      exact: true,
-    }),
-  ).toBeVisible();
+    page.getByRole("switch", { name: "Näytä erot" }),
+  ).not.toBeChecked();
+  await expect(overlay).toHaveAttribute(
+    "href",
+    "http://127.0.0.1:4173/obs/1-10?round=1&style=broadcast-trail-plain&gap=0",
+  );
+  await page.getByText("Tikkeri").click();
+  await expect(page.getByRole("switch", { name: "Näytä erot" })).toHaveCount(0);
+  await expect(overlay).toHaveAttribute(
+    "href",
+    "http://127.0.0.1:4173/obs/1-10?round=1&style=ticker",
+  );
 });
 
 test("event switcher can select another round of the same event", async ({
@@ -133,7 +147,7 @@ test("mobile results and OBS drawer work", async ({ page }) => {
   await page.goto("/competition/1-10?round=Final");
   await page.getByRole("tab", { name: "Tulokset" }).click();
   await expect(page.getByText("10,20", { exact: true }).last()).toBeVisible();
-  await page.getByRole("button", { name: "OBS Overlay" }).click();
+  await page.getByRole("button", { name: "Lähetysgrafiikka" }).click();
   await expect(
     page.getByRole("button", { name: "Kopioi linkki" }),
   ).toBeVisible();
@@ -259,7 +273,7 @@ test("reduced motion keeps tabs, popovers, copy feedback, and mobile drawers usa
     "transition-duration",
     "0s",
   );
-  await page.getByRole("button", { name: "OBS Overlay" }).click();
+  await page.getByRole("button", { name: "Lähetysgrafiikka" }).click();
   await expect(page.locator("[data-slot=popover-content]")).toHaveCSS(
     "animation-duration",
     "0s",
@@ -272,7 +286,7 @@ test("reduced motion keeps tabs, popovers, copy feedback, and mobile drawers usa
   );
   await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "OBS Overlay" }).click();
+  await page.getByRole("button", { name: "Lähetysgrafiikka" }).click();
   await expect(page.locator("[data-slot=drawer-content]")).toBeVisible();
   await expect(page.locator("[data-slot=drawer-content]")).toHaveCSS(
     "animation-duration",
@@ -439,7 +453,7 @@ test("popover uses CSS transitions and keyboard opening remains immediate", asyn
   page,
 }) => {
   await page.goto("/competition/1-10?round=Qualify");
-  const trigger = page.getByRole("button", { name: "OBS Overlay" });
+  const trigger = page.getByRole("button", { name: "Lähetysgrafiikka" });
   await trigger.click();
   const popover = page.locator('[data-slot="popover-content"]');
   await expect(popover).toBeVisible();
@@ -464,7 +478,9 @@ test("drawer drag stays direct, settles at 280ms, and keyboard overrides inline 
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/competition/1-10?round=Qualify");
-  await page.getByRole("button", { name: "OBS Overlay", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Lähetysgrafiikka", exact: true })
+    .click();
   const drawer = page.locator('[data-slot="drawer-content"]');
   await expect(drawer).toBeVisible();
   await expect
@@ -871,7 +887,7 @@ for (const path of ["/competition/1-10?round=Final", "/obs/1-10?heat=1"]) {
   });
 }
 
-test("confirmation heading and checkmark stay visible while status labels are screen-reader-only", async ({
+test("confirmation checkmarks stay visible while status labels are screen-reader-only", async ({
   page,
 }) => {
   await page.route("**/live/v1/results/**", (route) =>
@@ -888,10 +904,9 @@ test("confirmation heading and checkmark stay visible while status labels are sc
     }),
   );
   await page.goto("/competition/1-10?round=Final&tab=participants");
-  await expect(page.getByText("Vahvistus", { exact: true })).toHaveCSS(
-    "position",
-    "static",
-  );
+  await expect(
+    page.getByRole("tab", { name: "Ilmoittautuneet (1/2 vahvistanut)" }),
+  ).toBeVisible();
   const table = page
     .getByRole("tabpanel", { name: "Ilmoittautuneet" })
     .getByRole("table");
@@ -1008,7 +1023,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
     "Urheilija",
     "Seura",
     "1",
-    "2",
+    /2\s*\(meneillään\)/,
     "Tulos",
     "Ero",
   ]);
@@ -1047,4 +1062,292 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
   await expect(latest).not.toContainText("Seuraavana");
   await page.clock.runFor(5000);
   await expect(first).not.toHaveAttribute("data-changed");
+});
+
+test("latest attempt bar is hidden when the event is not live", async ({
+  page,
+}) => {
+  const athletes = [1, 2].map((id) => ({
+    ...runners[0],
+    Id: id,
+    Name: `Jumper ${id}`,
+    Position: id,
+    Result: "7,00",
+    HeatRank: id,
+    ResultRank: id,
+    Attempts: [{ Line1: "7,00", Line2: "" }],
+  }));
+  await page.route("**/live/v1/competition/1", (route) =>
+    route.fulfill({
+      json: {
+        "09.09.2026": events["09.09.2026"].map((event) => ({
+          ...event,
+          Category: "Field",
+          Status: "Official",
+        })),
+      },
+    }),
+  );
+  await page.route("**/live/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "Long jump",
+        EventCategory: "Field",
+        Enrollments: [],
+        Rounds: [
+          {
+            ...rounds[1],
+            Heats: [{ Index: 1, Allocations: athletes }],
+            TotalResults: athletes,
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/competition/1-10?round=Final");
+  const panel = page.getByRole("tabpanel", { name: "Tulokset" });
+  await expect(panel.getByRole("table")).toContainText("Jumper 1");
+  await expect(panel.getByText("Viimeisin suoritus")).toHaveCount(0);
+  await expect(panel.getByText("Seuraavana")).toHaveCount(0);
+});
+
+test("track results show gaps for hand and long times without attempt columns", async ({
+  page,
+}) => {
+  const athletes = [
+    ["2.57,38", "Leader"],
+    ["3.12,6h", "Hand timed"],
+    ["3.58,79", "Minute behind"],
+  ].map(([Result, Name], i) => ({
+    ...runners[0],
+    Id: i + 1,
+    Name,
+    Result,
+    HeatRank: i + 1,
+    Attempts: [{ Line1: Result, Line2: null }],
+  }));
+  await page.route("**/live/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "1000 m",
+        EventCategory: "Track",
+        Enrollments: [],
+        Rounds: [
+          {
+            ...rounds[1],
+            Heats: [{ Index: 1, Allocations: athletes }],
+            TotalResults: athletes,
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/competition/1-10?round=Final");
+  const table = page
+    .getByRole("tabpanel", { name: "Tulokset" })
+    .getByRole("table");
+  await expect(table.getByRole("columnheader")).toHaveText([
+    "Sija",
+    "Seuran logo",
+    "Urheilija",
+    "Seura",
+    "Tulos",
+    "Ero",
+  ]);
+  const gaps = table.locator("tbody tr td:last-child");
+  await expect(gaps).toHaveText(["—", "+15,22", "+1.01,41"]);
+});
+
+test("cross-country results are timed and show gaps to the leader", async ({
+  page,
+}) => {
+  const athletes = [
+    ["12.46,9h", "Second"],
+    ["12.37,7h", "Winner"],
+  ].map(([Result, Name], i) => ({
+    ...runners[0],
+    Id: i + 1,
+    Name,
+    Result,
+    HeatRank: 0,
+    Attempts: [{ Line1: Result, Line2: null }],
+  }));
+  await page.route("**/live/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "Maastojuoksu",
+        EventCategory: "Street",
+        Enrollments: [],
+        Rounds: [
+          {
+            ...rounds[1],
+            Heats: [{ Index: 1, Allocations: athletes }],
+            TotalResults: athletes,
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/competition/1-10?round=Final");
+  const rows = page
+    .getByRole("tabpanel", { name: "Tulokset" })
+    .getByRole("table")
+    .locator("tbody tr");
+  await expect(rows.locator("td:nth-child(3)")).toHaveText([
+    /Winner/,
+    /Second/,
+  ]);
+  await expect(rows.locator("td:last-child")).toHaveText(["—", "+9,20"]);
+});
+
+test("single-attempt field results hide attempts and gap centimetre marks", async ({
+  page,
+}) => {
+  const athletes = [
+    ["130", "Lower"],
+    ["135", "Higher"],
+  ].map(([Result, Name], i) => ({
+    ...runners[0],
+    Id: i + 1,
+    Name,
+    Result,
+    HeatRank: 0,
+    Attempts: [{ Line1: Result, Line2: "o" }],
+  }));
+  await page.route("**/live/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "Korkeus",
+        EventCategory: "Field",
+        Enrollments: [],
+        Rounds: [
+          {
+            ...rounds[1],
+            Heats: [{ Index: 1, Allocations: athletes }],
+            TotalResults: athletes,
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/competition/1-10?round=Final");
+  const table = page
+    .getByRole("tabpanel", { name: "Tulokset" })
+    .getByRole("table");
+  await expect(table.getByRole("columnheader")).toHaveText([
+    "Sija",
+    "Seuran logo",
+    "Urheilija",
+    "Seura",
+    "Tulos",
+    "Ero",
+  ]);
+  await expect(table.locator("tbody tr td:last-child")).toHaveText(["—", "−5"]);
+});
+
+test("protocol lists every heat in one table with heat rows", async ({
+  page,
+}) => {
+  const heat = (index: number, names: string[]) => ({
+    Index: index,
+    Allocations: names.map((Name, i) => ({
+      ...runners[0],
+      Id: index * 10 + i,
+      Name,
+      Position: names.length - i,
+      Result: "",
+    })),
+  });
+  await page.route("**/live/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "100 m",
+        EventCategory: "Track",
+        Enrollments: [],
+        Rounds: [
+          {
+            ...rounds[1],
+            Heats: [heat(1, ["Second", "First"]), heat(2, ["Only"])],
+            TotalResults: [],
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/competition/1-10?round=Final&tab=protocol");
+  const table = page
+    .getByRole("tabpanel", { name: "Pöytäkirjat" })
+    .getByRole("table");
+  await expect(table.getByRole("columnheader").first()).toHaveText("Rata");
+  await expect(table.locator("tbody th")).toHaveText([
+    /Erä 1\s*· 2 urheilijaa/,
+    /Erä 2\s*· 1 urheilijaa/,
+  ]);
+  // Lanes are listed in order within each heat.
+  await expect(table.locator("tbody td:nth-child(3)")).toHaveText([
+    /First/,
+    /Second/,
+    /Only/,
+  ]);
+});
+
+test("athletes eliminated after three rounds get hatched attempt slots", async ({
+  page,
+}) => {
+  const athletes = Array.from({ length: 9 }, (_, i) => {
+    const mark = (700 - i * 10).toString().replace(/(\d)(\d\d)$/, "$1,$2");
+    const count = i < 8 ? 4 : 3;
+    return {
+      ...runners[0],
+      Id: i + 1,
+      Name: `Jumper ${i + 1}`,
+      Position: i + 1,
+      Result: mark,
+      HeatRank: i + 1,
+      ResultRank: i + 1,
+      Attempts: Array.from({ length: count }, (_, j) => ({
+        Line1: j === 0 ? mark : "x",
+        Line2: "",
+      })),
+    };
+  });
+  await page.route("**/live/v1/competition/1", (route) =>
+    route.fulfill({
+      json: {
+        "09.09.2026": events["09.09.2026"].map((event) => ({
+          ...event,
+          Category: "Field",
+        })),
+      },
+    }),
+  );
+  await page.route("**/live/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "Long jump",
+        EventCategory: "Field",
+        Enrollments: [],
+        Rounds: [
+          {
+            ...rounds[1],
+            Heats: [{ Index: 1, Allocations: athletes }],
+            TotalResults: athletes,
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/competition/1-10?round=Final&tab=results");
+  const table = page
+    .getByRole("tabpanel", { name: "Tulokset" })
+    .getByRole("table");
+  await expect(table.locator("tbody tr").first()).toContainText("Jumper 1");
+  await expect(table.locator("td.hatch")).toHaveCount(1);
+  await expect(
+    table.locator("tbody tr").last().locator("td.hatch"),
+  ).toHaveCount(1);
+  // The live round in progress is marked in its column header.
+  await expect(
+    table.getByRole("columnheader", { name: "4 (meneillään)" }),
+  ).toBeVisible();
 });

@@ -8,7 +8,9 @@
     value: string;
     label: string;
     shortLabel?: string;
-    count?: number;
+    count?: number | string;
+    // Spoken in place of the count, for counts that need words ("7/9").
+    countLabel?: string;
     icon: Snippet;
     content: Snippet;
   };
@@ -69,9 +71,13 @@
                 activeTab
                   ? 'bg-primary/10 text-primary'
                   : 'bg-muted text-muted-foreground'}"
-                ><span class="sr-only">(</span>{tab.count}<span class="sr-only"
-                  >)</span
-                ></span
+                ><span aria-hidden={tab.countLabel ? true : undefined}
+                  ><span class="sr-only">(</span>{tab.count}<span
+                    class="sr-only">)</span
+                  ></span
+                >{#if tab.countLabel}<span class="sr-only"
+                    >({tab.countLabel})</span
+                  >{/if}</span
               >
             {/if}
           </Tabs.Trigger>

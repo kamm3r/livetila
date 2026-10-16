@@ -18,6 +18,9 @@ export class SearchWorkflow {
   selectedComp = $state<CompetitionList | null>(null);
   navigatingTo = $state<number | null>(null);
   private recent = $state<RecentSearch[]>([]);
+  get recentSearches(): readonly RecentSearch[] {
+    return this.recent;
+  }
   private storage?: Pick<Storage, "getItem" | "setItem">;
   private competitionsQuery = createQuery(() =>
     competitionQueries.competitions(),
@@ -37,6 +40,7 @@ export class SearchWorkflow {
   private activeQuery = $derived(
     this.selectedComp ? this.eventsQuery : this.competitionsQuery,
   );
+  competitions = $derived(this.competitionsQuery.data ?? []);
   isLoading = $derived(this.activeQuery.isPending);
   loadError = $derived(this.activeQuery.isError);
   filteredCompetitions = $derived(

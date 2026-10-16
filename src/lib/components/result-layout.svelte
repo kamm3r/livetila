@@ -5,24 +5,25 @@
   import * as Empty from "$lib/components/ui/empty";
   import { getRoundContext } from "./round-provider.svelte";
   import {
+    eliminatedAfterThree,
     gapToLeader,
+    leadingResult,
     recordTag,
     sortByResult,
     turnOrder,
   } from "$lib/results";
   import { createResultChanges } from "$lib/result-changes.svelte";
   import { cn } from "$lib/utils";
-  import type { Allocation, TotalResult } from "~/types/comp";
+  import type { Allocation, EventCategory, TotalResult } from "~/types/comp";
   import AthleteBadge from "./athlete-badge.svelte";
 
   type Entry = Allocation | TotalResult;
-  type Category = "Track" | "Field" | "Relay";
 
   const ctx = getRoundContext();
   let {
     eventCategory,
     live = false,
-  }: { eventCategory: Category; live?: boolean } = $props();
+  }: { eventCategory: EventCategory; live?: boolean } = $props();
 
   const sortedAllocs = $derived(
     ctx.currentHeat && ctx.heats.length > 0
@@ -58,7 +59,9 @@
     sortedAllocs.length > 0 ? "HeatRank" : "ResultRank",
   );
   const order = $derived(turnOrder(primary));
+  // Attempt-by-attempt follow-up only makes sense for field events in progress.
   const latest = $derived.by(() => {
+    if (!live || eventCategory !== "Field") return null;
     const seen = primaryChanges.latest;
     const entry = seen
       ? primary.find((item) => item.Id === seen.id)
@@ -69,14 +72,24 @@
     if (!mark) return null;
     return { entry, attempt, mark, gained: seen?.gained ?? 0 };
   });
-  const next = $derived(live ? order.next : null);
+  const next = $derived(latest ? order.next : null);
 
-  const medal = ["#f59e0b", "#9ca3af", "#c2410c"];
+  // Gold, silver and bronze fade in from the left edge of the podium rows.
+  const podium = [
+    "rgb(245 158 11 / 0.13)",
+    "rgb(156 163 175 / 0.16)",
+    "rgb(194 65 12 / 0.1)",
+  ];
   const moveDuration = $derived(prefersReducedMotion.current ? 0 : 250);
-  const isField = $derived(eventCategory === "Field");
 
+  // A single attempt is the result itself, so attempt columns only appear
+  // once some athlete has more than one.
   function attemptColumns(entries: Entry[]) {
-    return Math.max(0, ...entries.map((entry) => entry.Attempts?.length ?? 0));
+    const count = Math.max(
+      0,
+      ...entries.map((entry) => entry.Attempts?.length ?? 0),
+    );
+    return count > 1 ? count : 0;
   }
 
   // The best attempt is the first one matching the official result.
@@ -86,9 +99,9 @@
       : -1;
   }
 
-  function medalBar(rank: number | undefined) {
+  function podiumTint(rank: number | undefined) {
     return rank && rank <= 3
-      ? `box-shadow: inset 3px 0 0 ${medal[rank - 1]}`
+      ? `background-image: linear-gradient(90deg, ${podium[rank - 1]}, transparent 45%)`
       : undefined;
   }
 
@@ -159,13 +172,14 @@
   changes: ReturnType<typeof createResultChanges>,
 )}
   {@const columns = attemptColumns(entries)}
-  {@const leader = entries[0]?.Result ?? null}
+  {@const leader = leadingResult(entries, eventCategory)}
+  {@const out = eliminatedAfterThree(entries)}
+  <!-- While live, the newest attempt column is the round in progress. -->
+  {@const currentRound = live ? columns : 0}
   <div class="hidden overflow-x-auto rounded-lg border lg:block">
     <table class="w-full text-sm">
-      <thead class="bg-muted">
-        <tr
-          class="h-[34px] text-[10px] text-muted-foreground uppercase tracking-[0.06em]"
-        >
+      <thead>
+        <tr class="h-[34px] border-b text-[11px] text-muted-foreground">
           <th class="w-14 pr-2 text-right font-medium" scope="col">Sija</th>
           <th class="w-10" scope="col"
             ><span class="sr-only">Seuran logo</span></th
@@ -173,7 +187,16 @@
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
           <th class="px-2 text-left font-medium" scope="col">Seura</th>
           {#each { length: columns }, i (i)}
-            <th class="w-[58px] text-center font-medium" scope="col">{i + 1}</th
+            <th
+              class={cn(
+                "w-[58px] text-center font-medium",
+                i + 1 === currentRound &&
+                  "font-bold text-primary shadow-[inset_0_-2px_0_var(--primary)]",
+              )}
+              scope="col"
+              >{i + 1}{#if i + 1 === currentRound}<span class="sr-only">
+                  (meneillään)</span
+                >{/if}</th
             >
           {/each}
           <th class="w-24 pr-[18px] text-right font-medium" scope="col"
@@ -183,23 +206,28 @@
         </tr>
       </thead>
       <tbody>
-        {#each entries as entry, index (entry.Id)}
+        {#each entries as entry (entry.Id)}
           {@const change = changes.get(entry.Id)}
           {@const best = bestAttempt(entry)}
           {@const rank = entry[rankKey]}
+          {@const isOut = out.has(entry.Id)}
           <tr
             animate:flip={{ duration: moveDuration }}
             data-changed={change ? "" : undefined}
+            style={podiumTint(rank)}
             class={cn(
-              "h-[46px] transition-colors duration-1000",
-              index % 2 === 1 && "bg-muted/45",
+              "h-[46px] border-t transition-colors duration-1000 first:border-t-0",
+              isOut && "*:opacity-55",
               change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
             )}
           >
-            <td class="pr-2" style={medalBar(rank)}>
+            <td class="pr-2">
               <span class="grid grid-cols-[1fr_22px] items-center gap-1">
-                <span class="text-right font-bold text-[15px] tabular-nums"
-                  >{rank || "-"}</span
+                <span
+                  class={cn(
+                    "text-right font-bold text-[15px] tabular-nums",
+                    isOut && "font-semibold text-muted-foreground",
+                  )}>{rank || "-"}</span
                 >
                 <span>
                   {#if change?.gained}{@render gainedPlaces(change.gained)}{/if}
@@ -223,9 +251,15 @@
               {entry.Organization?.Name ?? "-"}
             </td>
             {#each { length: columns }, i (i)}
-              <td class="text-center text-[13px] tabular-nums">
-                {@render attemptMark(entry, i, best, change?.newAttempt)}
-              </td>
+              {#if isOut && i >= 3}
+                <td class="hatch border-l border-background"
+                  ><span class="sr-only">Karsiutui</span></td
+                >
+              {:else}
+                <td class="text-center text-[13px] tabular-nums">
+                  {@render attemptMark(entry, i, best, change?.newAttempt)}
+                </td>
+              {/if}
             {/each}
             <td class="text-right">{@render result(entry, false)}</td>
             <td
@@ -240,18 +274,19 @@
   </div>
 
   <ul class="overflow-hidden rounded-lg border lg:hidden">
-    {#each entries as entry, index (entry.Id)}
+    {#each entries as entry (entry.Id)}
       {@const change = changes.get(entry.Id)}
       {@const best = bestAttempt(entry)}
       {@const rank = entry[rankKey]}
       {@const gap = gapToLeader(entry.Result, leader, eventCategory)}
+      {@const isOut = out.has(entry.Id)}
       <li
         animate:flip={{ duration: moveDuration }}
         data-changed={change ? "" : undefined}
-        style={medalBar(rank)}
+        style={podiumTint(rank)}
         class={cn(
-          "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 px-3 py-2 transition-colors duration-1000",
-          index % 2 === 1 && "bg-muted/45",
+          "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
+          isOut && "*:opacity-55",
           change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
         )}
       >
@@ -272,26 +307,31 @@
           <p class="truncate text-muted-foreground text-xs">
             {entry.Organization?.Name ?? "-"}
           </p>
-          {#if columns > 0}
-            <!-- Fixed columns keep attempt N aligned across rows. -->
-            <ul
-              class="mt-1 grid grid-cols-[repeat(auto-fill,34px)] gap-x-1 text-xs tabular-nums"
-            >
-              {#each { length: columns }, i (i)}
-                <li>
-                  {#if entry.Attempts?.[i]?.Line1}
-                    {@render attemptMark(entry, i, best, change?.newAttempt)}
-                  {:else}
-                    <span class="px-1 text-muted-foreground" aria-hidden="true"
-                      >·</span
-                    ><span class="sr-only">Ei suoritusta</span>
-                  {/if}
-                </li>
-              {/each}
-            </ul>
-          {/if}
         </div>
-        <div class="flex flex-col items-end leading-tight">
+        {#if columns > 0}
+          <!-- Fixed columns keep attempt N aligned across rows. -->
+          <ul
+            class="col-span-2 col-start-3 row-start-2 mt-1 grid grid-cols-[repeat(auto-fill,34px)] gap-x-1 text-xs tabular-nums"
+          >
+            {#each { length: columns }, i (i)}
+              <li>
+                {#if isOut && i >= 3}
+                  <span class="hatch block h-4 rounded-[3px]" aria-hidden="true"
+                  ></span><span class="sr-only">Karsiutui</span>
+                {:else if entry.Attempts?.[i]?.Line1}
+                  {@render attemptMark(entry, i, best, change?.newAttempt)}
+                {:else}
+                  <span class="px-1 text-muted-foreground" aria-hidden="true"
+                    >·</span
+                  ><span class="sr-only">Ei suoritusta</span>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        <div
+          class="col-start-4 row-start-1 flex flex-col items-end leading-tight"
+        >
           {@render result(entry, true)}
           {#if gap && gap !== "—"}
             <span
@@ -305,7 +345,8 @@
   </ul>
   <p class="mt-2 text-[11px] text-muted-foreground">
     {[
-      isField && columns > 0 ? "x = hylätty · – = ei suoritusta" : null,
+      columns > 0 ? "x = hylätty · – = ei suoritusta" : null,
+      out.size > 0 ? "viivoitus = karsiutui kolmen kierroksen jälkeen" : null,
       "PB = ennätys · SB = kauden paras · Ero = ero kärkeen",
     ]
       .filter(Boolean)

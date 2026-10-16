@@ -1,5 +1,6 @@
 <script lang="ts">
   import { selectCompetitionRound } from "$lib/competition-selection";
+  import { isTimed } from "$lib/results";
   import { page } from "$app/state";
   import { replaceState } from "$app/navigation";
   import { ClipboardList, Trophy, Users } from "@lucide/svelte";
@@ -36,7 +37,7 @@
     findSelectedEvent(compEvents, eventId, selectedRound?.RoundTypeCategory),
   );
   const isTrack = $derived(
-    selectedEvent?.Category === "Track" || selectedEvent?.Category === "Relay",
+    selectedEvent ? isTimed(selectedEvent.Category) : false,
   );
   const isLoading = $derived(data.isLoading);
 
@@ -105,6 +106,11 @@
       .join(" · "),
   );
 
+  // Before confirmation opens nobody has confirmed; a plain count reads better
+  // than "0/9" then.
+  const confirmedCount = $derived(
+    competition?.Enrollments.filter((entry) => entry.Confirmed).length ?? 0,
+  );
   const allocations = $derived(
     selectedRound?.Heats.flatMap((heat) => heat.Allocations) ?? [],
   );
@@ -174,7 +180,13 @@
               />
             </div>
             <div class="order-2 sm:order-9">
-              <ObsPopover slug={`${compId}-${eventId}`} />
+              <ObsPopover
+                slug={`${compId}-${eventId}`}
+                competitionName={compDetails?.Competition.Name}
+                eventName={competition.Name}
+                events={compEvents}
+                eventCategory={competition.EventCategory}
+              />
             </div>
             <div class="order-3 basis-full sm:hidden"></div>
             <span
@@ -207,7 +219,12 @@
                 value: "participants",
                 label: "Ilmoittautuneet",
                 shortLabel: "Ilmoitt.",
-                count: competition.Enrollments.length,
+                count: confirmedCount
+                  ? `${confirmedCount}/${competition.Enrollments.length}`
+                  : competition.Enrollments.length,
+                countLabel: confirmedCount
+                  ? `${confirmedCount}/${competition.Enrollments.length} vahvistanut`
+                  : undefined,
                 icon: usersIcon,
                 content: participantsContent,
               },

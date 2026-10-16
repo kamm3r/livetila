@@ -27,7 +27,9 @@
   } from "$lib/components/ui/command";
   import { cn } from "$lib/utils.js";
 
-  const search = new SearchWorkflow(goto);
+  // A page may own the workflow to drive the search from outside the field.
+  let { search = new SearchWorkflow(goto) }: { search?: SearchWorkflow } =
+    $props();
   onMount(() => {
     try {
       search.restoreHistory(window.localStorage);
@@ -47,6 +49,9 @@
   let isOpen = $state(false);
   let isFocused = $state(false);
   let inputEl = $state<HTMLInputElement | null>(null);
+  export function focus() {
+    inputEl?.focus();
+  }
   let listEl = $state<HTMLElement | null>(null);
   let blurTimeout: ReturnType<typeof setTimeout> | undefined =
     $state(undefined);
