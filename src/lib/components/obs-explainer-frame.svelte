@@ -88,6 +88,6 @@
   </div>
 {:else}
   <div style:zoom>
-    <BroadcastFrame {view} inHeat={false} variant="trail-plain" {gaps} />
+    <BroadcastFrame {view} inHeat={false} {gaps} />
   </div>
 {/if}
