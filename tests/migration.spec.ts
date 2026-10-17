@@ -1027,6 +1027,10 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
     "Seura",
     "1",
     /2\s*\(meneillään\)/,
+    "3",
+    "4",
+    "5",
+    "6",
     "Tulos",
     "Ero",
   ]);
@@ -1054,7 +1058,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
     jumper(1, "First Jumper", ["7,10", "7,40", "x"], "7,40", 2),
   ];
   await page.clock.runFor(30_000);
-  await expect(table.getByRole("columnheader")).toHaveCount(9);
+  await expect(table.getByRole("columnheader")).toHaveCount(12);
   await expect(first).toContainText("Second Jumper");
   await expect(first).toHaveAttribute("data-changed");
   await expect(first).toContainText("Noussut 1 sijaa");
@@ -1203,7 +1207,7 @@ test("cross-country results are timed and show gaps to the leader", async ({
   await expect(rows.locator("td:last-child")).toHaveText(["—", "+9,20"]);
 });
 
-test("single-attempt field results hide attempts and gap centimetre marks", async ({
+test("vertical results align attempts by height without six-slot padding or gap centimetre marks", async ({
   page,
 }) => {
   const athletes = [
@@ -1242,6 +1246,8 @@ test("single-attempt field results hide attempts and gap centimetre marks", asyn
     "Seuran logo",
     "Urheilija",
     "Seura",
+    "130",
+    "135",
     "Tulos",
     "Ero",
   ]);
@@ -1345,10 +1351,10 @@ test("athletes eliminated after three rounds get hatched attempt slots", async (
     .getByRole("tabpanel", { name: "Tulokset" })
     .getByRole("table");
   await expect(table.locator("tbody tr").first()).toContainText("Jumper 1");
-  await expect(table.locator("td.hatch")).toHaveCount(1);
+  await expect(table.locator("td.hatch")).toHaveCount(3);
   await expect(
     table.locator("tbody tr").last().locator("td.hatch"),
-  ).toHaveCount(1);
+  ).toHaveCount(3);
   // The live round in progress is marked in its column header.
   await expect(
     table.getByRole("columnheader", { name: "4 (meneillään)" }),
