@@ -28,7 +28,7 @@ const highlightFor = 4000;
 export function createResultChanges(entries: () => Entry[]) {
   let previous = new Map<
     number,
-    { key: string; rank: number; attempts: number }
+    { key: string; rank: number; attempts: string[] }
   >();
   const changes = new SvelteMap<number, ResultChange>();
   const timers = new Map<number, ReturnType<typeof setTimeout>>();
@@ -37,16 +37,25 @@ export function createResultChanges(entries: () => Entry[]) {
   $effect(() => {
     const next = new Map<
       number,
-      { key: string; rank: number; attempts: number }
+      { key: string; rank: number; attempts: string[] }
     >();
     entries().forEach((entry, rank) => {
-      const attempts = entry.Attempts?.length ?? 0;
-      const key = `${entry.Result ?? ""}|${attempts}`;
+      const attempts =
+        entry.Attempts?.map((attempt) => JSON.stringify(attempt)) ?? [];
+      const key = JSON.stringify([entry.Result, attempts]);
       next.set(entry.Id, { key, rank, attempts });
       const before = previous.get(entry.Id);
       if (!before || before.key === key) return;
       const gained = Math.max(0, before.rank - rank);
-      const newAttempt = attempts > before.attempts ? attempts - 1 : undefined;
+      // Some feeds preallocate empty slots, and non-best marks do not change
+      // Result. Compare slot contents, not just the array length.
+      const changedIndex =
+        attempts.length >= before.attempts.length
+          ? attempts.findLastIndex(
+              (attempt, index) => attempt !== before.attempts[index],
+            )
+          : -1;
+      const newAttempt = changedIndex >= 0 ? changedIndex : undefined;
       changes.set(entry.Id, { gained, newAttempt });
       if (newAttempt !== undefined)
         latest = { id: entry.Id, attempt: newAttempt, gained };
