@@ -21,6 +21,7 @@ export type OverlayEntry = Allocation | TotalResult;
 export type OverlayView = {
   entries: OverlayEntry[];
   activeAllocationIds: Set<number>;
+  showAttempts: boolean;
   eventCategory: EventCategory;
   eventName?: string;
   roundName?: string;

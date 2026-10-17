@@ -10,6 +10,7 @@
   import { isTimed, sortByResult } from "$lib/results";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import { activeAllocationIds } from "$lib/active-attempt";
+  import { createOverlayAttempts } from "$lib/overlay-attempts.svelte";
   import { createResultChanges } from "$lib/result-changes.svelte";
   import {
     parseOverlayStyle,
@@ -59,8 +60,14 @@
   );
 
   const changes = createResultChanges(() => allocations);
+  const attemptDetails = createOverlayAttempts(
+    () => allocations,
+    () =>
+      `${slug}/${rounds?.Id ?? rounds?.Index}/${selectedHeat ?? "overall"}/${style}`,
+  );
   const view: OverlayView = $derived({
     entries: allocations,
+    showAttempts: attemptDetails.expanded,
     activeAllocationIds: activeAllocationIds(rounds, selection.heat),
     eventCategory,
     eventName: competition?.Name,

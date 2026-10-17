@@ -6,7 +6,7 @@
   // behind), or against the leader when nobody is focused. Athletes within
   // 2% of the lead are marked. `?gap=0` hides the gap, and `?accent=5ed6cb`
   // swaps the accent colour to match a stream's branding.
-  import { fade, fly, slide } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
   import type { AnimationConfig } from "svelte/animate";
   import { prefersReducedMotion } from "svelte/motion";
@@ -27,6 +27,7 @@
   } from "$lib/results";
   import ActiveAttempt from "$lib/components/active-attempt.svelte";
   import AthleteBadge from "$lib/components/athlete-badge.svelte";
+  import { collapse } from "./collapse";
   import { athleteBadge } from "$lib/athlete-badge";
   import {
     attemptSlots,
@@ -193,7 +194,9 @@
   // The latest attempt seen while on air, else the last athlete in the
   // starting order to have competed. Nobody is focused before that.
   const focusId = $derived(
-    timed ? null : (view.changes.latest?.id ?? turn?.previous?.Id ?? null),
+    timed || !view.showAttempts
+      ? null
+      : (view.changes.latest?.id ?? turn?.previous?.Id ?? null),
   );
 
   // Reorders run in two steps, like a timing tower: the new place numbers
@@ -454,7 +457,7 @@
         {#if focused}
           <ol
             data-attempt-details
-            transition:slide={{ duration }}
+            transition:collapse
             class="ml-5 grid grid-cols-6 text-black normal-case tabular-nums"
           >
             {#each attemptSlots(entry.Attempts) as attempt, i (i)}

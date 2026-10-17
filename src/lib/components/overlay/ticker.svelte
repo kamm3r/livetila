@@ -45,7 +45,7 @@
   class="fixed inset-x-0 bottom-0 p-6 font-semibold text-white tracking-tight"
   style:--accent={accent}
 >
-  {#if latest}
+  {#if latest && view.showAttempts}
     {@const name = shortName(latest.entry)}
     {@const tag = recordTag(latest.entry, view.eventCategory)}
     <div
