@@ -1,6 +1,5 @@
 <script lang="ts">
-  // Single fetch failures are common at one-second polling, so the warning
-  // only appears once data has gone unrefreshed for a while.
+  // Only show a refresh warning once the retained data is old enough.
   const staleAfter = 10_000;
   const timeFormatter = new Intl.DateTimeFormat("fi-FI", {
     hour: "2-digit",

@@ -5,10 +5,11 @@ import type {
   Events,
 } from "~/types/comp";
 
-const API_URL = "https://cached-public-api.tuloslista.com/live/v1";
+const API_URL = "https://live.tuloslista.com/api/v1";
 
+// Respect upstream HTTP caching so unchanged results can be revalidated.
 async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(url, { cache: "no-store", signal });
+  const response = await fetch(url, { signal });
   if (!response.ok) {
     throw new Error(`API error: ${response.status} ${response.statusText}`);
   }

@@ -13,7 +13,7 @@ A search workflow includes competition selection, event filtering, progressive
 result reveal and four recently selected result links. History is optional:
 unavailable browser storage must not prevent search or navigation.
 
-Live results and event status refresh every second without waiting for an event
+Live results and event status refresh every 30 seconds without waiting for an event
 to be marked in progress. The competition view polls in the foreground; OBS also
 polls in the background. The interval is not an end-to-end freshness guarantee:
 the upstream cache, network and browser scheduling can add latency.

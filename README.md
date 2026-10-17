@@ -6,8 +6,8 @@ Live athletics results and OBS streaming overlays powered by the public Tuloslis
 
 - Search competitions and events, including qualifying and final rounds. Results appear in batches as you scroll, with a keyboard-accessible “Show more” control. Filtering searches the complete fetched list.
 - View entrants, start lists, heat results, and overall results.
-- Refresh results and event status every second while viewing a competition, regardless of its reported status.
-- Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every second, including in the background.
+- Refresh results and event status every 30 seconds while viewing a competition, regardless of its reported status.
+- Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every 30 seconds, including in the background.
 - Responsive layouts, light/dark/system themes, and haptic feedback on supported devices.
 - Open SFIM points and results from the navbar beside the theme switcher.
 - Athlete club logos from Tilastopaja and country flags for foreign athletes in entrants, start lists, results and OBS overlays. Unavailable images are hidden.
@@ -61,7 +61,7 @@ Overlay parameters use one-based positions in the API's round and heat arrays:
 
 This shows the first heat of the second round. Omit `heat` for the round's overall results; omit `round` to use the first round. The OBS button in the viewer copies the current round and heat selection.
 
-Live result fetching is independent of event status. The competition viewer polls while visible; OBS also polls in the background. Shared query identities retain cached data across navigation, and abandoned requests are cancelled. The one-second polling interval does not bypass upstream caching or network latency. See [CONTEXT.md](CONTEXT.md) for selection and refresh conventions.
+Live result fetching is independent of event status. The competition viewer polls while visible; OBS also polls in the background. Shared query identities retain cached data across navigation, and abandoned requests are cancelled. Requests respect upstream HTTP caching; the browser can revalidate unchanged results without downloading the full payload. Upstream caching and network latency still affect freshness. See [CONTEXT.md](CONTEXT.md) for selection and refresh conventions.
 
 ## Deployment
 
@@ -71,7 +71,7 @@ For example, an nginx location can use `try_files $uri $uri/ /index.html;`. This
 
 On Vercel, the committed `vercel.json` overrides the old Next.js preset with `Other`, runs `pnpm build`, serves `build/`, and supplies the SPA fallback. Existing static assets take precedence over the fallback. No dashboard framework change is required for this branch. Use Node.js 24 in the Vercel project settings. If retrying a deployment manually, deploy the latest migration commit rather than an older Next.js-configured commit.
 
-API requests run directly in the browser against `https://cached-public-api.tuloslista.com/live/v1`, so the upstream service must be reachable and permit cross-origin requests. There is no application server or tRPC layer.
+API requests run directly in the browser against `https://live.tuloslista.com/api/v1`, so the upstream service must be reachable and permit cross-origin requests. There is no application server or tRPC layer.
 
 Club logos load from Tilastopaja's `https://www.tilastopaja.info/fi/db/pics/png/` directory. The lookup in `src/lib/club-logos.ts` resolves club names and abbreviations against 295 verified filenames from [Tilastopaja's Seuraliiga 2026 directory](https://www.tilastopaja.fi/seurakilpailut/seuraliiga/2026/kaikki), stored in `src/lib/data/club-logos.json`. This handles differences such as `IFÅsar` → `IFÅsarna`, `KUNPIR` → `KuntoP`, and capitalization mismatches. Clubs absent from the snapshot fall back to the API's abbreviation (`Organization.NameShort`). To add a club or update its filename, edit the JSON mapping; abbreviation aliases belong in `club-logos.ts`.
 
