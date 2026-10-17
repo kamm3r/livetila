@@ -28,25 +28,22 @@ const events = {
 };
 
 test.beforeEach(async ({ page }) => {
-  await page.route(
-    "https://cached-public-api.tuloslista.com/live/v1/**",
-    async (route) => {
-      const path = new URL(route.request().url()).pathname;
-      const data = path.endsWith("/properties")
-        ? { Competition: { Name: "Test Games" } }
-        : path.includes("/results/")
-          ? {
-              Name: "100 m",
-              EventCategory: "Track",
-              Enrollments: [],
-              Rounds: rounds,
-            }
-          : path.endsWith("/competition")
-            ? [{ Id: 1, Name: "Test Games", Date: "2026-09-09" }]
-            : events;
-      await route.fulfill({ json: data });
-    },
-  );
+  await page.route("https://live.tuloslista.com/api/v1/**", async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const data = path.endsWith("/properties")
+      ? { Competition: { Name: "Test Games" } }
+      : path.includes("/results/")
+        ? {
+            Name: "100 m",
+            EventCategory: "Track",
+            Enrollments: [],
+            Rounds: rounds,
+          }
+        : path.endsWith("/competition")
+          ? [{ Id: 1, Name: "Test Games", Date: "2026-09-09" }]
+          : events;
+    await route.fulfill({ json: data });
+  });
 });
 
 test("search supports keyboard selection and preserves the chosen round", async ({
@@ -154,7 +151,7 @@ test("mobile results and OBS drawer work", async ({ page }) => {
 });
 
 test("search API failure offers a retry", async ({ page }) => {
-  await page.route("**/live/v1/competition", (route) =>
+  await page.route("**/api/v1/competition", (route) =>
     route.fulfill({ status: 500, body: "unavailable" }),
   );
   await page.goto("/");
@@ -163,17 +160,17 @@ test("search API failure offers a retry", async ({ page }) => {
     "Tietojen lataaminen epäonnistui",
     { timeout: 15000 },
   );
-  await page.unroute("**/live/v1/competition");
+  await page.unroute("**/api/v1/competition");
   await page.getByRole("button", { name: "Yritä uudelleen" }).click();
   await expect(page.getByRole("option", { name: /Test Games/ })).toBeVisible();
 });
 
-test("results poll every second before live status arrives", async ({
+test("results respect the 30-second interval before live status arrives", async ({
   page,
 }) => {
   let live = false;
   let resultRequests = 0;
-  await page.route("**/live/v1/competition/1", (route) =>
+  await page.route("**/api/v1/competition/1", (route) =>
     route.fulfill({
       json: {
         "09.09.2026": events["09.09.2026"].map((event) => ({
@@ -183,7 +180,7 @@ test("results poll every second before live status arrives", async ({
       },
     }),
   );
-  await page.route("**/live/v1/results/1/10", (route) => {
+  await page.route("**/api/v1/results/1/10", (route) => {
     resultRequests++;
     return route.fulfill({
       json: {
@@ -200,10 +197,12 @@ test("results poll every second before live status arrives", async ({
   await expect(
     page.getByRole("button", { name: /100 m Loppukilpailu/ }),
   ).toBeVisible();
+  await page.clock.runFor(29_000);
+  expect(resultRequests).toBe(1);
   await page.clock.runFor(1000);
-  await expect.poll(() => resultRequests).toBeGreaterThan(1);
+  await expect.poll(() => resultRequests).toBe(2);
   live = true;
-  await page.clock.runFor(1000);
+  await page.clock.runFor(30_000);
   await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
   await page.clock.runFor(2000);
   await expect.poll(() => resultRequests).toBeGreaterThan(1);
@@ -318,7 +317,7 @@ test("search options appear together with no stagger or focus zoom", async ({
 test("search reveals more competitions on scroll and resets after filtering", async ({
   page,
 }) => {
-  await page.route("**/live/v1/competition", (route) =>
+  await page.route("**/api/v1/competition", (route) =>
     route.fulfill({
       json: Array.from({ length: 26 }, (_, i) => ({
         Id: i + 1,
@@ -355,7 +354,7 @@ test("search reveals more competitions on scroll and resets after filtering", as
 test("event search can reach events beyond the first batch", async ({
   page,
 }) => {
-  await page.route("**/live/v1/competition/1", (route) =>
+  await page.route("**/api/v1/competition/1", (route) =>
     route.fulfill({
       json: {
         "09.09.2026": Array.from({ length: 32 }, (_, i) => ({
@@ -519,11 +518,11 @@ test("drawer drag stays direct, settles at 280ms, and keyboard overrides inline 
 });
 
 for (const path of ["/competition/1-10", "/obs/1-10"]) {
-  test(`new results appear on the next one-second refresh: ${path}`, async ({
+  test(`new results appear on the next 30-second refresh: ${path}`, async ({
     page,
   }) => {
     let result = "10,20";
-    await page.route("**/live/v1/results/1/10", (route) =>
+    await page.route("**/api/v1/results/1/10", (route) =>
       route.fulfill({
         json: {
           Name: "100 m",
@@ -551,7 +550,7 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
         .first(),
     ).toBeVisible();
     result = "09,99";
-    await page.clock.runFor(1000);
+    await page.clock.runFor(30_000);
     await expect(
       page
         .getByText("09,99", { exact: true })
@@ -580,7 +579,7 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
       });
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    await page.clock.runFor(1000);
+    await page.clock.runFor(30_100);
     if (path.startsWith("/obs/")) {
       await expect.poll(() => requests).toBeGreaterThan(1);
     } else {
@@ -592,6 +591,8 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
         });
         document.dispatchEvent(new Event("visibilitychange"));
       });
+      // Foreground polling resumes on the next scheduled refresh.
+      await page.clock.runFor(30_000);
       await expect.poll(() => requests).toBeGreaterThan(1);
     }
   });
@@ -602,7 +603,7 @@ test("malformed competition and OBS links never fetch competition data", async (
 }) => {
   const requests: string[] = [];
   page.on("request", (request) => {
-    if (request.url().includes("/live/v1/")) requests.push(request.url());
+    if (request.url().includes("/api/v1/")) requests.push(request.url());
   });
   await page.clock.install();
   for (const path of ["/competition/1-10-extra", "/obs/a-b"]) {
@@ -632,7 +633,7 @@ test("search remains usable with unavailable history storage and competition nam
       return setItem.call(this, key, value);
     };
   });
-  await page.route("**/live/v1/competition", (route) =>
+  await page.route("**/api/v1/competition", (route) =>
     route.fulfill({
       json: [{ Id: 1, Name: "Test / Games", Date: "2026-09-09" }],
     }),
@@ -657,7 +658,7 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
     let fail = false;
     let result = "10,20";
     let failures = 0;
-    await page.route("**/live/v1/results/1/10", (route) => {
+    await page.route("**/api/v1/results/1/10", (route) => {
       if (fail) {
         failures++;
         return route.fulfill({ status: 503, body: "Unavailable" });
@@ -692,11 +693,9 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
     );
     fail = true;
     for (let attempt = 1; attempt <= 4; attempt++) {
-      await page.clock.runFor(attempt === 1 ? 1000 : 4000);
+      await page.clock.runFor(attempt === 1 ? 30_000 : 4000);
       await expect.poll(() => failures).toBeGreaterThanOrEqual(attempt);
-      // The app only warns once data has gone unrefreshed for a while.
-      if (attempt === 1 && path.startsWith("/competition/"))
-        await expect(delayNotice).toHaveCount(0);
+      // A failed scheduled refresh is already 30 seconds past the last data.
     }
     await expect(delayNotice).toBeVisible();
     await expect(score("10,20")).toBeVisible();
@@ -707,7 +706,7 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
       );
     fail = false;
     result = "09,99";
-    await page.clock.runFor(1000);
+    await page.clock.runFor(30_000);
     await expect(score("09,99")).toBeVisible();
     await expect(delayNotice).toHaveCount(0);
   });
@@ -717,7 +716,7 @@ for (const heatCount of [0, 1]) {
   test(`overall results remain visible with ${heatCount} empty heats`, async ({
     page,
   }) => {
-    await page.route("**/live/v1/results/**", (route) =>
+    await page.route("**/api/v1/results/**", (route) =>
       route.fulfill({
         json: {
           Name: "100 m",
@@ -776,7 +775,7 @@ for (const path of [
         ResultRank: 2,
       },
     ];
-    await page.route("**/live/v1/results/**", (route) =>
+    await page.route("**/api/v1/results/**", (route) =>
       route.fulfill({
         json: {
           Name: "Long jump",
@@ -830,7 +829,7 @@ for (const path of ["/competition/1-10?round=Final", "/obs/1-10?heat=1"]) {
         body: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="20"><rect width="24" height="20" fill="yellow"/></svg>',
       }),
     );
-    await page.route("**/live/v1/results/**", (route) =>
+    await page.route("**/api/v1/results/**", (route) =>
       route.fulfill({
         json: {
           Name: "100 m",
@@ -846,6 +845,7 @@ for (const path of ["/competition/1-10?round=Final", "/obs/1-10?heat=1"]) {
         },
       }),
     );
+    await page.clock.install();
     await page.goto(path);
     if (path.startsWith("/competition")) {
       for (const tab of ["Ilmoittautuneet", "Pöytäkirjat", "Tulokset"]) {
@@ -877,7 +877,10 @@ for (const path of ["/competition/1-10?round=Final", "/obs/1-10?heat=1"]) {
     await expect(
       page.getByText("Slow Runner", { exact: true }).last(),
     ).toBeVisible();
-    await page.waitForResponse("**/live/v1/results/**");
+    await Promise.all([
+      page.waitForResponse("**/api/v1/results/**"),
+      page.clock.runFor(30_000),
+    ]);
     await expect(page.locator('img[src*="NakkVire.png"]:visible')).toHaveCount(
       0,
     );
@@ -890,7 +893,7 @@ for (const path of ["/competition/1-10?round=Final", "/obs/1-10?heat=1"]) {
 test("confirmation checkmarks stay visible while status labels are screen-reader-only", async ({
   page,
 }) => {
-  await page.route("**/live/v1/results/**", (route) =>
+  await page.route("**/api/v1/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "100 m",
@@ -933,7 +936,7 @@ for (const [status, tab] of [
   test(`competition opens on the tab matching event status: ${status}`, async ({
     page,
   }) => {
-    await page.route("**/live/v1/competition/1", (route) =>
+    await page.route("**/api/v1/competition/1", (route) =>
       route.fulfill({
         json: {
           "09.09.2026": events["09.09.2026"].map((event) => ({
@@ -996,7 +999,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
     jumper(1, "First Jumper", ["7,10", "7,40"], "7,40", 1),
     jumper(2, "Second Jumper", ["7,20", "x"], "7,20", 2),
   ];
-  await page.route("**/live/v1/results/**", (route) =>
+  await page.route("**/api/v1/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Long jump",
@@ -1042,7 +1045,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
     jumper(1, "First Jumper", ["7,10", "7,40", "x"], "7,40", 1),
     jumper(2, "Second Jumper", ["7,20", "x"], "7,20", 2),
   ];
-  await page.clock.runFor(1000);
+  await page.clock.runFor(30_000);
   await expect(latest).toContainText(/Viimeisin.*First Jumper.*x/);
   await expect(latest).toContainText(/Seuraavana.*Second Jumper/);
 
@@ -1050,7 +1053,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
     jumper(2, "Second Jumper", ["7,20", "x", "7,55"], "7,55", 1),
     jumper(1, "First Jumper", ["7,10", "7,40", "x"], "7,40", 2),
   ];
-  await page.clock.runFor(1000);
+  await page.clock.runFor(30_000);
   await expect(table.getByRole("columnheader")).toHaveCount(9);
   await expect(first).toContainText("Second Jumper");
   await expect(first).toHaveAttribute("data-changed");
@@ -1077,7 +1080,7 @@ test("latest attempt bar is hidden when the event is not live", async ({
     ResultRank: id,
     Attempts: [{ Line1: "7,00", Line2: "" }],
   }));
-  await page.route("**/live/v1/competition/1", (route) =>
+  await page.route("**/api/v1/competition/1", (route) =>
     route.fulfill({
       json: {
         "09.09.2026": events["09.09.2026"].map((event) => ({
@@ -1088,7 +1091,7 @@ test("latest attempt bar is hidden when the event is not live", async ({
       },
     }),
   );
-  await page.route("**/live/v1/results/**", (route) =>
+  await page.route("**/api/v1/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Long jump",
@@ -1126,7 +1129,7 @@ test("track results show gaps for hand and long times without attempt columns", 
     HeatRank: i + 1,
     Attempts: [{ Line1: Result, Line2: null }],
   }));
-  await page.route("**/live/v1/results/**", (route) =>
+  await page.route("**/api/v1/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "1000 m",
@@ -1172,7 +1175,7 @@ test("cross-country results are timed and show gaps to the leader", async ({
     HeatRank: 0,
     Attempts: [{ Line1: Result, Line2: null }],
   }));
-  await page.route("**/live/v1/results/**", (route) =>
+  await page.route("**/api/v1/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Maastojuoksu",
@@ -1214,7 +1217,7 @@ test("single-attempt field results hide attempts and gap centimetre marks", asyn
     HeatRank: 0,
     Attempts: [{ Line1: Result, Line2: "o" }],
   }));
-  await page.route("**/live/v1/results/**", (route) =>
+  await page.route("**/api/v1/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Korkeus",
@@ -1258,7 +1261,7 @@ test("protocol lists every heat in one table with heat rows", async ({
       Result: "",
     })),
   });
-  await page.route("**/live/v1/results/**", (route) =>
+  await page.route("**/api/v1/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "100 m",
@@ -1311,7 +1314,7 @@ test("athletes eliminated after three rounds get hatched attempt slots", async (
       })),
     };
   });
-  await page.route("**/live/v1/competition/1", (route) =>
+  await page.route("**/api/v1/competition/1", (route) =>
     route.fulfill({
       json: {
         "09.09.2026": events["09.09.2026"].map((event) => ({
@@ -1321,7 +1324,7 @@ test("athletes eliminated after three rounds get hatched attempt slots", async (
       },
     }),
   );
-  await page.route("**/live/v1/results/**", (route) =>
+  await page.route("**/api/v1/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Long jump",
