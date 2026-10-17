@@ -114,7 +114,7 @@
       previousLive = lastLive;
       lastLive = live;
     }
-    // Polling rebuilds the view every second; only a new attempt counts.
+    // Polling rebuilds the view every 30 seconds; only a new attempt counts.
     if (latest && latest !== seen) {
       seen = latest;
       pending = latest;
