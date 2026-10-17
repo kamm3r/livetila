@@ -39,6 +39,13 @@ export const competitionQueries = {
       refetchIntervalInBackground: background,
     });
   },
+  confirmations: (enabled: boolean) =>
+    queryOptions({
+      queryKey: ["confirmation-competitions"],
+      queryFn: ({ signal }) => api.getConfirmationCompetitions(signal),
+      enabled,
+      refetchInterval: 5 * 60_000,
+    }),
   details: (id?: string) =>
     queryOptions({
       queryKey: ["competition-details", id],
