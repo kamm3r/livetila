@@ -7,6 +7,7 @@
   import { page } from "$app/state";
   import { cn } from "$lib/utils";
   import { gapToLeader, isTimed, leadingResult, recordTag } from "$lib/results";
+  import ActiveAttempt from "$lib/components/active-attempt.svelte";
   import AthleteBadge from "$lib/components/athlete-badge.svelte";
   import { athleteBadge } from "$lib/athlete-badge";
   import {
@@ -145,7 +146,9 @@
             >
             <span class="flex w-8 shrink-0 items-center justify-center">
               {#if athleteBadge(entry)}
-                <AthleteBadge {entry} />
+                <AthleteBadge {entry} /><ActiveAttempt
+                  active={view.activeAllocationIds.has(entry.AllocId)}
+                />
               {:else if clubInitials(entry)}
                 <span
                   class="flex h-5 w-6 items-center justify-center rounded-sm bg-white text-[9px] text-neutral-700"

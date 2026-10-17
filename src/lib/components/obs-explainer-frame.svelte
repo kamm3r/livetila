@@ -60,6 +60,7 @@
   };
   const view: OverlayView = $derived({
     entries,
+    activeAllocationIds: new Set<number>(),
     eventCategory,
     // The competition's own titles, with example ones while they load.
     eventName: labels.eventName ?? "M Keihäs",
