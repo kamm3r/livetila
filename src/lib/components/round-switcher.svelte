@@ -1,24 +1,35 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
+  import { cn } from "$lib/utils";
   import { getRoundContext } from "./round-provider.svelte";
 
   const ctx = getRoundContext();
+
+  function label(category: string, name: string) {
+    if (category === "Qualify") return { full: "Alkuerät", short: "Alku" };
+    if (category === "Final") return { full: "Loppukilpailu", short: "Loppu" };
+    return { full: name, short: name };
+  }
 </script>
 
 {#if ctx.rounds.length > 1}
-  <div class="flex flex-wrap items-center gap-2">
+  <div class="inline-flex items-center rounded-full bg-muted p-[3px]">
     {#each ctx.rounds as round (round.Index)}
-      <Button
-        size="sm"
-        variant={ctx.selectedRound === round.Index ? "default" : "outline"}
+      {@const text = label(round.RoundTypeCategory, round.Name)}
+      {@const selected = ctx.selectedRound === round.Index}
+      <button
+        type="button"
+        aria-pressed={selected}
+        class={cn(
+          "motion-control h-7 rounded-full px-3.5 font-medium text-xs focus-visible:outline-2 focus-visible:outline-primary",
+          selected
+            ? "bg-background text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground",
+        )}
         onclick={() => ctx.handleRoundChange(round.Index)}
       >
-        {round.RoundTypeCategory === "Qualify"
-          ? "Alkuerät"
-          : round.RoundTypeCategory === "Final"
-            ? "Loppukilpailu"
-            : round.Name}
-      </Button>
+        <span class="sm:hidden" aria-hidden="true">{text.short}</span>
+        <span class="sr-only sm:not-sr-only">{text.full}</span>
+      </button>
     {/each}
   </div>
 {/if}

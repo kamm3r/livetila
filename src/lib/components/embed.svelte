@@ -4,7 +4,7 @@
   import { toast } from "svelte-sonner";
   import { Button } from "$lib/components/ui/button";
 
-  let { url }: { url: string } = $props();
+  let { url, disabled = false }: { url: string; disabled?: boolean } = $props();
 
   let copy = $state(false);
   let copyTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -35,7 +35,7 @@
   });
 </script>
 
-<Button variant="secondary" class="w-full gap-2" onclick={copyUrlToClipboard}>
+<Button class="w-full gap-2" {disabled} onclick={copyUrlToClipboard}>
   <div class="relative flex size-4 items-center justify-center">
     <span class="motion-copy-icon" data-visible={!copy} aria-hidden="true">
       <CopyIcon data-icon="inline-start" />

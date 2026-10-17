@@ -65,6 +65,7 @@ export function overlayLink(
   slug: string,
   rounds: Round[],
   selection: HeatSelection,
+  options: { style?: string; gap?: boolean } = {},
 ): string {
   const params = new URLSearchParams();
   const round = rounds.findIndex((item) => item.Index === selection.round);
@@ -72,7 +73,10 @@ export function overlayLink(
     rounds[round]?.Heats.findIndex((item) => item.Index === selection.heat) ??
     -1;
   if (round >= 0) params.set("round", String(round + 1));
+  // Without a heat the overlay lists the whole round.
   if (heat >= 0) params.set("heat", String(heat + 1));
+  if (options.style) params.set("style", options.style);
+  if (options.gap === false) params.set("gap", "0");
   return `/obs/${slug}?${params}`;
 }
 

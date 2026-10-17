@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@tanstack/svelte-query": "^6.1.48",
+    "i18n-iso-countries": "^7.14.0",
     "svelte": "^5.57.0",
     "web-haptics": "0.0.6",
     "zod": "^4.5.4"

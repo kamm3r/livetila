@@ -1,6 +1,17 @@
 export type CompetitionProperties = {
-  Settings: [];
+  Settings: CompetitionSetting[];
   Competition: CompetitionDetails;
+};
+
+// Type 1 is online confirmation: StringValue "on" enables it and IntValue is
+// the deadline in minutes before each event starts.
+export type CompetitionSetting = {
+  Id: number;
+  Type: number;
+  Index: number;
+  StringValue: string;
+  IntValue: number;
+  DateTimeValue: string;
 };
 
 export type CompetitionDetails = {
@@ -27,12 +38,15 @@ export type Stadion = {
   Type: number;
 };
 
+// Street covers road and cross-country running, recorded as times.
+export type EventCategory = "Track" | "Field" | "Relay" | "Street";
+
 export type Events = Record<string, EventList[]>;
 
 export type EventList = {
   Id: number;
   BeginDateTimeWithTZ: string;
-  Category: "Track" | "Field" | "Relay";
+  Category: EventCategory;
   SubCategory: string;
   EventId: number;
   EventName: string;
@@ -48,7 +62,7 @@ export type EventList = {
 
 export type Competition = {
   Enrollments: Enrollment[];
-  EventCategory: "Track" | "Field" | "Relay";
+  EventCategory: EventCategory;
   EventSubCategory: string;
   IsCombinedEvent: boolean;
   RootName: string;
