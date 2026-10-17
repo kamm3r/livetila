@@ -96,5 +96,15 @@ export function createCompetitionData(
           query.data !== undefined && (query.isError || query.failureCount > 0),
       );
     },
+    // Time of the oldest data that is currently failing to refresh, or null.
+    get refreshFailingSince() {
+      const failing = requiredQueries.filter(
+        (query) =>
+          query.data !== undefined && (query.isError || query.failureCount > 0),
+      );
+      return failing.length
+        ? Math.min(...failing.map((query) => query.dataUpdatedAt))
+        : null;
+    },
   };
 }

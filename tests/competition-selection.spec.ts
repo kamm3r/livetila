@@ -41,6 +41,18 @@ test("round and heat identities survive both URL formats", () => {
     heat: selection.heat!.Index,
   });
   expect(link).toBe("/obs/1-10?round=2&heat=2");
+  expect(
+    overlayLink(
+      "1-10",
+      rounds,
+      { round: selection.round!.Index, heat: selection.heat!.Index },
+      { gap: false },
+    ),
+  ).toBe("/obs/1-10?round=2&heat=2&gap=0");
+  // No heat: the whole round.
+  expect(
+    overlayLink("1-10", rounds, { round: selection.round!.Index, heat: -1 }),
+  ).toBe("/obs/1-10?round=2");
   const decoded = selectOverlayRound(
     rounds,
     new URL(link, "https://example.test").searchParams,
