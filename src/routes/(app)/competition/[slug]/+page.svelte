@@ -5,7 +5,7 @@
   import { replaceState } from "$app/navigation";
   import { ClipboardList, Trophy, Users } from "@lucide/svelte";
   import { createQuery } from "@tanstack/svelte-query";
-  import ObsPopover from "$lib/components/obs-popover.svelte";
+  import OverlayPopover from "$lib/components/overlay-popover.svelte";
   import LiveIndicator from "$lib/components/live-indicator.svelte";
   import EventSwitcher from "$lib/components/event-switcher.svelte";
   import RoundSwitcher from "$lib/components/round-switcher.svelte";
@@ -217,7 +217,7 @@
 
       {#key slug}
         <RoundProvider rounds={competition.Rounds} roundCategory={roundFromUrl}>
-          <!-- Mobile: switcher and OBS on one line, status and rounds below. -->
+          <!-- Mobile: switcher and overlay button on one line, status and rounds below. -->
           <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
             <div class="order-1 min-w-0 max-sm:flex-1 sm:shrink-0">
               <EventSwitcher
@@ -228,7 +228,7 @@
               />
             </div>
             <div class="order-2 sm:order-9">
-              <ObsPopover
+              <OverlayPopover
                 slug={`${compId}-${eventId}`}
                 competitionName={compDetails?.Competition.Name}
                 eventName={competition.Name}

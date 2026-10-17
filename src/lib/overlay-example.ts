@@ -1,4 +1,4 @@
-// Example data for the OBS link popover's preview, shaped like the event it
+// Example data for the overlay link popover's preview, shaped like the event it
 // is opened from: throws and horizontal jumps get a series of marks, vertical
 // jumps a series of heights, running events a heat that gets its times.
 import { isTimed } from "$lib/results";

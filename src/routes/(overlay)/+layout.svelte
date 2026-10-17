@@ -2,12 +2,12 @@
   let { children } = $props();
 </script>
 
-<div class="obs-overlay fixed inset-0 z-50 overflow-auto">
+<div class="overlay-root fixed inset-0 z-50 overflow-auto">
   {@render children()}
 </div>
 
 <style>
-  :global(body:has(.obs-overlay)) {
+  :global(body:has(.overlay-root)) {
     background: transparent;
   }
 </style>

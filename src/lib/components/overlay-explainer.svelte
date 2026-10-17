@@ -7,7 +7,7 @@
   } from "$lib/overlay-features";
   import ExplainerFrame, {
     type ExplainerLabels,
-  } from "./obs-explainer-frame.svelte";
+  } from "./overlay-explainer-frame.svelte";
   import { buildExample, exampleKind } from "$lib/overlay-example";
   import { isVerticalJump } from "$lib/results";
   import type { Allocation, EventCategory } from "~/types/comp";
