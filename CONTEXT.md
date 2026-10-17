@@ -25,3 +25,6 @@ message marks interrupted updates until a successful refresh clears it.
 In results, horizontal jumps and throws keep six attempt slots visible (three in
 combined events), without truncating extra marks supplied by the API. Vertical
 jumps align each athlete’s marks by height, with no fixed six-attempt limit.
+Overlay attempt details collapse after 15 seconds without a result or attempt
+change; identical refreshes do not restart the timer. A new or corrected mark
+reopens details, including fouls that do not improve the athlete’s best result.

@@ -313,3 +313,51 @@ test.describe("Aikataulu", () => {
     await expect(rows.nth(0)).toContainText("Laji 11");
   });
 });
+
+// Lista hides the open series; the ticker drops its callout with it.
+test.describe("attempt details", () => {
+  test("Lista collapses the series after 15 seconds and reopens it on a non-best attempt", async ({
+    page,
+  }) => {
+    const idle = () => [jumper(1, "Idle", "Jumper", "7,10", ["7,10", ""])];
+    const server = await serve(page, idle());
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.clock.install();
+    await page.goto("/obs/1-10?heat=1&style=broadcast-trail-plain");
+    const details = page.locator("[data-attempt-details]:visible");
+    await expect.poll(() => details.count()).toBe(1);
+    await page.clock.runFor(14_000);
+    await expect(details).toHaveCount(1);
+    await page.clock.runFor(1001);
+    await expect(details).toHaveCount(0);
+    // The mark stays on the bar once the series is gone.
+    await expect(visibleText(page, "7,10m")).toBeVisible();
+    // An identical poll keeps it closed.
+    await page.clock.runFor(15_000);
+    await expect(details).toHaveCount(0);
+
+    server.set([jumper(1, "Idle", "Jumper", "7,10", ["7,10", "x"])]);
+    await page.clock.runFor(30_000);
+    await expect(details).toHaveCount(1);
+    await expect(details.locator("li").nth(1)).toContainText("x");
+    await page.clock.runFor(15_001);
+    await expect(details).toHaveCount(0);
+  });
+
+  test("Tikkeri still calls out a new attempt after the details have collapsed", async ({
+    page,
+  }) => {
+    const server = await serve(page, field());
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.clock.install();
+    await page.goto("/obs/1-10?heat=1&style=ticker");
+    await expect(visibleText(page, "Korhonen")).toBeVisible();
+    // Fifteen quiet seconds, then a poll that changes nothing.
+    await page.clock.runFor(30_000);
+    await expect(page.getByRole("status")).toHaveCount(0);
+
+    server.set(virtanenJumps("x"));
+    await page.clock.runFor(30_000);
+    await expect(page.getByRole("status")).toContainText("Yritys 3");
+  });
+});

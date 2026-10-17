@@ -7,7 +7,7 @@ Live athletics results and OBS streaming overlays powered by the public Tuloslis
 - Search competitions and events, including qualifying and final rounds. Results appear in batches as you scroll, with a keyboard-accessible “Show more” control. Filtering searches the complete fetched list.
 - View entrants, start lists, heat results, and overall results. Results show six attempt slots for horizontal jumps and throws (three for combined events); high jump and pole vault align attempts by height.
 - Refresh results and event status every 30 seconds while viewing a competition, regardless of its reported status.
-- Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every 30 seconds, including in the background.
+- Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every 30 seconds, including in the background. Attempt details collapse after 15 seconds without a result change and reopen when a new or corrected attempt arrives.
 - Responsive layouts, light/dark/system themes, and haptic feedback on supported devices.
 - Open SFIM points and results from the navbar beside the theme switcher.
 - Three-dot indicators identify the API-selected active athlete and attempt in live results and OBS overlays. Reduced-motion preferences keep the dots static.
