@@ -15,6 +15,7 @@
   import { createResultChanges } from "$lib/result-changes.svelte";
   import { cn } from "$lib/utils";
   import type { Allocation, EventCategory, TotalResult } from "~/types/comp";
+  import { attemptLayout } from "$lib/attempt-layout";
   import AthleteBadge from "./athlete-badge.svelte";
 
   type Entry = Allocation | TotalResult;
@@ -22,8 +23,15 @@
   const ctx = getRoundContext();
   let {
     eventCategory,
+    eventSubCategory,
+    isCombinedEvent = false,
     live = false,
-  }: { eventCategory: EventCategory; live?: boolean } = $props();
+  }: {
+    eventCategory: EventCategory;
+    eventSubCategory?: string;
+    isCombinedEvent?: boolean;
+    live?: boolean;
+  } = $props();
 
   const sortedAllocs = $derived(
     ctx.currentHeat && ctx.heats.length > 0
@@ -59,9 +67,13 @@
     sortedAllocs.length > 0 ? "HeatRank" : "ResultRank",
   );
   const order = $derived(turnOrder(primary));
+  const vertical = $derived(
+    attemptLayout(primary, eventCategory, eventSubCategory, isCombinedEvent)
+      .vertical,
+  );
   // Attempt-by-attempt follow-up only makes sense for field events in progress.
   const latest = $derived.by(() => {
-    if (!live || eventCategory !== "Field") return null;
+    if (!live || eventCategory !== "Field" || vertical) return null;
     const seen = primaryChanges.latest;
     const entry = seen
       ? primary.find((item) => item.Id === seen.id)
@@ -81,16 +93,6 @@
     "rgb(194 65 12 / 0.1)",
   ];
   const moveDuration = $derived(prefersReducedMotion.current ? 0 : 250);
-
-  // A single attempt is the result itself, so attempt columns only appear
-  // once some athlete has more than one.
-  function attemptColumns(entries: Entry[]) {
-    const count = Math.max(
-      0,
-      ...entries.map((entry) => entry.Attempts?.length ?? 0),
-    );
-    return count > 1 ? count : 0;
-  }
 
   // The best attempt is the first one matching the official result.
   function bestAttempt(entry: Entry) {
@@ -144,25 +146,35 @@
   i: number,
   best: number,
   newAttempt: number | undefined,
+  height?: string,
 )}
-  {@const attempt = entry.Attempts?.[i]}
+  {@const index =
+    height === undefined
+      ? i
+      : (entry.Attempts?.findIndex((attempt) => attempt.Line1 === height) ??
+        -1)}
+  {@const attempt = entry.Attempts?.[index]}
   {#if attempt?.Line1}
     <span
       class={cn(
         "inline-flex flex-col rounded px-1",
-        i === best && "font-bold text-primary",
+        !height && index === best && "font-bold text-primary",
         isFoul(attempt.Line1) && "text-muted-foreground/70",
         attempt.Line1 === "–" || attempt.Line1 === "-"
           ? "text-muted-foreground"
           : "",
-        i === newAttempt && "ring-1 ring-yellow-400",
+        index === newAttempt && "ring-1 ring-yellow-400",
       )}
     >
-      <span>{attempt.Line1}</span>
-      {#if attempt.Line2}<span class="text-[10px] text-muted-foreground"
-          >{attempt.Line2}</span
+      <span>{height ? attempt.Line2 || "–" : attempt.Line1}</span>
+      {#if !height && attempt.Line2}<span
+          class="text-[10px] text-muted-foreground">{attempt.Line2}</span
         >{/if}
     </span>
+  {:else}
+    <span class="text-muted-foreground" aria-hidden="true">·</span><span
+      class="sr-only">Ei suoritusta</span
+    >
   {/if}
 {/snippet}
 
@@ -171,11 +183,31 @@
   rankKey: "HeatRank" | "ResultRank",
   changes: ReturnType<typeof createResultChanges>,
 )}
-  {@const columns = attemptColumns(entries)}
+  {@const layout = attemptLayout(
+    entries,
+    eventCategory,
+    eventSubCategory,
+    isCombinedEvent,
+  )}
+  {@const columns = layout.labels.length}
   {@const leader = leadingResult(entries, eventCategory)}
-  {@const out = eliminatedAfterThree(entries)}
-  <!-- While live, the newest attempt column is the round in progress. -->
-  {@const currentRound = live ? columns : 0}
+  {@const out = layout.vertical
+    ? new Set<number>()
+    : eliminatedAfterThree(entries)}
+  <!-- Padding to six slots must not mark the sixth attempt as active. -->
+  {@const currentRound =
+    live && !layout.vertical
+      ? Math.min(
+          columns,
+          Math.max(
+            0,
+            ...entries.map(
+              (entry) =>
+                entry.Attempts?.filter((attempt) => attempt.Line1).length ?? 0,
+            ),
+          ),
+        )
+      : 0}
   <div class="hidden overflow-x-auto rounded-lg border lg:block">
     <table class="w-full text-sm">
       <thead>
@@ -194,7 +226,9 @@
                   "font-bold text-primary shadow-[inset_0_-2px_0_var(--primary)]",
               )}
               scope="col"
-              >{i + 1}{#if i + 1 === currentRound}<span class="sr-only">
+              >{layout.labels[i]}{#if i + 1 === currentRound}<span
+                  class="sr-only"
+                >
                   (meneillään)</span
                 >{/if}</th
             >
@@ -257,7 +291,13 @@
                 >
               {:else}
                 <td class="text-center text-[13px] tabular-nums">
-                  {@render attemptMark(entry, i, best, change?.newAttempt)}
+                  {@render attemptMark(
+                    entry,
+                    i,
+                    best,
+                    change?.newAttempt,
+                    layout.vertical ? layout.labels[i] : undefined,
+                  )}
                 </td>
               {/if}
             {/each}
@@ -315,11 +355,21 @@
           >
             {#each { length: columns }, i (i)}
               <li>
+                {#if layout.vertical}<span
+                    class="block text-[10px] text-muted-foreground"
+                    >{layout.labels[i]}</span
+                  >{/if}
                 {#if isOut && i >= 3}
                   <span class="hatch block h-4 rounded-[3px]" aria-hidden="true"
                   ></span><span class="sr-only">Karsiutui</span>
-                {:else if entry.Attempts?.[i]?.Line1}
-                  {@render attemptMark(entry, i, best, change?.newAttempt)}
+                {:else if layout.vertical || entry.Attempts?.[i]?.Line1}
+                  {@render attemptMark(
+                    entry,
+                    i,
+                    best,
+                    change?.newAttempt,
+                    layout.vertical ? layout.labels[i] : undefined,
+                  )}
                 {:else}
                   <span class="px-1 text-muted-foreground" aria-hidden="true"
                     >·</span
@@ -345,7 +395,11 @@
   </ul>
   <p class="mt-2 text-[11px] text-muted-foreground">
     {[
-      columns > 0 ? "x = hylätty · – = ei suoritusta" : null,
+      columns > 0
+        ? layout.vertical
+          ? "o = onnistunut · x = hylätty · – = ei suoritusta"
+          : "x = hylätty · – = ei suoritusta"
+        : null,
       out.size > 0 ? "viivoitus = karsiutui kolmen kierroksen jälkeen" : null,
       "PB = ennätys · SB = kauden paras · Ero = ero kärkeen",
     ]

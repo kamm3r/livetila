@@ -324,5 +324,10 @@
 {/snippet}
 
 {#snippet resultsContent()}
-  <ResultLayout eventCategory={competition!.EventCategory} live={isLive} />
+  <ResultLayout
+    eventCategory={competition!.EventCategory}
+    eventSubCategory={competition!.EventSubCategory}
+    isCombinedEvent={competition!.IsCombinedEvent}
+    live={isLive}
+  />
 {/snippet}
