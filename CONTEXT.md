@@ -13,7 +13,7 @@ A search workflow includes competition selection, event filtering, progressive
 result reveal and four recently selected result links. History is optional:
 unavailable browser storage must not prevent search or navigation.
 
-Live results and event status refresh every second without waiting for an event
+Live results and event status refresh every 30 seconds without waiting for an event
 to be marked in progress. The competition view polls in the foreground; OBS also
 polls in the background. The interval is not an end-to-end freshness guarantee:
 the upstream cache, network and browser scheduling can add latency.
@@ -21,3 +21,10 @@ the upstream cache, network and browser scheduling can add latency.
 Failed refreshes retain the last successful data and current viewing state. Only
 initial failures without cached data replace the view with an error. A status
 message marks interrupted updates until a successful refresh clears it.
+
+In results, horizontal jumps and throws keep six attempt slots visible (three in
+combined events), without truncating extra marks supplied by the API. Vertical
+jumps align each athlete’s marks by height, with no fixed six-attempt limit.
+Overlay attempt details collapse after 15 seconds without a result or attempt
+change; identical refreshes do not restart the timer. A new or corrected mark
+reopens details, including fouls that do not improve the athlete’s best result.

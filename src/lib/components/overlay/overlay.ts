@@ -2,37 +2,17 @@ import type { ResultChange, LatestAttempt } from "$lib/result-changes.svelte";
 import type { Allocation, EventCategory, TotalResult } from "~/types/comp";
 
 export const overlayStyles = [
-  "classic",
-  "tower",
-  "ticker",
-  "spotlight",
-  "classic-plus",
-  "classic-inline",
-  "classic-focus",
-  "broadcast",
-  "broadcast-pinned",
-  "broadcast-board",
-  "broadcast-refined",
-  "broadcast-context",
-  "broadcast-gap",
-  "broadcast-swap",
-  "broadcast-detail",
-  "broadcast-quiet",
-  "broadcast-trail",
-  "broadcast-stacked",
-  "broadcast-quiet-2",
-  "broadcast-trail-2",
-  "broadcast-stacked-2",
-  "broadcast-trail-stack",
-  "broadcast-trail-inline",
   "broadcast-trail-plain",
+  "ticker",
   "broadcast-results",
   "timetable",
 ] as const;
 export type OverlayStyle = (typeof overlayStyles)[number];
 
 export function parseOverlayStyle(value: string | null): OverlayStyle {
-  return overlayStyles.find((style) => style === value) ?? "classic";
+  return (
+    overlayStyles.find((style) => style === value) ?? "broadcast-trail-plain"
+  );
 }
 
 export type OverlayEntry = Allocation | TotalResult;
@@ -40,6 +20,8 @@ export type OverlayEntry = Allocation | TotalResult;
 // Everything a design needs; the page owns fetching, selection and errors.
 export type OverlayView = {
   entries: OverlayEntry[];
+  activeAllocationIds: Set<number>;
+  showAttempts: boolean;
   eventCategory: EventCategory;
   eventName?: string;
   roundName?: string;

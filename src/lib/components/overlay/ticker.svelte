@@ -6,6 +6,7 @@
   import { page } from "$app/state";
   import { cn } from "$lib/utils";
   import { recordTag } from "$lib/results";
+  import ActiveAttempt from "$lib/components/active-attempt.svelte";
   import AthleteBadge from "$lib/components/athlete-badge.svelte";
   import {
     qualification,
@@ -44,7 +45,7 @@
   class="fixed inset-x-0 bottom-0 p-6 font-semibold text-white tracking-tight"
   style:--accent={accent}
 >
-  {#if latest}
+  {#if latest && view.showAttempts}
     {@const name = shortName(latest.entry)}
     {@const tag = recordTag(latest.entry, view.eventCategory)}
     <div
@@ -61,7 +62,9 @@
         Yritys {latest.change.attempt + 1}
       </span>
       <span class="flex items-center gap-2 px-3 py-2">
-        <AthleteBadge entry={latest.entry} />
+        <AthleteBadge entry={latest.entry} /><ActiveAttempt
+          active={view.activeAllocationIds.has(latest.entry.AllocId)}
+        />
         <span class="uppercase">{name.surname}</span>
         <span class="text-neutral-400">{name.initial}</span>
       </span>
@@ -133,7 +136,9 @@
                 >
                   {rank ?? "–"}
                 </span>
-                <AthleteBadge {entry} />
+                <AthleteBadge {entry} /><ActiveAttempt
+                  active={view.activeAllocationIds.has(entry.AllocId)}
+                />
                 <span class="uppercase">{name.surname}</span>
                 <span class="text-(--accent) tabular-nums">
                   {entry.Result || "–"}

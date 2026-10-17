@@ -60,6 +60,8 @@
   };
   const view: OverlayView = $derived({
     entries,
+    activeAllocationIds: new Set<number>(),
+    showAttempts: true,
     eventCategory,
     // The competition's own titles, with example ones while they load.
     eventName: labels.eventName ?? "M Keihäs",
@@ -88,6 +90,6 @@
   </div>
 {:else}
   <div style:zoom>
-    <BroadcastFrame {view} inHeat={false} variant="trail-plain" {gaps} />
+    <BroadcastFrame {view} inHeat={false} {gaps} />
   </div>
 {/if}

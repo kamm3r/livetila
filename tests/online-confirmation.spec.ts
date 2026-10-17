@@ -1,39 +1,48 @@
 import { expect, test } from "@playwright/test";
-import { onlineConfirmation } from "../src/lib/online-confirmation";
-import type { CompetitionProperties } from "../src/types/comp";
+import {
+  onlineConfirmation,
+  usesOnlineConfirmation,
+} from "../src/lib/online-confirmation";
+import type {
+  CompetitionDetails,
+  CompetitionProperties,
+} from "../src/types/comp";
 
-const properties = (
-  settings: Partial<CompetitionProperties["Settings"][0]>[],
-) =>
-  ({
-    Settings: settings,
-    Competition: { Id: 20830, ConfirmationDeadlineInMinutes: 0 },
-  }) as unknown as CompetitionProperties;
+// Event starts 18:00 local time on 9.9.; confirmation opens the day before
+// and closes an hour before the start.
+const portal = {
+  Id: 20830,
+  ConfirmationDeadlineInMinutes: 60,
+  ConfirmationOpensWindowInDays: 1,
+} as CompetitionDetails;
+const begin = new Date(2026, 8, 9, 18).toISOString();
+const at = (day: number, hour: number, minute = 0) =>
+  new Date(2026, 8, day, hour, minute).getTime();
 
-test("an enabled setting links the portal with the event's deadline", () => {
-  const result = onlineConfirmation(
-    properties([{ Type: 1, StringValue: "on", IntValue: 60 }]),
-    "2026-09-09T18:00:00+03:00",
-  );
+test("confirmation is offered from the opening day until the deadline", () => {
+  const result = onlineConfirmation(portal, begin, at(8, 0));
   expect(result?.url).toBe("https://www.tuloslista.com/varmistus/#!/20830");
-  expect(result?.deadline?.toISOString()).toBe("2026-09-09T14:00:00.000Z");
+  expect(result?.deadline.getTime()).toBe(at(9, 17));
+  expect(onlineConfirmation(portal, begin, at(9, 16, 59))).not.toBeNull();
 });
 
-test("competitions without online confirmation get no link", () => {
-  expect(onlineConfirmation(properties([]), "2026-09-09T18:00:00Z")).toBeNull();
-  expect(
-    onlineConfirmation(
-      properties([{ Type: 1, StringValue: "off", IntValue: 60 }]),
-      "2026-09-09T18:00:00Z",
-    ),
-  ).toBeNull();
-  expect(onlineConfirmation(null, undefined)).toBeNull();
+test("confirmation is hidden before it opens and after the deadline", () => {
+  expect(onlineConfirmation(portal, begin, at(7, 23, 59))).toBeNull();
+  expect(onlineConfirmation(portal, begin, at(9, 17))).toBeNull();
 });
 
-test("an invalid event time keeps the link without a deadline", () => {
-  const result = onlineConfirmation(
-    properties([{ Type: 1, StringValue: "on", IntValue: 45 }]),
-    undefined,
-  );
-  expect(result?.deadline).toBeNull();
+test("competitions missing from the portal or without a start time get none", () => {
+  expect(onlineConfirmation(undefined, begin, at(9, 12))).toBeNull();
+  expect(onlineConfirmation(portal, undefined, at(9, 12))).toBeNull();
+});
+
+test("the properties setting tells whether to ask the portal", () => {
+  const properties = (StringValue?: string) =>
+    ({
+      Settings: StringValue ? [{ Type: 1, StringValue, IntValue: 60 }] : [],
+    }) as unknown as CompetitionProperties;
+  expect(usesOnlineConfirmation(properties("on"))).toBe(true);
+  expect(usesOnlineConfirmation(properties("off"))).toBe(false);
+  expect(usesOnlineConfirmation(properties())).toBe(false);
+  expect(usesOnlineConfirmation(null)).toBe(false);
 });
