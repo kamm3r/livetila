@@ -132,7 +132,7 @@ test("OBS track results sort fastest first and the background is transparent", a
     "background-color",
     "rgba(0, 0, 0, 0)",
   );
-  await expect(page.getByText("Loppukilpailu", { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Loppukilpailu – /)).toBeVisible();
   await page.goto("/obs/1-10?heat=99");
   await expect(page.getByText("Erä 99 ei ole olemassa")).toBeVisible();
   await page.goto("/obs/invalid");
@@ -685,12 +685,7 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
     const score = (value: string) =>
       page.getByText(value, { exact: true }).filter({ visible: true }).first();
     await expect(score("10,20")).toBeVisible();
-    const delayNotice = page.getByText(
-      path.startsWith("/obs/")
-        ? "Päivitys viivästyy. Näytetään viimeisimmät saadut tulokset."
-        : "Päivitys viivästyy",
-      { exact: true },
-    );
+    const delayNotice = page.getByText("Päivitys viivästyy", { exact: true });
     fail = true;
     for (let attempt = 1; attempt <= 4; attempt++) {
       await page.clock.runFor(attempt === 1 ? 30_000 : 4000);
