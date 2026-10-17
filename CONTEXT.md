@@ -21,3 +21,7 @@ the upstream cache, network and browser scheduling can add latency.
 Failed refreshes retain the last successful data and current viewing state. Only
 initial failures without cached data replace the view with an error. A status
 message marks interrupted updates until a successful refresh clears it.
+
+In results, horizontal jumps and throws keep six attempt slots visible (three in
+combined events), without truncating extra marks supplied by the API. Vertical
+jumps align each athlete’s marks by height, with no fixed six-attempt limit.
