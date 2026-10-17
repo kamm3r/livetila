@@ -1,17 +1,17 @@
 # Livetila
 
-Live athletics results and OBS streaming overlays powered by the public Tuloslista API.
+Live athletics results and streaming overlays (e.g. for OBS Studio) powered by the public Tuloslista API.
 
 ## Features
 
 - Search competitions and events, including qualifying and final rounds. Results appear in batches as you scroll, with a keyboard-accessible “Show more” control. Filtering searches the complete fetched list.
 - View entrants, start lists, heat results, and overall results. Results show six attempt slots for horizontal jumps and throws (three for combined events); high jump and pole vault align attempts by height.
 - Refresh results and event status every 30 seconds while viewing a competition, regardless of its reported status.
-- Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every 30 seconds, including in the background. Attempt details collapse after 15 seconds without a result change and reopen when a new or corrected attempt arrives.
+- Copy an overlay URL for use as a browser source in OBS or other streaming software for the selected round and heat. Overlays refresh every 30 seconds, including in the background. Attempt details collapse after 15 seconds without a result change and reopen when a new or corrected attempt arrives.
 - Responsive layouts, light/dark/system themes, and haptic feedback on supported devices.
 - Open SFIM points and results from the navbar beside the theme switcher.
-- Three-dot indicators identify the API-selected active athlete and attempt in live results and OBS overlays. Reduced-motion preferences keep the dots static.
-- Athlete club logos from Tilastopaja and country flags for foreign athletes in entrants, start lists, results and OBS overlays. Unavailable images are hidden.
+- Three-dot indicators identify the API-selected active athlete and attempt in live results and overlays. Reduced-motion preferences keep the dots static.
+- Athlete club logos from Tilastopaja and country flags for foreign athletes in entrants, start lists, results and overlays. Unavailable images are hidden.
 
 ## Development
 
@@ -52,23 +52,23 @@ The regression tests use API fixtures so they do not depend on live competitions
 
 - `/`: competition and event search.
 - `/competition/[competitionId]-[eventId]`: competition viewer; `?round=Qualify` or `?round=Final` selects a round.
-- `/obs/[competitionId]-[eventId]`: transparent OBS overlay.
+- `/overlay/[competitionId]-[eventId]`: transparent streaming overlay.
 
 Overlay parameters use one-based positions in the API's round and heat arrays:
 
 ```text
-/obs/123-456?round=2&heat=1
+/overlay/123-456?round=2&heat=1
 ```
 
-This shows the first heat of the second round. Omit `heat` for the round's overall results; omit `round` to use the first round. The OBS button in the viewer copies the current round and heat selection.
+This shows the first heat of the second round. Omit `heat` for the round's overall results; omit `round` to use the first round. The Grafiikka button in the viewer copies the current round and heat selection.
 
 `style` picks the overlay: `broadcast-trail-plain` (Lista, the default), `ticker` (Tikkeri), `broadcast-results` (Lopputulokset) or `timetable` (Aikataulu). Unknown values fall back to Lista. `gap=0` hides gaps and `accent=5ed6cb` changes the accent colour.
 
-Live result fetching is independent of event status. The competition viewer polls while visible; OBS also polls in the background. Shared query identities retain cached data across navigation, and abandoned requests are cancelled. Requests respect upstream HTTP caching; the browser can revalidate unchanged results without downloading the full payload. Upstream caching and network latency still affect freshness. See [CONTEXT.md](CONTEXT.md) for selection and refresh conventions.
+Live result fetching is independent of event status. The competition viewer polls while visible; the overlay also polls in the background. Shared query identities retain cached data across navigation, and abandoned requests are cancelled. Requests respect upstream HTTP caching; the browser can revalidate unchanged results without downloading the full payload. Upstream caching and network latency still affect freshness. See [CONTEXT.md](CONTEXT.md) for selection and refresh conventions.
 
 ## Deployment
 
-The app uses SvelteKit's static adapter in client-rendered SPA mode. Run `pnpm build` and serve `build/` from a static host. Configure the host to serve `index.html` for routes that do not match a file, including `/competition/*` and `/obs/*`, so direct links and browser reloads work. Assets should be served normally.
+The app uses SvelteKit's static adapter in client-rendered SPA mode. Run `pnpm build` and serve `build/` from a static host. Configure the host to serve `index.html` for routes that do not match a file, including `/competition/*` and `/overlay/*`, so direct links and browser reloads work. Assets should be served normally.
 
 For example, an nginx location can use `try_files $uri $uri/ /index.html;`. This fallback is required by the chosen [SvelteKit SPA deployment configuration](https://svelte.dev/docs/kit/single-page-apps).
 
@@ -88,7 +88,7 @@ SvelteKit 2, Svelte 5 runes, TypeScript, TanStack Svelte Query, Tailwind CSS 4, 
 src/
 ├── lib/
 │   ├── api.ts              # Public API client
-│   ├── competition-selection.ts # Selection rules and competition/OBS links
+│   ├── competition-selection.ts # Selection rules and competition/overlay links
 │   ├── competition-data.svelte.ts # Query identity, validation and polling
 │   ├── search-workflow.svelte.ts  # Search state, reveal limits and history
 │   ├── events.ts           # Event normalization
@@ -96,7 +96,7 @@ src/
 │   └── components/         # App components and shadcn-svelte UI
 ├── routes/
 │   ├── (app)/              # Search and competition viewer
-│   └── (overlay)/obs/      # OBS overlay
+│   └── (overlay)/overlay/  # Streaming overlay
 └── types/comp.ts           # API types
 static/                     # Static assets
 tests/                     # Browser regression tests
@@ -104,7 +104,7 @@ tests/                     # Browser regression tests
 
 ## Motion and dependency maintenance
 
-Motion uses Svelte and CSS. Pointer-operated tabs have a 180 ms selection indicator; popovers enter in 180 ms and leave in 100 ms; copy feedback takes 120 ms; button presses take 160 ms and releases take 100 ms. The home search suggestions overlay the page without shifting surrounding content, with immediate opening and dismissal; individual search results, filtering, and tab content appear immediately. Keyboard actions skip decorative transitions, and reduced-motion preferences disable CSS motion and OBS row movement. Live overlays only animate rows when their positions change.
+Motion uses Svelte and CSS. Pointer-operated tabs have a 180 ms selection indicator; popovers enter in 180 ms and leave in 100 ms; copy feedback takes 120 ms; button presses take 160 ms and releases take 100 ms. The home search suggestions overlay the page without shifting surrounding content, with immediate opening and dismissal; individual search results, filtering, and tab content appear immediately. Keyboard actions skip decorative transitions, and reduced-motion preferences disable CSS motion and overlay row movement. Live overlays only animate rows when their positions change.
 
 The motion rules live in `src/app.css`. Keep controls responsive during transitions and avoid replaying entrance animations during data refreshes.
 

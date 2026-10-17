@@ -59,7 +59,7 @@ export function competitionRoundLink(
   return next;
 }
 
-// Existing OBS links use one-based array positions. Keep this translation here
+// Existing overlay links use one-based array positions. Keep this translation here
 // so non-contiguous domain Index values never change the copied URL format.
 export function overlayLink(
   slug: string,
@@ -77,7 +77,7 @@ export function overlayLink(
   if (heat >= 0) params.set("heat", String(heat + 1));
   if (options.style) params.set("style", options.style);
   if (options.gap === false) params.set("gap", "0");
-  return `/obs/${slug}?${params}`;
+  return `/overlay/${slug}?${params}`;
 }
 
 export function selectOverlayRound(rounds: Round[], params: URLSearchParams) {

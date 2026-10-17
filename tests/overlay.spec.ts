@@ -116,7 +116,7 @@ test.describe("style selection", () => {
     }) => {
       await serve(page, field());
       await page.emulateMedia({ reducedMotion: "reduce" });
-      await page.goto(`/obs/1-10?heat=1${query}`);
+      await page.goto(`/overlay/1-10?heat=1${query}`);
       await expect(visibleText(page, "Loppukilpailu")).toBeVisible();
       await expect(visibleText(page, "Tulos")).toBeVisible();
       await expect(page.locator("[data-attempt-details]")).toHaveCount(1);
@@ -131,7 +131,7 @@ test.describe("Lista", () => {
   }) => {
     await serve(page, field());
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/obs/1-10?heat=1&style=broadcast-trail-plain");
+    await page.goto("/overlay/1-10?heat=1&style=broadcast-trail-plain");
     const rows = standings(page);
     await expect(rows.nth(0)).toContainText("Korhonen");
     await expect(rows.nth(1)).toContainText("Virtanen");
@@ -155,7 +155,7 @@ test.describe("Lista", () => {
     await serve(page, field());
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(
-      "/obs/1-10?heat=1&style=broadcast-trail-plain&gap=0&accent=ff8800",
+      "/overlay/1-10?heat=1&style=broadcast-trail-plain&gap=0&accent=ff8800",
     );
     await expect(visibleText(page, "7,10m")).toBeVisible();
     await expect(page.getByText("+0,35")).toHaveCount(0);
@@ -167,7 +167,7 @@ test.describe("Lista", () => {
   }) => {
     const server = await serve(page, field());
     await page.clock.install();
-    await page.goto("/obs/1-10?heat=1&style=broadcast-trail-plain");
+    await page.goto("/overlay/1-10?heat=1&style=broadcast-trail-plain");
     const rows = standings(page);
     await expect(rows.nth(0)).toContainText("Korhonen");
 
@@ -194,7 +194,7 @@ test.describe("Lista", () => {
     const server = await serve(page, [slow, fast], "Track");
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.clock.install();
-    await page.goto("/obs/1-10?heat=1&style=broadcast-trail-plain");
+    await page.goto("/overlay/1-10?heat=1&style=broadcast-trail-plain");
     await expect(visibleText(page, "Loppukilpailu – Lähtölista")).toBeVisible();
     const rows = standings(page);
     await expect(rows).toHaveCount(2);
@@ -220,7 +220,7 @@ test.describe("Tikkeri", () => {
     const server = await serve(page, field());
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.clock.install();
-    await page.goto("/obs/1-10?heat=1&style=ticker");
+    await page.goto("/overlay/1-10?heat=1&style=ticker");
     for (const name of ["Korhonen", "Virtanen", "Mäkinen"])
       await expect(visibleText(page, name)).toBeVisible();
     await expect(visibleText(page, "LIVE")).toBeVisible();
@@ -246,7 +246,7 @@ test.describe("Lopputulokset", () => {
   }) => {
     await serve(page, field());
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/obs/1-10?heat=1&style=broadcast-results");
+    await page.goto("/overlay/1-10?heat=1&style=broadcast-results");
     await expect(visibleText(page, "Tulokset – Loppukilpailu")).toBeVisible();
     const rows = page.locator("ol > li");
     await expect(rows).toHaveCount(3);
@@ -263,7 +263,7 @@ test.describe("Lopputulokset", () => {
   test("?gap=0 leaves out the gap column", async ({ page }) => {
     await serve(page, field());
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/obs/1-10?heat=1&style=broadcast-results&gap=0");
+    await page.goto("/overlay/1-10?heat=1&style=broadcast-results&gap=0");
     await expect(visibleText(page, "7,10m")).toBeVisible();
     await expect(page.getByText("Ero", { exact: true })).toHaveCount(0);
     await expect(page.getByText("−0,18")).toHaveCount(0);
@@ -297,7 +297,7 @@ test.describe("Aikataulu", () => {
     });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.clock.install();
-    await page.goto("/obs/1-10?style=timetable");
+    await page.goto("/overlay/1-10?style=timetable");
     await expect(visibleText(page, "Aikataulu")).toBeVisible();
     await expect(visibleText(page, /syyskuuta 2026/)).toBeVisible();
     const rows = page.locator("ol > li");
@@ -323,7 +323,7 @@ test.describe("attempt details", () => {
     const server = await serve(page, idle());
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.clock.install();
-    await page.goto("/obs/1-10?heat=1&style=broadcast-trail-plain");
+    await page.goto("/overlay/1-10?heat=1&style=broadcast-trail-plain");
     const details = page.locator("[data-attempt-details]:visible");
     await expect.poll(() => details.count()).toBe(1);
     await page.clock.runFor(14_000);
@@ -350,7 +350,7 @@ test.describe("attempt details", () => {
     const server = await serve(page, field());
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.clock.install();
-    await page.goto("/obs/1-10?heat=1&style=ticker");
+    await page.goto("/overlay/1-10?heat=1&style=ticker");
     await expect(visibleText(page, "Korhonen")).toBeVisible();
     // Fifteen quiet seconds, then a poll that changes nothing.
     await page.clock.runFor(30_000);

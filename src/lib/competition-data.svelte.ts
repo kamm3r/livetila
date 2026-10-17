@@ -3,7 +3,7 @@ import { api } from "./api";
 import { parseCompetitionSlug } from "./competition-selection";
 import { flattenEvents } from "./events";
 
-// Results must refresh without waiting for a status change. OBS keeps polling
+// Results must refresh without waiting for a status change. The overlay keeps polling
 // when its document is hidden; ordinary viewing follows foreground visibility.
 // Match the upstream 29-second cache and let the browser revalidate unchanged data.
 const liveInterval = 30_000;

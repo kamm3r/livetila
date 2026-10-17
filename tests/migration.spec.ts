@@ -64,7 +64,7 @@ test("search supports keyboard selection and preserves the chosen round", async 
   await expect(page.getByRole("heading", { name: "Test Games" })).toBeVisible();
 });
 
-test("round navigation, desktop results, and OBS clipboard link stay in sync", async ({
+test("round navigation, desktop results, and overlay clipboard link stay in sync", async ({
   page,
   context,
 }) => {
@@ -82,7 +82,9 @@ test("round navigation, desktop results, and OBS clipboard link stay in sync", a
   await page.getByRole("button", { name: "Kopioi linkki" }).click();
   await expect
     .poll(() => page.evaluate(() => navigator.clipboard.readText()))
-    .toBe("http://127.0.0.1:4173/obs/1-10?round=2&style=broadcast-trail-plain");
+    .toBe(
+      "http://127.0.0.1:4173/overlay/1-10?round=2&style=broadcast-trail-plain",
+    );
   await page.keyboard.press("Escape");
   await page.goBack();
   await expect(page).toHaveURL(/round=Qualify/);
@@ -90,7 +92,7 @@ test("round navigation, desktop results, and OBS clipboard link stay in sync", a
   const overlay = page.getByRole("link", { name: "Avaa grafiikka" });
   await expect(overlay).toHaveAttribute(
     "href",
-    "http://127.0.0.1:4173/obs/1-10?round=1&style=broadcast-trail-plain",
+    "http://127.0.0.1:4173/overlay/1-10?round=1&style=broadcast-trail-plain",
   );
   await page.getByText("Näytä erot").click();
   await expect(
@@ -98,13 +100,13 @@ test("round navigation, desktop results, and OBS clipboard link stay in sync", a
   ).not.toBeChecked();
   await expect(overlay).toHaveAttribute(
     "href",
-    "http://127.0.0.1:4173/obs/1-10?round=1&style=broadcast-trail-plain&gap=0",
+    "http://127.0.0.1:4173/overlay/1-10?round=1&style=broadcast-trail-plain&gap=0",
   );
   await page.getByText("Tikkeri").click();
   await expect(page.getByRole("switch", { name: "Näytä erot" })).toHaveCount(0);
   await expect(overlay).toHaveAttribute(
     "href",
-    "http://127.0.0.1:4173/obs/1-10?round=1&style=ticker",
+    "http://127.0.0.1:4173/overlay/1-10?round=1&style=ticker",
   );
 });
 
@@ -123,23 +125,23 @@ test("event switcher can select another round of the same event", async ({
   await expect(page.locator("button button")).toHaveCount(0);
 });
 
-test("OBS track results sort fastest first and the background is transparent", async ({
+test("overlay track results sort fastest first and the background is transparent", async ({
   page,
 }) => {
-  await page.goto("/obs/1-10?round=2&heat=1");
+  await page.goto("/overlay/1-10?round=2&heat=1");
   await expect(page.getByRole("listitem").first()).toContainText("Fast Runner");
   await expect(page.locator("body")).toHaveCSS(
     "background-color",
     "rgba(0, 0, 0, 0)",
   );
   await expect(page.getByText(/^Loppukilpailu – /)).toBeVisible();
-  await page.goto("/obs/1-10?heat=99");
+  await page.goto("/overlay/1-10?heat=99");
   await expect(page.getByText("Erä 99 ei ole olemassa")).toBeVisible();
-  await page.goto("/obs/invalid");
+  await page.goto("/overlay/invalid");
   await expect(page.getByText("Virheellinen linkki")).toBeVisible();
 });
 
-test("mobile results and OBS drawer work", async ({ page }) => {
+test("mobile results and overlay drawer work", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/competition/1-10?round=Final");
   await page.getByRole("tab", { name: "Tulokset" }).click();
@@ -517,7 +519,7 @@ test("drawer drag stays direct, settles at 280ms, and keyboard overrides inline 
   await expect(drawer).toHaveCount(0);
 });
 
-for (const path of ["/competition/1-10", "/obs/1-10"]) {
+for (const path of ["/competition/1-10", "/overlay/1-10"]) {
   test(`new results appear on the next 30-second refresh: ${path}`, async ({
     page,
   }) => {
@@ -560,7 +562,7 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
   });
 }
 
-for (const path of ["/competition/1-10", "/obs/1-10"]) {
+for (const path of ["/competition/1-10", "/overlay/1-10"]) {
   test(`refresh visibility policy: ${path}`, async ({ page }) => {
     let requests = 0;
     page.on("request", (request) => {
@@ -580,7 +582,7 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
       document.dispatchEvent(new Event("visibilitychange"));
     });
     await page.clock.runFor(30_100);
-    if (path.startsWith("/obs/")) {
+    if (path.startsWith("/overlay/")) {
       await expect.poll(() => requests).toBeGreaterThan(1);
     } else {
       expect(requests).toBe(1);
@@ -598,7 +600,7 @@ for (const path of ["/competition/1-10", "/obs/1-10"]) {
   });
 }
 
-test("malformed competition and OBS links never fetch competition data", async ({
+test("malformed competition and overlay links never fetch competition data", async ({
   page,
 }) => {
   const requests: string[] = [];
@@ -606,7 +608,7 @@ test("malformed competition and OBS links never fetch competition data", async (
     if (request.url().includes("/api/v1/")) requests.push(request.url());
   });
   await page.clock.install();
-  for (const path of ["/competition/1-10-extra", "/obs/a-b"]) {
+  for (const path of ["/competition/1-10-extra", "/overlay/a-b"]) {
     await page.goto(path);
     await expect(
       page.getByText("Virheellinen linkki", { exact: true }),
@@ -651,7 +653,7 @@ test("search remains usable with unavailable history storage and competition nam
   await expect(page).toHaveURL(/competition\/1-10\?round=Qualify/);
 });
 
-for (const path of ["/competition/1-10", "/obs/1-10"]) {
+for (const path of ["/competition/1-10", "/overlay/1-10"]) {
   test(`refresh failure preserves loaded results and recovers: ${path}`, async ({
     page,
   }) => {
@@ -748,8 +750,8 @@ for (const heatCount of [0, 1]) {
 
 for (const path of [
   "/competition/1-10?round=Final",
-  "/obs/1-10?heat=1",
-  "/obs/1-10",
+  "/overlay/1-10?heat=1",
+  "/overlay/1-10",
 ]) {
   test(`official ranks resolve tied field results: ${path}`, async ({
     page,
@@ -803,7 +805,7 @@ for (const path of [
   });
 }
 
-for (const path of ["/competition/1-10?round=Final", "/obs/1-10?heat=1"]) {
+for (const path of ["/competition/1-10?round=Final", "/overlay/1-10?heat=1"]) {
   test(`athlete club logos and foreign flags render and survive refresh: ${path}`, async ({
     page,
   }) => {
@@ -1408,7 +1410,7 @@ for (const variant of [
     await page.goto(
       competition
         ? "/competition/1-10?round=Final"
-        : `/obs/1-10?heat=1&style=${variant}`,
+        : `/overlay/1-10?heat=1&style=${variant}`,
     );
     const indicator = page.locator("[data-active-attempt]:visible");
     await expect(indicator).toHaveCount(1);

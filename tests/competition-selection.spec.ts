@@ -40,7 +40,7 @@ test("round and heat identities survive both URL formats", () => {
     round: selection.round!.Index,
     heat: selection.heat!.Index,
   });
-  expect(link).toBe("/obs/1-10?round=2&heat=2");
+  expect(link).toBe("/overlay/1-10?round=2&heat=2");
   expect(
     overlayLink(
       "1-10",
@@ -48,11 +48,11 @@ test("round and heat identities survive both URL formats", () => {
       { round: selection.round!.Index, heat: selection.heat!.Index },
       { gap: false },
     ),
-  ).toBe("/obs/1-10?round=2&heat=2&gap=0");
+  ).toBe("/overlay/1-10?round=2&heat=2&gap=0");
   // No heat: the whole round.
   expect(
     overlayLink("1-10", rounds, { round: selection.round!.Index, heat: -1 }),
-  ).toBe("/obs/1-10?round=2");
+  ).toBe("/overlay/1-10?round=2");
   const decoded = selectOverlayRound(
     rounds,
     new URL(link, "https://example.test").searchParams,
@@ -67,7 +67,7 @@ test("round and heat identities survive both URL formats", () => {
   expect(competitionRoundLink(url, rounds, 99)).toBeNull();
 });
 
-test("selection defaults and invalid heats stay distinct for competition and OBS", () => {
+test("selection defaults and invalid heats stay distinct for competition and overlay", () => {
   expect(selectCompetitionRound(rounds, "missing").round?.Index).toBe(42);
   expect(
     selectCompetitionRound(rounds, "Qualify", { round: 42, heat: 90 }).heat

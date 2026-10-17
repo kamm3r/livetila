@@ -4,8 +4,8 @@
   import { Cast, ExternalLink } from "@lucide/svelte";
   import { getRoundContext } from "./round-provider.svelte";
   import Embed from "./embed.svelte";
-  import ObsExplainer from "./obs-explainer.svelte";
-  import ObsSetup from "./obs-setup.svelte";
+  import OverlayExplainer from "./overlay-explainer.svelte";
+  import OverlaySetup from "./overlay-setup.svelte";
   import { Button } from "$lib/components/ui/button";
   import {
     Popover,
@@ -245,11 +245,11 @@
       </p>
     {/if}
   </div>
-  <ObsSetup />
+  <OverlaySetup />
 {/snippet}
 
 {#snippet preview(wide: boolean)}
-  <ObsExplainer
+  <OverlayExplainer
     {features}
     context={featureContext}
     {labels}
@@ -288,7 +288,7 @@
       class="hidden sm:inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 font-medium text-[13px] text-muted-foreground outline-none select-none hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary motion-control"
     >
       <Cast class="size-4" aria-hidden="true" />
-      OBS
+      Grafiikka
     </PopoverTrigger>
     <PopoverContent
       align="end"
