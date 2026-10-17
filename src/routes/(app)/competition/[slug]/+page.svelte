@@ -11,6 +11,7 @@
   import RoundSwitcher from "$lib/components/round-switcher.svelte";
   import TabsWithHaptics from "$lib/components/tabs-haptics.svelte";
   import RoundProvider from "$lib/components/round-provider.svelte";
+  import ConfirmationBanner from "$lib/components/confirmation-banner.svelte";
   import ParticipantLayout from "$lib/components/participant-layout.svelte";
   import ProtocolLayout from "$lib/components/protocol-layout.svelte";
   import ResultLayout from "$lib/components/result-layout.svelte";
@@ -20,7 +21,10 @@
     createCompetitionData,
   } from "$lib/competition-data.svelte";
   import { findSelectedEvent } from "$lib/competition-selection";
-  import { onlineConfirmation } from "$lib/online-confirmation";
+  import {
+    onlineConfirmation,
+    usesOnlineConfirmation,
+  } from "$lib/online-confirmation";
 
   const slug = $derived(page.params.slug ?? "");
   const data = createCompetitionData(() => slug, "competition");
@@ -82,8 +86,11 @@
   };
   const initialTab = $derived.by(() => {
     const fromUrl = page.url.searchParams.get("tab");
-    if (tabs.some((tab) => tab === fromUrl)) return fromUrl!;
-    return statusTab[selectedEvent?.Status ?? ""] ?? "participants";
+    if (visibleTabs.some((tab) => tab === fromUrl)) return fromUrl!;
+    const fromStatus = statusTab[selectedEvent?.Status ?? ""];
+    return fromStatus && visibleTabs.includes(fromStatus)
+      ? fromStatus
+      : "participants";
   });
 
   function handleTabChange(tab: string) {
@@ -112,23 +119,22 @@
   const confirmedCount = $derived(
     competition?.Enrollments.filter((entry) => entry.Confirmed).length ?? 0,
   );
-  // Offered until the deadline passes; heat allocation follows confirmation,
-  // so an allocated event no longer accepts it either.
+  // Shown only while the portal accepts confirmations for this event.
+  const portal = createQuery(() =>
+    competitionQueries.confirmations(usesOnlineConfirmation(compDetails)),
+  );
   let now = $state(Date.now());
   $effect(() => {
     const timer = setInterval(() => (now = Date.now()), 30_000);
     return () => clearInterval(timer);
   });
-  const confirmation = $derived.by(() => {
-    if (selectedEvent?.Status !== "Unallocated") return null;
-    const result = onlineConfirmation(
-      compDetails,
-      selectedEvent.BeginDateTimeWithTZ,
-    );
-    return result && (!result.deadline || result.deadline.getTime() > now)
-      ? result
-      : null;
-  });
+  const confirmation = $derived(
+    onlineConfirmation(
+      portal.data?.find((comp) => String(comp.Id) === compId),
+      selectedEvent?.BeginDateTimeWithTZ,
+      now,
+    ),
+  );
   const allocations = $derived(
     selectedRound?.Heats.flatMap((heat) => heat.Allocations) ?? [],
   );
@@ -136,6 +142,30 @@
     allocations.filter((entry) => entry.Result).length ||
       (selectedRound?.TotalResults ?? []).filter((entry) => entry.Result)
         .length,
+  );
+
+  // Protocols and results appear once the event has them; an unknown status
+  // falls back to the data alone. A tab stays once shown so a reverted
+  // allocation cannot pull it away mid-view.
+  const status = $derived(selectedEvent?.Status);
+  const available = $derived({
+    protocol:
+      status === "Allocated" ||
+      status === "Progress" ||
+      status === "Official" ||
+      allocations.length > 0,
+    results: status === "Progress" || status === "Official" || resultCount > 0,
+  });
+  let revealed = $state<Record<string, boolean>>({});
+  $effect(() => {
+    if (available.protocol) revealed[`${slug}/protocol`] = true;
+    if (available.results) revealed[`${slug}/results`] = true;
+  });
+  const visibleTabs = $derived(
+    tabs.filter(
+      (tab) =>
+        tab === "participants" || available[tab] || revealed[`${slug}/${tab}`],
+    ),
   );
 
   const error = $derived(
@@ -229,12 +259,16 @@
             </div>
           </div>
 
+          {#if confirmation}
+            <ConfirmationBanner {confirmation} {now} />
+          {/if}
+
           <TabsWithHaptics
             defaultValue={initialTab}
             onValueChange={handleTabChange}
             tabs={[
               {
-                value: "participants",
+                value: "participants" as const,
                 label: "Ilmoittautuneet",
                 shortLabel: "Ilmoitt.",
                 count: confirmedCount
@@ -247,7 +281,7 @@
                 content: participantsContent,
               },
               {
-                value: "protocol",
+                value: "protocol" as const,
                 label: "Pöytäkirjat",
                 shortLabel: "Pöytäk.",
                 count: allocations.length,
@@ -255,13 +289,13 @@
                 content: protocolContent,
               },
               {
-                value: "results",
+                value: "results" as const,
                 label: "Tulokset",
                 count: resultCount,
                 icon: trophyIcon,
                 content: resultsContent,
               },
-            ]}
+            ].filter((tab) => visibleTabs.includes(tab.value))}
           />
         </RoundProvider>
       {/key}
@@ -282,7 +316,7 @@
 {/snippet}
 
 {#snippet participantsContent()}
-  <ParticipantLayout enrollments={competition!.Enrollments} {confirmation} />
+  <ParticipantLayout enrollments={competition!.Enrollments} />
 {/snippet}
 
 {#snippet protocolContent()}
