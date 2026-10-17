@@ -61,6 +61,8 @@ Overlay parameters use one-based positions in the API's round and heat arrays:
 
 This shows the first heat of the second round. Omit `heat` for the round's overall results; omit `round` to use the first round. The OBS button in the viewer copies the current round and heat selection.
 
+`style` picks the overlay: `broadcast-trail-plain` (Lista, the default), `ticker` (Tikkeri), `broadcast-results` (Lopputulokset) or `timetable` (Aikataulu). Unknown values fall back to Lista. `gap=0` hides gaps and `accent=5ed6cb` changes the accent colour.
+
 Live result fetching is independent of event status. The competition viewer polls while visible; OBS also polls in the background. Shared query identities retain cached data across navigation, and abandoned requests are cancelled. Requests respect upstream HTTP caching; the browser can revalidate unchanged results without downloading the full payload. Upstream caching and network latency still affect freshness. See [CONTEXT.md](CONTEXT.md) for selection and refresh conventions.
 
 ## Deployment

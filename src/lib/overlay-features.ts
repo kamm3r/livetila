@@ -2,8 +2,9 @@
 // popover. A feature shows a switch where it applies and changes the copied
 // link. Add new ones here.
 
-export type LinkStyle =
-  "broadcast-trail-plain" | "ticker" | "broadcast-results" | "timetable";
+import type { OverlayStyle } from "$lib/components/overlay/overlay";
+
+export type LinkStyle = OverlayStyle;
 
 export const linkStyles: { id: LinkStyle; label: string }[] = [
   { id: "broadcast-trail-plain", label: "Lista" },
