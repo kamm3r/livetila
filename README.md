@@ -10,6 +10,7 @@ Live athletics results and OBS streaming overlays powered by the public Tuloslis
 - Copy an OBS browser-source URL for the selected round and heat. Overlays refresh every 30 seconds, including in the background.
 - Responsive layouts, light/dark/system themes, and haptic feedback on supported devices.
 - Open SFIM points and results from the navbar beside the theme switcher.
+- Three-dot indicators identify the API-selected active athlete and attempt in live results and OBS overlays. Reduced-motion preferences keep the dots static.
 - Athlete club logos from Tilastopaja and country flags for foreign athletes in entrants, start lists, results and OBS overlays. Unavailable images are hidden.
 
 ## Development

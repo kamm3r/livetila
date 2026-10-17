@@ -16,6 +16,8 @@
   import { cn } from "$lib/utils";
   import type { Allocation, EventCategory, TotalResult } from "~/types/comp";
   import { attemptLayout } from "$lib/attempt-layout";
+  import { activeAllocationIds } from "$lib/active-attempt";
+  import ActiveAttempt from "./active-attempt.svelte";
   import AthleteBadge from "./athlete-badge.svelte";
 
   type Entry = Allocation | TotalResult;
@@ -32,6 +34,8 @@
     isCombinedEvent?: boolean;
     live?: boolean;
   } = $props();
+
+  const activeIds = $derived(activeAllocationIds(ctx.currentRound));
 
   const sortedAllocs = $derived(
     ctx.currentHeat && ctx.heats.length > 0
@@ -195,17 +199,21 @@
     ? new Set<number>()
     : eliminatedAfterThree(entries)}
   <!-- Padding to six slots must not mark the sixth attempt as active. -->
+  {@const activeIndex = ctx.currentHeat?.ActiveAllocationAttemptIndex ?? -1}
   {@const currentRound =
     live && !layout.vertical
       ? Math.min(
           columns,
-          Math.max(
-            0,
-            ...entries.map(
-              (entry) =>
-                entry.Attempts?.filter((attempt) => attempt.Line1).length ?? 0,
-            ),
-          ),
+          activeIndex >= 0 && activeIds.size > 0
+            ? activeIndex + 1
+            : Math.max(
+                0,
+                ...entries.map(
+                  (entry) =>
+                    entry.Attempts?.filter((attempt) => attempt.Line1).length ??
+                    0,
+                ),
+              ),
         )
       : 0}
   <div class="hidden overflow-x-auto rounded-lg border lg:block">
@@ -273,6 +281,7 @@
               <span class="flex items-center gap-2 whitespace-nowrap">
                 <AthleteBadge {entry} kind="flag" />
                 <span class="font-semibold">{entry.Name}</span>
+                <ActiveAttempt active={activeIds.has(entry.AllocId)} />
                 {#if entry.Number}<span
                     class="text-muted-foreground text-xs tabular-nums"
                     >#{entry.Number}</span
@@ -339,6 +348,7 @@
           <div class="flex min-w-0 items-baseline gap-1.5">
             <AthleteBadge {entry} kind="flag" />
             <span class="truncate font-semibold text-sm">{entry.Name}</span>
+            <ActiveAttempt active={activeIds.has(entry.AllocId)} />
             {#if entry.Number}<span
                 class="shrink-0 text-[11px] text-muted-foreground tabular-nums"
                 >#{entry.Number}</span

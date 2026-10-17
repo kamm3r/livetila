@@ -25,6 +25,7 @@
     recordTag,
     turnOrder,
   } from "$lib/results";
+  import ActiveAttempt from "$lib/components/active-attempt.svelte";
   import AthleteBadge from "$lib/components/athlete-badge.svelte";
   import { athleteBadge } from "$lib/athlete-badge";
   import {
@@ -414,7 +415,12 @@
                 {banners.get(entry.Id) === "PB" ? "Ennätys" : "Kauden paras"}
               </span>
             {/if}
-            <span class="truncate">{entry.Surname || entry.Name}</span>
+            <span class="truncate"
+              >{entry.Surname || entry.Name}
+              <ActiveAttempt
+                active={view.activeAllocationIds.has(entry.AllocId)}
+              /></span
+            >
             {#if tag}
               <span
                 class={cn(

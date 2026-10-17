@@ -156,6 +156,8 @@ export type Round = {
 };
 
 export type Heat = {
+  ActiveAllocationId?: number;
+  ActiveAllocationAttemptIndex?: number;
   Id: number;
   Index: number;
   Wind: string;
