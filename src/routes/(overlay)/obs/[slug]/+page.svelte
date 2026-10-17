@@ -9,6 +9,7 @@
   import { flattenEvents } from "$lib/events";
   import { isTimed, sortByResult } from "$lib/results";
   import { Skeleton } from "$lib/components/ui/skeleton";
+  import { activeAllocationIds } from "$lib/active-attempt";
   import { createResultChanges } from "$lib/result-changes.svelte";
   import {
     parseOverlayStyle,
@@ -60,6 +61,7 @@
   const changes = createResultChanges(() => allocations);
   const view: OverlayView = $derived({
     entries: allocations,
+    activeAllocationIds: activeAllocationIds(rounds, selection.heat),
     eventCategory,
     eventName: competition?.Name,
     roundName: rounds?.Name,

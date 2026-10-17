@@ -1355,3 +1355,103 @@ test("athletes eliminated after three rounds get hatched attempt slots", async (
     table.getByRole("columnheader", { name: "4 (meneillään)" }),
   ).toBeVisible();
 });
+
+for (const variant of [
+  "desktop",
+  "mobile",
+  "broadcast-trail-plain",
+  "ticker",
+]) {
+  test(`active athlete dots follow upstream selection and stop for official results: ${variant}`, async ({
+    page,
+  }) => {
+    let active = 101;
+    let status = "Progress";
+    const athletes = runners.map((runner, index) => ({
+      ...runner,
+      AllocId: 101 + index,
+      TeamId: 201 + index,
+    }));
+    await page.route("**/api/v1/results/**", (route) =>
+      route.fulfill({
+        json: {
+          Name: "Long jump",
+          EventCategory: "Field",
+          Enrollments: athletes.map((entry) => ({
+            ...entry,
+            Id: entry.Id + 1000,
+            Confirmed: true,
+          })),
+          Rounds: [
+            {
+              ...rounds[1],
+              Status: status,
+              TotalResults: athletes,
+              Heats: [
+                {
+                  Index: 1,
+                  ActiveAllocationId: active,
+                  ActiveAllocationAttemptIndex: 0,
+                  Allocations: athletes,
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    if (variant === "mobile")
+      await page.setViewportSize({ width: 390, height: 844 });
+    await page.clock.install();
+    const competition = variant === "desktop" || variant === "mobile";
+    await page.goto(
+      competition
+        ? "/competition/1-10?round=Final"
+        : `/obs/1-10?heat=1&style=${variant}`,
+    );
+    const indicator = page.locator("[data-active-attempt]:visible");
+    await expect(indicator).toHaveCount(1);
+    const row = (name: string) =>
+      page
+        .locator("tr, li")
+        .filter({ hasText: name })
+        .locator("[data-active-attempt]:visible");
+    await expect(row("Slow Runner")).toHaveCount(1);
+    if (competition) {
+      for (const tab of ["Pöytäkirjat", "Ilmoittautuneet"]) {
+        await page.getByRole("tab", { name: tab }).click();
+        await expect(indicator).toHaveCount(0);
+      }
+      await page.getByRole("tab", { name: "Tulokset" }).click();
+      await expect(indicator).toHaveCount(1);
+    }
+
+    expect(
+      await indicator
+        .locator(".dot")
+        .first()
+        .evaluate((el) => getComputedStyle(el).animationName),
+    ).toBe("none");
+    active = 102;
+    await page.clock.runFor(30_000);
+    await expect(row("Fast Runner")).toHaveCount(1);
+    await expect(row("Slow Runner")).toHaveCount(0);
+    if (competition) {
+      for (const tab of ["Pöytäkirjat", "Ilmoittautuneet"]) {
+        await page.getByRole("tab", { name: tab }).click();
+        await expect(indicator).toHaveCount(0);
+      }
+      await page.getByRole("tab", { name: "Tulokset" }).click();
+      await expect(indicator).toHaveCount(1);
+    }
+
+    active = 0;
+    await page.clock.runFor(30_000);
+    await expect(indicator).toHaveCount(0);
+    active = 101;
+    status = "Official";
+    await page.clock.runFor(30_000);
+    await expect(indicator).toHaveCount(0);
+  });
+}

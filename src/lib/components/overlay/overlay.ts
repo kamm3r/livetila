@@ -20,6 +20,7 @@ export type OverlayEntry = Allocation | TotalResult;
 // Everything a design needs; the page owns fetching, selection and errors.
 export type OverlayView = {
   entries: OverlayEntry[];
+  activeAllocationIds: Set<number>;
   eventCategory: EventCategory;
   eventName?: string;
   roundName?: string;
