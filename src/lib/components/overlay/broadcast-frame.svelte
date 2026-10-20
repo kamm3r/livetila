@@ -28,6 +28,7 @@
   import ActiveAttempt from "$lib/components/active-attempt.svelte";
   import AthleteBadge from "$lib/components/athlete-badge.svelte";
   import { collapse } from "./collapse";
+  import { settle, wipeIn, wipeOut } from "./wipe";
   import { athleteBadge } from "$lib/athlete-badge";
   import {
     attemptSlots,
@@ -43,12 +44,22 @@
     view,
     inHeat,
     gaps,
+    records,
   }: {
     view: OverlayView;
     inHeat: boolean;
     // Overrides `?gap=0`, for previews outside the overlay page.
     gaps?: boolean;
+    // Overrides `?records=0`, likewise.
+    records?: boolean;
   } = $props();
+  // `?records=0` drops the SB and PB tags and banners, for competitions whose
+  // entries mostly come without them.
+  const showRecords = $derived(
+    records ?? page.url.searchParams.get("records") !== "0",
+  );
+  const tagOf = (entry: OverlayEntry) =>
+    showRecords ? recordTag(entry, view.eventCategory) : null;
 
   const accent = $derived.by(() => {
     const value = page.url.searchParams.get("accent");
@@ -75,6 +86,13 @@
   let seen: LatestAttempt | null = null;
   let revealTimer: ReturnType<typeof setTimeout> | undefined;
   let popTimer: ReturnType<typeof setTimeout> | undefined;
+  let bannerTimer: ReturnType<typeof setTimeout> | undefined;
+  let whitened = $state<number | null>(null);
+  // A record's row keeps its mark once the banner has slid away, until the
+  // athlete's next attempt.
+  let bannered = $state<number | null>(null);
+  // The athlete as they were, shown until a record's row starts to climb.
+  let holding = $state.raw<OverlayEntry | null>(null);
   $effect(() => {
     const live = view.entries;
     const latest = view.changes.latest;
@@ -86,14 +104,39 @@
     if (latest && latest !== seen) {
       seen = latest;
       pending = latest;
+      bannered = null;
       staged = previousLive;
       clearTimeout(revealTimer);
       revealTimer = setTimeout(() => {
-        pending = null;
-        staged = untrack(() => view.entries);
-        popping = { id: latest.id, attempt: latest.attempt };
-        clearTimeout(popTimer);
-        popTimer = setTimeout(() => (popping = null), 1300);
+        const next = untrack(() => view.entries);
+        const before = staged.find((item) => item.Id === latest.id);
+        const entry = next.find((item) => item.Id === latest.id);
+        const tag = entry && tagOf(entry);
+        const record =
+          tag && entry.Attempts?.[latest.attempt]?.Line1 === entry.Result;
+        const land = () => {
+          holding = null;
+          pending = null;
+          popping = { id: latest.id, attempt: latest.attempt };
+          clearTimeout(popTimer);
+          popTimer = setTimeout(() => (popping = null), 1300);
+          if (!record) return;
+          // A new season or personal best lands on a white row so the accent
+          // wipe stands out; the row is back in the accent colour behind the
+          // banner when that leaves.
+          whitened = latest.id;
+          showBanner(latest.id, tag);
+        };
+        // A record's mark and banner arrive as its row starts to climb, once
+        // the new place numbers have landed.
+        const climbs =
+          !!before && !!entry && next.indexOf(entry) !== staged.indexOf(before);
+        staged = next;
+        clearTimeout(bannerTimer);
+        if (record && climbs && swapDuration) {
+          holding = before;
+          bannerTimer = setTimeout(land, swapDelay);
+        } else land();
       }, revealDelay);
       return;
     }
@@ -110,6 +153,15 @@
   const revealed = new SvelteSet<number>();
   const banners = new SvelteMap<number, "PB" | "SB">();
   const bannerTimers = new Set<ReturnType<typeof setTimeout>>();
+  function showBanner(id: number, tag: "PB" | "SB") {
+    banners.set(id, tag);
+    bannered = id;
+    const done = setTimeout(() => {
+      banners.delete(id);
+      bannerTimers.delete(done);
+    }, bannerFor);
+    bannerTimers.add(done);
+  }
   let opened = false;
   const finishers = $derived(
     timed
@@ -143,7 +195,7 @@
     return () => clearTimeout(timer);
   });
   // A banner gets the screen to itself before the next time comes in.
-  const bannerFor = 2500;
+  const bannerFor = 3000;
   $effect(() => {
     const next = Number(waitingKey.split(",")[0]);
     if (!waitingKey || Number.isNaN(next)) return;
@@ -151,14 +203,8 @@
     const timer = setTimeout(() => {
       revealed.add(next);
       const entry = untrack(() => staged.find((item) => item.Id === next));
-      const tag = entry && recordTag(entry, view.eventCategory);
-      if (!tag) return;
-      banners.set(next, tag);
-      const done = setTimeout(() => {
-        banners.delete(next);
-        bannerTimers.delete(done);
-      }, bannerFor);
-      bannerTimers.add(done);
+      const tag = entry && tagOf(entry);
+      if (tag) showBanner(next, tag);
     }, wait);
     return () => clearTimeout(timer);
   });
@@ -188,6 +234,7 @@
   $effect(() => () => {
     clearTimeout(revealTimer);
     clearTimeout(popTimer);
+    clearTimeout(bannerTimer);
   });
   const vertical = $derived(isVerticalJump(entries));
   const turn = $derived(timed ? null : turnOrder(entries));
@@ -255,7 +302,12 @@
     new Map(entries.map((entry, index) => [entry.Id, index])),
   );
 
-  const visible = $derived(ordered.map((entry, index) => ({ entry, index })));
+  const visible = $derived(
+    ordered.map((entry, index) => ({
+      entry: entry.Id === holding?.Id ? holding : entry,
+      index,
+    })),
+  );
 
   const leader = $derived(leadingResult(entries, view.eventCategory));
 
@@ -272,7 +324,10 @@
 
   const showGaps = $derived(gaps ?? page.url.searchParams.get("gap") !== "0");
   const focusedResult = $derived(
-    entries.find((entry) => entry.Id === focusId)?.Result ?? null,
+    (focusId === holding?.Id
+      ? holding
+      : entries.find((entry) => entry.Id === focusId)
+    )?.Result ?? null,
   );
   function rowGap(result: string | null) {
     if (!showGaps) return null;
@@ -358,17 +413,24 @@
       {@const place = places.get(entry.Id) ?? index}
       {@const rank = rankOf(entry, place, inHeat)}
       {@const focused = entry.Id === focusId}
-      {@const tag = recordTag(entry, view.eventCategory)}
+      {@const tag = tagOf(entry)}
+      <!-- White while the attempt is under way, in the accent once it is in
+           (for a record, once its banner has taken over). -->
+      {@const attempting =
+        pending?.id === entry.Id ||
+        holding?.Id === entry.Id ||
+        whitened === entry.Id}
       {@const q = qualification(entry)}
       {@const gap = focused ? null : rowGap(entry.Result)}
       <!-- The athlete who just competed climbs over the rows they pass. -->
       <li animate:swap in:enter class={cn("relative", focused && "z-20")}>
         <div
           class={cn(
-            "flex h-7 items-stretch bg-neutral-800/90 transition-colors duration-700",
+            "relative flex h-7 items-stretch bg-neutral-800/90 transition-colors duration-700",
             // Text switches at once so it never fades through the background.
             focused &&
               "bg-(--accent) text-black transition-[background-color] duration-300",
+            focused && attempting && "bg-white duration-0",
             // Running events show their changes as the times come in.
             !focused && !timed && change && "bg-neutral-600 duration-0",
           )}
@@ -410,21 +472,14 @@
           <span
             class="relative flex min-w-0 flex-1 items-center gap-1.5 pl-1.5"
           >
-            {#if banners.get(entry.Id)}
-              <span
-                transition:fade={{ duration }}
-                class="absolute inset-0 z-10 flex items-center justify-center bg-(--accent) text-black text-xs"
-              >
-                {banners.get(entry.Id) === "PB" ? "Ennätys" : "Kauden paras"}
-              </span>
-            {/if}
             <span class="truncate"
               >{entry.Surname || entry.Name}
               <ActiveAttempt
                 active={view.activeAllocationIds.has(entry.AllocId)}
               /></span
             >
-            {#if tag}
+            <!-- A new record's tag waits for its banner to have been. -->
+            {#if tag && whitened !== entry.Id && !banners.has(entry.Id)}
               <span
                 class={cn(
                   "px-1 text-[10px]",
@@ -445,12 +500,45 @@
               >
             {/if}
           </span>
-          {#if !focused}
+          <!-- A new record shows its mark, as the banner arrives and after. -->
+          {#if !focused || whitened === entry.Id || bannered === entry.Id}
             <span
               class="flex w-20 shrink-0 items-center justify-end bg-white/5 px-2 tabular-nums"
             >
               {@render mark(shown(entry))}
             </span>
+          {/if}
+          {#if banners.get(entry.Id)}
+            <!-- The banner slides off the end of the row on its way out. -->
+            <div
+              class="pointer-events-none absolute inset-0 z-10 overflow-hidden"
+            >
+              <!-- The athlete in focus has it across the whole row, as the mark
+                   has no place of its own there; elsewhere the mark stays in
+                   view beside it. -->
+              <div
+                in:wipeIn
+                out:wipeOut
+                onintroend={() => (whitened = null)}
+                class={cn(
+                  "absolute inset-y-0 left-0 flex items-stretch bg-(--accent) text-black",
+                  focused ? "right-0" : "right-20",
+                )}
+              >
+                <span in:settle class="flex flex-1 items-center justify-center">
+                  {banners.get(entry.Id) === "PB"
+                    ? "Personal best"
+                    : "Season best"}
+                </span>
+                {#if focused}
+                  <span
+                    class="flex w-20 shrink-0 items-center justify-end px-2 tabular-nums"
+                  >
+                    {@render mark(shown(entry))}
+                  </span>
+                {/if}
+              </div>
+            </div>
           {/if}
         </div>
 

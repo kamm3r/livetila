@@ -21,7 +21,7 @@ export type OverlayFeatureContext = {
   timed: boolean;
 };
 
-export type OverlayFeatureId = "gap" | "heats";
+export type OverlayFeatureId = "gap" | "records" | "heats";
 
 export type OverlayFeature = {
   id: OverlayFeatureId;
@@ -43,6 +43,15 @@ export const overlayFeatures: OverlayFeature[] = [
     // The ticker has no room for a difference column; a timetable has no
     // results.
     available: ({ style }) => style !== "ticker" && style !== "timetable",
+  },
+  {
+    id: "records",
+    label: "Näytä ennätykset",
+    // Many entries come without a PB or SB, so a stream may rather show none.
+    description: () =>
+      "SB- ja PB-merkinnät nimen vieressä ja banneri uudelle ennätykselle.",
+    defaultOn: true,
+    available: ({ style }) => style !== "timetable",
   },
   {
     id: "heats",
