@@ -113,6 +113,7 @@
           {events}
           {eventCategory}
           gaps={features.gap}
+          records={features.records}
         />
       </div>
     {/key}

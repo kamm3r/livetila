@@ -201,6 +201,12 @@ export function buildExample(
     kind === "height"
       ? heightSeries(phase, heightScale(eventName))
       : distanceSeries(phase, distanceScale(eventName));
+  // The fourth athlete's new lead beats their personal best, so the preview
+  // shows the record banner.
+  const personalBest =
+    kind === "height"
+      ? (2.2 * heightScale(eventName)).toFixed(2)
+      : (80.5 * distanceScale(eventName)).toFixed(2);
   return (
     base
       .map((entry, i) => {
@@ -209,7 +215,13 @@ export function buildExample(
           0,
           ...attempts.filter(cleared).map((attempt) => Number(attempt.Line1)),
         );
-        return { ...entry, Attempts: attempts, Result: best.toFixed(2) };
+        return {
+          ...entry,
+          Attempts: attempts,
+          Result: best.toFixed(2),
+          PB: i === 3 ? personalBest : "",
+          SB: "",
+        };
       })
       .sort((a, b) => Number(b.Result) - Number(a.Result))
       // Example data only fills the fields the overlay reads.

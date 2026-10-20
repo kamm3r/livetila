@@ -25,6 +25,7 @@
     entries,
     zoom,
     gaps,
+    records,
     labels,
     cycle,
     style,
@@ -34,6 +35,7 @@
     entries: OverlayEntry[];
     zoom: number;
     gaps: boolean;
+    records: boolean;
     labels: ExplainerLabels;
     cycle: number;
     style: LinkStyle;
@@ -78,7 +80,7 @@
   <!-- The ticker pins itself to the bottom of the screen; the transform makes
        this box its screen. -->
   <div class="relative h-36 w-full transform-[translateZ(0)]">
-    <Ticker {view} inHeat={false} />
+    <Ticker {view} inHeat={false} {records} />
   </div>
 {:else if style === "timetable"}
   <div style:zoom class="w-[44rem]">
@@ -86,10 +88,10 @@
   </div>
 {:else if style === "broadcast-results"}
   <div style:zoom class="w-[44rem]">
-    <BroadcastResults {view} inHeat={false} {gaps} />
+    <BroadcastResults {view} inHeat={false} {gaps} {records} />
   </div>
 {:else}
   <div style:zoom>
-    <BroadcastFrame {view} inHeat={false} {gaps} />
+    <BroadcastFrame {view} inHeat={false} {gaps} {records} />
   </div>
 {/if}
