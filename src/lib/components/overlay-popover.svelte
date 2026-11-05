@@ -269,7 +269,9 @@
       <Cast class="size-4" aria-hidden="true" />
     </DrawerTrigger>
     <DrawerContent class="data-[vaul-drawer-direction=bottom]:max-h-[90vh]">
-      <DrawerHeader>
+      <DrawerHeader
+        class="group-data-[vaul-drawer-direction=bottom]/drawer-content:text-left"
+      >
         <DrawerTitle>Lähetysgrafiikka</DrawerTitle>
         <DrawerDescription>
           Tulokset lähetykseen OBS:n tai muun ohjelman selainlähteenä.

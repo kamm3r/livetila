@@ -110,6 +110,10 @@
 
   const isFoul = (mark: string) => /^[xr]$/i.test(mark.trim());
 
+  // The API writes a pass and negative wind with a hyphen.
+  const typeset = (mark: string) =>
+    mark === "-" ? "–" : mark.replace(/^-/, "−");
+
   // Below table width the gap has no column header to name it.
   const showsGap = $derived(
     [sortedAllocs, showTotal ? sortedTotal : []].some((list) => {
@@ -214,10 +218,10 @@
         index === newAttempt && "ring-1 ring-yellow-400",
       )}
     >
-      <span>{height ? attempt.Line2 || "–" : attempt.Line1}</span>
+      <span>{typeset(height ? attempt.Line2 || "–" : attempt.Line1)}</span>
       {#if !height && attempt.Line2}<span
-          class="font-normal text-[10px] text-muted-foreground"
-          >{attempt.Line2}</span
+          class="font-normal text-[11px] text-muted-foreground"
+          >{typeset(attempt.Line2)}</span
         >{/if}
     </span>
   {:else}
@@ -385,6 +389,7 @@
         aria-hidden="true"
         class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_oklch,var(--muted)_45%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
       >
+        <span class="hidden text-left md:col-span-2 md:block">Sija</span>
         <span class="hidden text-left md:col-start-3 md:block">Urheilija</span>
         <span class="grid md:col-start-4" style={attemptGrid}>
           {#each layout.labels as label, i (label)}
