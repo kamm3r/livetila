@@ -301,7 +301,7 @@
             <th
               class={cn(
                 "w-[58px] text-center font-medium",
-                i + 1 === currentRound && "font-semibold text-primary",
+                i + 1 === currentRound && "font-semibold text-foreground",
               )}
               scope="col"
               >{layout.labels[i]}{#if i + 1 === currentRound}<span
@@ -408,8 +408,9 @@
         <span class="grid md:col-start-4" style={attemptGrid}>
           {#each layout.labels as label, i (label)}
             <span
-              class={cn(i + 1 === currentRound && "font-semibold text-primary")}
-              >{label}</span
+              class={cn(
+                i + 1 === currentRound && "font-semibold text-foreground",
+              )}>{label}</span
             >
           {/each}
         </span>
