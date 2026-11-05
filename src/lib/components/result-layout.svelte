@@ -367,10 +367,12 @@
           >
             {#each { length: isOut ? 3 : columns }, i (i)}
               <li>
-                {#if layout.vertical}<span
-                    class="block text-[10px] text-muted-foreground"
-                    >{layout.labels[i]}</span
-                  >{/if}
+                <span
+                  class={cn(
+                    "block text-[10px] text-muted-foreground",
+                    i + 1 === currentRound && "font-semibold text-primary",
+                  )}>{layout.labels[i]}</span
+                >
                 {#if layout.vertical || entry.Attempts?.[i]?.Line1}
                   {@render attemptMark(
                     entry,
@@ -388,7 +390,7 @@
             {/each}
             {#if isOut && columns > 3}
               <li
-                class="hatch h-4 self-center rounded-[3px]"
+                class="hatch mb-0.5 h-5 self-end rounded-[3px]"
                 style={`grid-column: span ${columns - 3}`}
               >
                 <span class="sr-only">Karsiutui</span>

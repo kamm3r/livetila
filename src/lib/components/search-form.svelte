@@ -64,7 +64,24 @@
     void search.selectedComp;
     if (listEl) listEl.scrollTop = 0;
   });
+  // The list fades at the bottom only while there is more to scroll to.
+  let moreBelow = $state(false);
+  function updateMoreBelow() {
+    if (!listEl) return;
+    moreBelow =
+      listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight > 1;
+  }
+  $effect(() => {
+    void search.results.length;
+    void search.visibleCount;
+    void search.isLoading;
+    void listHeight;
+    if (!listEl) return;
+    const frame = requestAnimationFrame(updateMoreBelow);
+    return () => cancelAnimationFrame(frame);
+  });
   function handleScroll(event: Event) {
+    updateMoreBelow();
     const list = event.currentTarget as HTMLElement;
     if (
       search.hasMore &&
@@ -93,7 +110,7 @@
     void search.selectEvent(event);
   }
 
-  let listHeight = $state(320);
+  let listHeight = $state(420);
   function measureSpace() {
     if (!inputEl) return;
     const viewport = window.visualViewport;
@@ -101,7 +118,7 @@
       (viewport?.height ?? window.innerHeight) + (viewport?.offsetTop ?? 0);
     listHeight = Math.max(
       96,
-      Math.min(320, bottom - inputEl.getBoundingClientRect().bottom - 88),
+      Math.min(420, bottom - inputEl.getBoundingClientRect().bottom - 88),
     );
   }
   onMount(() => {
@@ -204,7 +221,10 @@
               <CommandList
                 bind:ref={listEl}
                 onscroll={handleScroll}
-                class="search-list overflow-y-auto overscroll-contain pb-10"
+                class={cn(
+                  "overflow-y-auto overscroll-contain",
+                  moreBelow && "search-fade",
+                )}
                 style={`max-height: ${listHeight}px`}
               >
                 {#if search.matchingRecent.length}
@@ -404,7 +424,7 @@
 
 <style>
   /* Rows fade out at the bottom edge: a hint there is more to scroll to. */
-  :global(.search-list) {
+  :global(.search-fade) {
     mask-image: linear-gradient(
       to bottom,
       black calc(100% - 2.5rem),
