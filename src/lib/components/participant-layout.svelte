@@ -61,7 +61,7 @@
             )}
           >
             <td class="pl-3">
-              <span class="inline-flex w-6 justify-center"
+              <span class="flex w-6 items-center justify-center"
                 >{@render status(enrollment)}</span
               >
             </td>
