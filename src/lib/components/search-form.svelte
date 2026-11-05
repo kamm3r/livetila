@@ -262,7 +262,7 @@
                 bind:ref={listEl}
                 onscroll={handleScroll}
                 class={cn(
-                  "overflow-y-auto overscroll-contain [scrollbar-width:thin]",
+                  "snap-y overflow-y-auto overscroll-contain [scrollbar-width:thin] **:data-[slot=command-item]:snap-start",
                 )}
                 style={`max-height: ${fittedHeight ?? listHeight}px`}
               >
@@ -280,10 +280,20 @@
                         <Clock
                           class="recent-icon size-4 shrink-0 text-muted-foreground"
                         />
-                        <span
-                          class="min-w-0 break-words font-medium text-foreground text-sm"
-                          >{item.label}</span
-                        >
+                        {@const parts = item.label.split(" / ")}
+                        <span class="flex min-w-0 flex-col gap-0.5">
+                          <span class="break-words text-sm"
+                            ><span class="font-medium text-foreground"
+                              >{parts.at(-2)}</span
+                            >
+                            <span class="text-muted-foreground"
+                              >{parts.at(-1)}</span
+                            ></span
+                          >
+                          <span class="truncate text-muted-foreground text-xs"
+                            >{parts.slice(0, -2).join(" / ")}</span
+                          >
+                        </span>
                       </CommandItem>
                       <button
                         type="button"
@@ -336,7 +346,7 @@
                   {#each search.filteredCompetitions.slice(0, search.visibleCount) as comp (comp.Id)}
                     <div>
                       <CommandItem
-                        class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [@media(hover:none)]:data-selected:bg-transparent [&>.cn-command-item-indicator]:hidden"
+                        class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [&>.cn-command-item-indicator]:hidden"
                         onmousedown={(e) => {
                           e.preventDefault();
                         }}
@@ -363,7 +373,7 @@
                             </span>
                           </div>
                           <ChevronRight
-                            class="size-4 shrink-0 text-primary opacity-0 group-data-selected:opacity-100 [@media(hover:none)]:group-data-selected:opacity-0"
+                            class="size-4 shrink-0 text-primary row-chevron opacity-0 group-data-selected:opacity-100"
                           />
                         </div>
                       </CommandItem>
@@ -377,7 +387,7 @@
                         search.navigatingTo !== null && !isNavigating}
                       <div>
                         <CommandItem
-                          class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [@media(hover:none)]:data-selected:bg-transparent [&>.cn-command-item-indicator]:hidden disabled:pointer-events-none"
+                          class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [&>.cn-command-item-indicator]:hidden disabled:pointer-events-none"
                           disabled={isDisabled}
                           onmousedown={(e) => {
                             e.preventDefault();
@@ -416,7 +426,7 @@
                                 />
                               {:else}
                                 <ChevronRight
-                                  class="size-4 text-primary opacity-0 group-data-selected:opacity-100 [@media(hover:none)]:group-data-selected:opacity-0"
+                                  class="size-4 text-primary row-chevron opacity-0 group-data-selected:opacity-100"
                                 />
                               {/if}
                             </div>
@@ -461,7 +471,9 @@
 </div>
 
 <style>
-  .recent-row:has(:global([data-selected])),
+  :global(html[data-input="keyboard"])
+    .recent-row:has(:global([data-selected])),
+  .recent-row:hover,
   .recent-row:focus-within {
     background: color-mix(in oklch, var(--primary) 10%, transparent);
   }

@@ -204,7 +204,16 @@
       </div>
       <Skeleton class="h-9 w-56 max-w-full" />
       <Skeleton class="mb-1 h-5 w-72 max-w-full" />
-      <Skeleton class="h-96 w-full rounded-xl" />
+      <div class="data-frame">
+        <div class="data-head"></div>
+        {#each { length: 8 }, i (i)}
+          <div class="flex h-12 items-center gap-3 border-t px-3">
+            <Skeleton class="size-6 shrink-0 rounded-full" />
+            <Skeleton class="h-4 w-40 max-w-1/2" />
+            <Skeleton class="ml-auto h-4 w-12" />
+          </div>
+        {/each}
+      </div>
     </div>
   {:else if error}
     <div
@@ -286,7 +295,7 @@
                 label: "Ilmoittautuneet",
                 count: confirmedCount
                   ? `${confirmedCount}/${competition.Enrollments.length}`
-                  : competition.Enrollments.length,
+                  : competition.Enrollments.length || undefined,
                 countLabel: confirmedCount
                   ? `${confirmedCount}/${competition.Enrollments.length} vahvistanut`
                   : undefined,

@@ -33,7 +33,7 @@
       className,
     )}
     onclick={toggleMode}
-    aria-label="Toggle theme"
+    aria-label="Vaihda teema"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +55,7 @@
       <path d="M12 14.3l7.37 -7.37" />
       <path d="M12 19.6l8.85 -8.85" />
     </svg>
-    <span class="sr-only">Toggle theme</span>
+    <span class="sr-only">Vaihda teema</span>
   </Tooltip.Trigger>
   <Tooltip.Content>
     Paina <Kbd.Root>D</Kbd.Root> vaihtaaksesi teemaa

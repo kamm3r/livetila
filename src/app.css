@@ -223,13 +223,16 @@ html[data-input="pointer"] .motion-control:active:not(:disabled) {
   box-shadow: none;
 }
 
-/* Rows fade out at the bottom edge: a hint there is more to scroll to. */
-.fade-below {
-  mask-image: linear-gradient(
-    to bottom,
-    black calc(100% - 1.5rem),
-    transparent
-  );
+/* The list's keyboard position is not a pointer state: without a keyboard, a
+   row only lights up under the pointer. */
+html:not([data-input="keyboard"])
+  [data-slot="command-item"][data-selected]:not(:hover, :active) {
+  background: transparent;
+}
+html:not([data-input="keyboard"])
+  [data-slot="command-item"][data-selected]:not(:hover, :active)
+  .row-chevron {
+  opacity: 0;
 }
 
 /* Hatching marks attempts never taken after elimination. The period makes a

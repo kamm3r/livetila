@@ -139,7 +139,7 @@
     {/each}
   </ul>
 {:else}
-  <Empty.Root>
-    <Empty.Description>Eräjakoja ei ole saatavilla vielä...</Empty.Description>
+  <Empty.Root class="data-frame py-12">
+    <Empty.Description>Eräjakoja ei ole vielä.</Empty.Description>
   </Empty.Root>
 {/if}

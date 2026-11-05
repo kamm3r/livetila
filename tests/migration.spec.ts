@@ -214,11 +214,11 @@ test("theme toggles without reacting to typing in search", async ({ page }) => {
   await page.goto("/");
   const input = page.getByRole("combobox");
   await expect(input).toBeVisible();
-  await page.getByRole("button", { name: "Toggle theme" }).click();
+  await page.getByRole("button", { name: "Vaihda teema" }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
   await input.fill("d");
   await expect(page.locator("html")).toHaveClass(/dark/);
-  await page.getByRole("button", { name: "Toggle theme" }).click();
+  await page.getByRole("button", { name: "Vaihda teema" }).click();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
 });
 
@@ -430,8 +430,9 @@ test("recent searches persist, stay capped at four, and can be removed with keyb
     page.getByRole("button", { name: /Poista viimeisimmistä/ }),
   ).toHaveCount(4);
   await expect(page.getByRole("option").first()).toContainText(
-    "Test Games / 100 m / Alkuerät",
+    "100 m Alkuerät",
   );
+  await expect(page.getByRole("option").first()).toContainText("Test Games");
   const remove = page.getByRole("button", {
     name: /Poista viimeisimmistä.*Test Games/,
   });
@@ -742,9 +743,7 @@ for (const heatCount of [0, 1]) {
     await expect(
       page.getByRole("cell", { name: "10,20", exact: true }),
     ).toBeVisible();
-    await expect(
-      page.getByText("Tuloksia ei ole saatavilla vielä..."),
-    ).toHaveCount(0);
+    await expect(page.getByText("Tuloksia ei ole vielä.")).toHaveCount(0);
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.getByText("10,20", { exact: true }).last()).toBeVisible();
   });

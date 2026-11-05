@@ -596,8 +596,8 @@
   {#if sortedAllocs.length > 0}
     <div>{@render resultList(sortedAllocs, "HeatRank", heatChanges)}</div>
   {:else if !showTotal}
-    <Empty.Root>
-      <Empty.Description>Tuloksia ei ole saatavilla vielä...</Empty.Description>
+    <Empty.Root class="data-frame py-12">
+      <Empty.Description>Tuloksia ei ole vielä.</Empty.Description>
     </Empty.Root>
   {/if}
 

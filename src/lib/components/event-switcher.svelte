@@ -72,17 +72,31 @@
 
   let open = $state(false);
 
-  // The list fades at the bottom only while there is more to scroll to.
+  // Opens on the current event and ends on a whole row. The count below says
+  // there are more rows than fit.
+  const maxListHeight = 400;
   let listEl = $state<HTMLElement | null>(null);
-  let moreBelow = $state(false);
-  function updateMoreBelow() {
-    if (!listEl) return;
-    moreBelow =
-      listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight > 1;
-  }
+  let fittedHeight = $state<number | null>(null);
   $effect(() => {
     if (!listEl) return;
-    const frame = requestAnimationFrame(updateMoreBelow);
+    const list = listEl;
+    const frame = requestAnimationFrame(() => {
+      const rows = [...list.children] as HTMLElement[];
+      const fits = rows.filter(
+        (row) => row.offsetTop + row.offsetHeight <= maxListHeight,
+      );
+      const last = fits.at(-1);
+      fittedHeight =
+        fits.length < rows.length && last
+          ? last.offsetTop + last.offsetHeight
+          : null;
+      const current = list.querySelector<HTMLElement>("[aria-current]");
+      if (
+        current &&
+        current.offsetTop + current.offsetHeight > list.clientHeight
+      )
+        list.scrollTop = current.offsetTop - 6;
+    });
     return () => cancelAnimationFrame(frame);
   });
 
@@ -121,11 +135,8 @@
   <Popover.Content class="w-[min(420px,calc(100vw-2rem))] p-0" align="start">
     <div
       bind:this={listEl}
-      onscroll={updateMoreBelow}
-      class={cn(
-        "max-h-96 overflow-auto p-1.5 sm:max-h-100",
-        moreBelow && "fade-below",
-      )}
+      class="relative snap-y overflow-auto p-1.5 scroll-pt-1.5 [scrollbar-width:thin]"
+      style={`max-height: ${fittedHeight ?? maxListHeight}px`}
     >
       {#each sortedEvents as event, i (`${event.Id}-${event.BeginDateTimeWithTZ}`)}
         {@const selected =
@@ -134,7 +145,7 @@
         <button
           aria-current={selected ? "true" : undefined}
           class={cn(
-            "grid w-full cursor-pointer grid-cols-[3rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary items-baseline sm:grid-cols-[3rem_minmax(0,1fr)_8.25rem]",
+            "grid w-full cursor-pointer snap-start grid-cols-[3rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary items-baseline sm:grid-cols-[3rem_minmax(0,1fr)_8.25rem]",
             selected && "bg-accent",
           )}
           onclick={() => handleSelect(i.toString())}
@@ -163,5 +174,10 @@
         </button>
       {/each}
     </div>
+    {#if fittedHeight !== null}
+      <p class="border-t px-3.5 py-2 text-muted-foreground text-xs">
+        {sortedEvents.length} lajia
+      </p>
+    {/if}
   </Popover.Content>
 </Popover.Root>

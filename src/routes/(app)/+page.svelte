@@ -28,9 +28,10 @@
   }
 
   // "Kilpailu / M Moukari / Alkuerät" → "M Moukari" and "Alkuerät"
-  const eventLabel = (label: string) => label.split(" / ")[1] ?? label;
-  const roundLabel = (label: string) => label.split(" / ").slice(2).join(" / ");
-  const competitionLabel = (label: string) => label.split(" / ")[0];
+  const eventLabel = (label: string) => label.split(" / ").at(-2) ?? label;
+  const roundLabel = (label: string) => label.split(" / ").at(-1);
+  const competitionLabel = (label: string) =>
+    label.split(" / ").slice(0, -2).join(" / ");
 
   const competitionMeta = (comp: CompetitionList) =>
     [new Date(comp.Date).toLocaleDateString("fi-FI"), comp.Stadion?.Name]
