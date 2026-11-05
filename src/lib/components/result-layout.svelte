@@ -110,6 +110,17 @@
 
   const isFoul = (mark: string) => /^[xr]$/i.test(mark.trim());
 
+  // Below table width the gap has no column header to name it.
+  const showsGap = $derived(
+    [sortedAllocs, showTotal ? sortedTotal : []].some((list) => {
+      const leader = leadingResult(list, eventCategory);
+      return list.some((entry) => {
+        const gap = gapToLeader(entry.Result, leader, eventCategory);
+        return gap && gap !== "—";
+      });
+    }),
+  );
+
   // Once under everything on the page, explaining only what is on the page.
   const legend = $derived.by(() => {
     const entries = [...sortedAllocs, ...(showTotal ? sortedTotal : [])];
@@ -367,13 +378,14 @@
   <!-- From tablet width a row fits on one line: name, attempts, result. -->
   <ul
     class="data-frame overflow-clip lg:hidden"
-    style={`--attempts: ${columns * (layout.vertical ? 44 : 52)}px`}
+    style={`--attempts: ${columns * 44}px`}
   >
     {#if sharedLabels}
       <li
         aria-hidden="true"
         class="data-head sticky top-0 z-10 grid h-7 items-center gap-x-2.5 border-b-0 bg-muted px-3 text-center tracking-normal normal-case md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_5.5rem]"
       >
+        <span class="hidden text-left md:col-start-3 md:block">Urheilija</span>
         <span class="grid md:col-start-4" style={attemptGrid}>
           {#each layout.labels as label, i (label)}
             <span
@@ -382,6 +394,7 @@
             >
           {/each}
         </span>
+        <span class="hidden pr-5 text-right md:block">Tulos / Ero</span>
       </li>
     {/if}
     {#each entries as entry (entry.Id)}
@@ -571,6 +584,11 @@
           <span class="font-medium text-foreground/75">{key}</span> = {meaning}
         </li>
       {/each}
+      {#if showsGap}
+        <li class="lg:hidden">
+          <span class="font-medium text-foreground/75">Ero</span> = ero kärkeen
+        </li>
+      {/if}
     </ul>
   {/if}
 </div>

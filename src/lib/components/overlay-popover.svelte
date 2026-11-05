@@ -268,7 +268,7 @@
     >
       <Cast class="size-4" aria-hidden="true" />
     </DrawerTrigger>
-    <DrawerContent>
+    <DrawerContent class="data-[vaul-drawer-direction=bottom]:max-h-[90vh]">
       <DrawerHeader>
         <DrawerTitle>Lähetysgrafiikka</DrawerTitle>
         <DrawerDescription>
@@ -285,7 +285,7 @@
   <Popover {open} onOpenChange={handleOpenChange}>
     <PopoverTrigger
       aria-label="Lähetysgrafiikka"
-      class="toolbar-control motion-control -mr-3 whitespace-nowrap border-transparent bg-transparent px-3 text-muted-foreground shadow-none hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground max-sm:hidden"
+      class="toolbar-control motion-control whitespace-nowrap border-transparent bg-transparent text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground data-[state=open]:text-foreground max-sm:hidden"
     >
       <Cast class="size-4" aria-hidden="true" />
       Grafiikka

@@ -37,7 +37,7 @@
   const eventStatusLabel: Record<string, string> = {
     Unallocated: "Eräjaot puuttuvat",
     Allocated: "Eräjaot tehty",
-    Progress: "Live",
+    Progress: "LIVE",
     Official: "Tulokset valmiit",
   };
 

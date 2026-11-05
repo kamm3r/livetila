@@ -127,17 +127,19 @@
     <ul
       class="mt-3 flex flex-wrap gap-x-3.5 gap-y-1 text-muted-foreground text-xs"
     >
-      <li>
+      <li class="flex items-center gap-1">
         <Check
-          class="inline size-3.5 align-[-2px] text-green-700 dark:text-green-400"
+          class="size-3.5 text-green-700 dark:text-green-400"
           aria-hidden="true"
-        /> = vahvistettu
+        />
+        = vahvistettu
       </li>
-      <li>
+      <li class="flex items-center gap-1">
         <span
-          class="inline-block size-3 rounded-full border border-muted-foreground border-dashed align-[-1px]"
+          class="size-3 rounded-full border border-muted-foreground border-dashed"
           aria-hidden="true"
-        ></span> = ei vielä vahvistanut
+        ></span>
+        = ei vielä vahvistanut
       </li>
     </ul>
   {/if}
