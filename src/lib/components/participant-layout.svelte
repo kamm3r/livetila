@@ -90,10 +90,17 @@
   </div>
 
   <ul class="data-frame lg:hidden">
+    <li
+      aria-hidden="true"
+      class="data-head flex items-center justify-between border-b-0 px-3"
+    >
+      <span></span>
+      <span>PB / SB</span>
+    </li>
     {#each sorted as enrollment (enrollment.Id)}
       <li
         class={cn(
-          "grid grid-cols-[20px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2.5 first:border-t-0",
+          "grid grid-cols-[20px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2 first:border-t-0",
           !enrollment.Confirmed && "text-muted-foreground [&_img]:opacity-80",
         )}
       >
@@ -101,31 +108,23 @@
         <!-- The cell stays when there is no logo, so the columns hold. -->
         <span class="flex"><AthleteBadge entry={enrollment} /></span>
         <div class="min-w-0">
-          <div class="flex min-w-0 items-center gap-1.5">
-            <span class="truncate font-medium text-sm">{enrollment.Name}</span>
+          <p class="wrap-break-word text-sm leading-5">
+            <span class="font-medium">{enrollment.Name}</span>
             {#if enrollment.Number}<span
-                class="shrink-0 text-[11px] text-muted-foreground tabular-nums"
+                class="ml-0.5 text-[11px] text-muted-foreground tabular-nums"
                 >#{enrollment.Number}</span
               >{/if}
-          </div>
-          <p class="truncate text-muted-foreground text-xs">
+          </p>
+          <p class="truncate text-muted-foreground text-xs leading-4">
             {enrollment.Organization?.Name ?? "-"}
           </p>
         </div>
-        <div
-          class="text-right text-muted-foreground text-xs leading-tight tabular-nums"
-        >
-          <div>
-            PB <span class="font-semibold text-foreground"
-              >{enrollment.PB || "–"}</span
-            >
-          </div>
-          <div>
-            SB <span class="font-semibold text-foreground"
-              >{enrollment.SB || "–"}</span
-            >
-          </div>
-        </div>
+        <dl class="text-right text-xs leading-tight tabular-nums">
+          <dt class="sr-only">PB</dt>
+          <dd>{enrollment.PB || "–"}</dd>
+          <dt class="sr-only">SB</dt>
+          <dd class="text-muted-foreground">{enrollment.SB || "–"}</dd>
+        </dl>
       </li>
     {/each}
   </ul>
@@ -133,17 +132,19 @@
     <ul
       class="mt-3 flex flex-wrap gap-x-3.5 gap-y-1 text-muted-foreground text-xs"
     >
-      <li>
+      <li class="flex items-center gap-1">
         <Check
-          class="inline size-3.5 align-[-2px] text-green-700 dark:text-green-400"
+          class="size-3.5 text-green-700 dark:text-green-400"
           aria-hidden="true"
-        /> = vahvistettu
+        />
+        = vahvistettu
       </li>
-      <li>
+      <li class="flex items-center gap-1">
         <span
-          class="inline-block size-3 rounded-full border border-muted-foreground border-dashed align-[-1px]"
+          class="size-3 rounded-full border border-muted-foreground border-dashed"
           aria-hidden="true"
-        ></span> = ei vielä vahvistanut
+        ></span>
+        = ei vielä vahvistanut
       </li>
     </ul>
   {/if}

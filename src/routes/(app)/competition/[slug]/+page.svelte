@@ -3,7 +3,6 @@
   import { isTimed } from "$lib/results";
   import { page } from "$app/state";
   import { replaceState } from "$app/navigation";
-  import { ClipboardList, Trophy, Users } from "@lucide/svelte";
   import { createQuery } from "@tanstack/svelte-query";
   import OverlayPopover from "$lib/components/overlay-popover.svelte";
   import LiveIndicator from "$lib/components/live-indicator.svelte";
@@ -15,6 +14,7 @@
   import ParticipantLayout from "$lib/components/participant-layout.svelte";
   import ProtocolLayout from "$lib/components/protocol-layout.svelte";
   import ResultLayout from "$lib/components/result-layout.svelte";
+  import { Button } from "$lib/components/ui/button";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import {
     competitionQueries,
@@ -185,35 +185,45 @@
   <title>{compDetails?.Competition.Name ?? "Kilpailu"} - Livetila</title>
 </svelte:head>
 
-<main class="page-width relative flex grow flex-col py-5 sm:py-8">
+<main class="page-width relative flex grow flex-col py-4 sm:py-8">
   {#if !data.identity}
-    <div class="flex flex-col items-center justify-center py-20">
-      <h2 class="font-bold text-2xl">Virheellinen linkki</h2>
-      <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
+    <div
+      class="flex flex-1 flex-col items-center justify-center gap-2 pb-14 text-center"
+    >
+      <h2 class="font-semibold text-2xl tracking-tight">Virheellinen linkki</h2>
+      <a href="/" class="mt-2 text-primary text-sm underline underline-offset-4"
+        >Palaa etusivulle</a
+      >
     </div>
   {:else if isLoading}
-    <div class="flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <Skeleton class="h-8 w-28 rounded-md" />
-        <Skeleton class="h-10 w-48 rounded-md" />
+    <!-- Same frame as the loaded page, so nothing jumps when data arrives. -->
+    <div class="flex flex-col gap-3 sm:gap-4" aria-hidden="true">
+      <div class="flex flex-col gap-1.5">
+        <Skeleton class="h-7 w-64 max-w-full" />
+        <Skeleton class="h-4 w-48" />
       </div>
-      <div class="mt-2 flex flex-col gap-3">
-        <Skeleton class="h-10 w-full" />
-        <Skeleton class="h-14 w-full" />
-        <Skeleton class="h-14 w-full" />
-        <Skeleton class="h-14 w-full" />
-      </div>
+      <Skeleton class="h-9 w-56 max-w-full" />
+      <Skeleton class="mb-1 h-5 w-72 max-w-full" />
+      <Skeleton class="h-96 w-full rounded-xl" />
     </div>
   {:else if error}
-    <div class="flex flex-col items-center justify-center py-20">
-      <h2 class="font-bold text-2xl">Virhe</h2>
-      <p class="mt-2 text-muted-foreground">{error}</p>
-      <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
+    <div
+      class="flex flex-1 flex-col items-center justify-center gap-2 pb-14 text-center"
+    >
+      <h2 class="font-semibold text-2xl tracking-tight">{error}</h2>
+      <div class="mt-3 flex items-center gap-4 text-sm">
+        <Button onclick={() => location.reload()}>Yritä uudelleen</Button>
+        <a href="/" class="text-muted-foreground underline underline-offset-4"
+          >Palaa etusivulle</a
+        >
+      </div>
     </div>
   {:else if competition}
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-col gap-1">
-        <h2 class="font-semibold text-2xl tracking-tight text-balance">
+    <div class="flex flex-col gap-3 sm:gap-4">
+      <div class="flex flex-col gap-0.5 sm:gap-1">
+        <h2
+          class="font-semibold text-xl tracking-tight text-balance sm:text-2xl"
+        >
           {compDetails?.Competition.Name ?? ""}
         </h2>
         {#if subline}
@@ -225,7 +235,8 @@
 
       {#key slug}
         <RoundProvider rounds={competition.Rounds} roundCategory={roundFromUrl}>
-          <!-- Mobile: switcher and overlay button on one line, status and rounds below. -->
+          <!-- Event, then round, then status. On a phone the event and the
+               overlay button share the first line. -->
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
             <div class="order-1 min-w-0 max-sm:flex-1 sm:shrink-0">
               <EventSwitcher
@@ -233,6 +244,7 @@
                 currentEventId={eventId}
                 events={compEvents}
                 roundFromUrl={selectedRound?.RoundTypeCategory}
+                roundShownElsewhere={competition.Rounds.length > 1}
               />
             </div>
             <div class="order-2 sm:order-9">
@@ -245,6 +257,7 @@
               />
             </div>
             <div class="order-3 basis-full sm:hidden"></div>
+            <div class="order-4 empty:hidden sm:order-2"><RoundSwitcher /></div>
             <div class="order-5 has-[>[role=status]:empty]:hidden">
               <LiveIndicator
                 live={isLive}
@@ -257,10 +270,7 @@
                 >{eventMeta}</span
               >
             {/if}
-            <div class="order-7 flex-1"></div>
-            <div class="order-8">
-              <RoundSwitcher />
-            </div>
+            <div class="order-7 flex-1 max-sm:hidden"></div>
           </div>
 
           {#if confirmation}
@@ -274,28 +284,22 @@
               {
                 value: "participants" as const,
                 label: "Ilmoittautuneet",
-                shortLabel: "Osanottajat",
                 count: confirmedCount
                   ? `${confirmedCount}/${competition.Enrollments.length}`
                   : competition.Enrollments.length,
                 countLabel: confirmedCount
                   ? `${confirmedCount}/${competition.Enrollments.length} vahvistanut`
                   : undefined,
-                icon: usersIcon,
                 content: participantsContent,
               },
               {
                 value: "protocol" as const,
                 label: "Pöytäkirjat",
-                count: allocations.length,
-                icon: clipboardIcon,
                 content: protocolContent,
               },
               {
                 value: "results" as const,
                 label: "Tulokset",
-                count: resultCount,
-                icon: trophyIcon,
                 content: resultsContent,
               },
             ].filter((tab) => visibleTabs.includes(tab.value))}
@@ -305,18 +309,6 @@
     </div>
   {/if}
 </main>
-
-{#snippet usersIcon()}
-  <Users class="size-4" />
-{/snippet}
-
-{#snippet clipboardIcon()}
-  <ClipboardList class="size-4" />
-{/snippet}
-
-{#snippet trophyIcon()}
-  <Trophy class="size-4" />
-{/snippet}
 
 {#snippet participantsContent()}
   <ParticipantLayout enrollments={competition!.Enrollments} />
