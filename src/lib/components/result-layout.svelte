@@ -301,7 +301,8 @@
             <th
               class={cn(
                 "w-[58px] text-center font-medium",
-                i + 1 === currentRound && "font-semibold text-foreground",
+                i + 1 === currentRound &&
+                  "font-semibold text-foreground underline decoration-foreground/50 decoration-2 underline-offset-4",
               )}
               scope="col"
               >{layout.labels[i]}{#if i + 1 === currentRound}<span
@@ -409,7 +410,8 @@
           {#each layout.labels as label, i (label)}
             <span
               class={cn(
-                i + 1 === currentRound && "font-semibold text-foreground",
+                i + 1 === currentRound &&
+                  "font-semibold text-foreground underline decoration-foreground/50 decoration-2 underline-offset-4",
               )}>{label}</span
             >
           {/each}
