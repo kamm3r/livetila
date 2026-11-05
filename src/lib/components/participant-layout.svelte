@@ -60,7 +60,11 @@
                 "text-muted-foreground [&_img]:opacity-80",
             )}
           >
-            <td class="pl-3">{@render status(enrollment)}</td>
+            <td class="pl-3">
+              <span class="inline-flex w-6 justify-center"
+                >{@render status(enrollment)}</span
+              >
+            </td>
             <td class="px-1"><AthleteBadge entry={enrollment} /></td>
             <td class="px-2">
               <span class="flex items-center gap-2 whitespace-nowrap">

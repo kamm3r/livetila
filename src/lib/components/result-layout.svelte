@@ -431,12 +431,19 @@
           "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
           sharedLabels &&
             "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem] md:items-center",
+          // With no attempts a row is two lines, laid out like the start list.
+          columns === 0 && "items-center",
           isOut &&
             "text-muted-foreground [&_[data-best]]:text-inherit [&_img]:opacity-80",
           change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
         )}
       >
-        <div class="-mt-0.5 flex flex-col items-center leading-tight md:mt-0">
+        <div
+          class={cn(
+            "flex flex-col items-center leading-tight",
+            columns > 0 && "-mt-0.5 md:mt-0",
+          )}
+        >
           {@render rankMark(rank, isOut)}
           {#if change?.gained}{@render gainedPlaces(change.gained)}{/if}
         </div>
@@ -497,7 +504,7 @@
         {/if}
         <div
           class={cn(
-            "col-start-4 row-start-1 flex flex-col items-end leading-tight",
+            "col-start-4 row-start-1 flex flex-col items-end self-start leading-tight",
             sharedLabels && "md:col-start-5",
           )}
         >

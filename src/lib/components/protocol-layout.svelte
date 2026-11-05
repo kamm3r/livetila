@@ -54,9 +54,11 @@
           {/if}
           {#each heat.allocations as alloc (alloc.Id)}
             <tr class="h-12 border-t first:border-t-0">
-              <td class="pl-3 font-semibold text-sm tabular-nums"
-                >{alloc.Position || ""}</td
-              >
+              <td class="pl-3 font-semibold text-sm tabular-nums">
+                <span class="inline-block w-6 text-center"
+                  >{alloc.Position || ""}</span
+                >
+              </td>
               <td class="px-1"><AthleteBadge entry={alloc} /></td>
               <td class="px-2">
                 <span class="flex items-center gap-2 whitespace-nowrap">

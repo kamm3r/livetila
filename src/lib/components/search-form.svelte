@@ -388,17 +388,16 @@
                               class="text-[13px] text-muted-foreground tabular-nums"
                               >{evt.Time}</span
                             >
-                            <div class="flex min-w-0 flex-col gap-0.5">
-                              <span
-                                class="truncate font-medium text-foreground text-sm"
+                            <span class="truncate text-sm"
+                              ><span class="font-medium text-foreground"
                                 >{evt.EventName}</span
                               >
-                              <span
-                                class="truncate text-muted-foreground text-xs"
-                              >
-                                {isNavigating ? "Siirrytään..." : evt.Name}
-                              </span>
-                            </div>
+                              <span class="text-muted-foreground"
+                                >{isNavigating
+                                  ? "Siirrytään..."
+                                  : evt.Name}</span
+                              ></span
+                            >
                             <div
                               class="flex items-center gap-2 self-center text-muted-foreground text-xs tabular-nums"
                             >
