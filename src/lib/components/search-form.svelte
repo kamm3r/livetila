@@ -1,13 +1,5 @@
 <script lang="ts">
-  import {
-    ArrowRight,
-    Calendar,
-    ChevronRight,
-    Clock,
-    LoaderCircle,
-    Search,
-    X,
-  } from "@lucide/svelte";
+  import { ChevronRight, Clock, LoaderCircle, Search, X } from "@lucide/svelte";
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy, onMount } from "svelte";
   import { goto } from "$app/navigation";
@@ -44,7 +36,11 @@
   }
 
   const groupHeadingClassName =
-    "**:data-[command-group-heading]:px-2 **:data-[command-group-heading]:pb-2 **:data-[command-group-heading]:font-semibold **:data-[command-group-heading]:text-muted-foreground/70 **:data-[command-group-heading]:text-xs **:data-[command-group-heading]:uppercase **:data-[command-group-heading]:tracking-wider";
+    "p-0 **:data-[command-group-heading]:px-2.5 **:data-[command-group-heading]:pb-2 **:data-[command-group-heading]:font-medium **:data-[command-group-heading]:text-muted-foreground **:data-[command-group-heading]:text-[11px] **:data-[command-group-heading]:uppercase **:data-[command-group-heading]:tracking-[0.05em]";
+
+  const multipleEventDates = $derived(
+    new Set(search.filteredEvents.map((event) => event.Date)).size > 1,
+  );
 
   let isOpen = $state(false);
   let isFocused = $state(false);
@@ -140,7 +136,7 @@
   }
 </script>
 
-<div class="relative mx-auto h-16 w-full max-w-2xl">
+<div class="relative mx-auto h-14 w-full max-w-2xl">
   <Command
     class="absolute inset-x-0 top-0 z-30 h-auto overflow-visible bg-transparent p-0 text-left"
     onkeydown={(event) => {
@@ -158,15 +154,15 @@
   >
     <div
       class={cn(
-        "relative overflow-hidden rounded-[28px] border bg-card motion-search-surface",
-        showDropdown && "shadow-xl shadow-black/10",
+        "relative overflow-hidden rounded-2xl border bg-card motion-search-surface",
+        showDropdown && "shadow-lg shadow-black/8 dark:shadow-black/30",
         isFocused
-          ? "border-primary ring-2 ring-primary/10"
-          : "border-border shadow-sm",
+          ? "border-primary/60 ring-2 ring-primary/12"
+          : "border-input shadow-xs",
       )}
     >
       <div class="relative z-10">
-        <div class="flex h-[62px] items-center gap-2 px-5 sm:gap-3">
+        <div class="flex h-[54px] items-center gap-2.5 px-4">
           <span
             class={cn(
               "inline-flex",
@@ -174,13 +170,13 @@
               !isFocused && "text-muted-foreground",
             )}
           >
-            <Search class="size-5" />
+            <Search class="size-[18px]" />
           </span>
 
           <CommandPrimitive.Input
             bind:ref={inputEl}
             onclick={handleFocus}
-            class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none sm:text-base"
+            class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none sm:text-base"
             aria-label="Hae kilpailuja tai lajeja"
             placeholder={search.step === "events"
               ? "Hae lajeja..."
@@ -198,7 +194,7 @@
       </div>
 
       {#if showDropdown}
-        <div class="mx-4 h-px bg-border"></div>
+        <div class="h-px bg-border"></div>
       {/if}
 
       {#if showDropdown}
@@ -208,28 +204,25 @@
               <CommandList
                 bind:ref={listEl}
                 onscroll={handleScroll}
-                class="overflow-y-auto overscroll-contain"
+                class="search-list overflow-y-auto overscroll-contain pb-3"
                 style={`max-height: ${listHeight}px`}
               >
                 {#if search.matchingRecent.length}
                   {#each search.matchingRecent as item (item.id)}
-                    <div
-                      class="recent-row flex items-center rounded-xl pr-2 sm:pr-3"
-                    >
+                    <div class="recent-row flex items-center rounded-lg pr-1">
                       <CommandItem
-                        class="group min-w-0 flex-1 cursor-pointer rounded-xl bg-transparent px-2 py-2 data-selected:bg-transparent sm:px-3 sm:py-2.5"
+                        class="group min-w-0 flex-1 cursor-pointer rounded-lg bg-transparent px-2.5 py-2 data-selected:bg-transparent [&>.cn-command-item-indicator]:hidden"
                         value={`recent-${item.id}`}
                         onSelect={() => {
                           void search.selectRecent(item);
                         }}
                         onmousedown={(event) => event.preventDefault()}
                       >
+                        <Clock
+                          class="recent-icon size-4 shrink-0 text-muted-foreground"
+                        />
                         <span
-                          class="recent-icon flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:size-9"
-                          ><Clock class="size-4" /></span
-                        >
-                        <span
-                          class="min-w-0 break-words font-medium text-foreground text-sm sm:text-base"
+                          class="min-w-0 break-words font-medium text-foreground text-sm"
                           >{item.label}</span
                         >
                       </CommandItem>
@@ -284,7 +277,7 @@
                   {#each search.filteredCompetitions.slice(0, search.visibleCount) as comp (comp.Id)}
                     <div>
                       <CommandItem
-                        class="group cursor-pointer rounded-xl px-2 py-2 data-selected:bg-primary/10 active:bg-primary/15 sm:px-3 sm:py-2.5"
+                        class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [&>.cn-command-item-indicator]:hidden"
                         onmousedown={(e) => {
                           e.preventDefault();
                         }}
@@ -292,33 +285,26 @@
                         value={`${comp.Name}-${comp.Id}`}
                       >
                         <div
-                          class="flex flex-1 items-center justify-between gap-2 sm:gap-3"
+                          class="flex min-w-0 flex-1 items-center justify-between gap-3"
                         >
-                          <div class="flex items-center gap-2 sm:gap-3">
-                            <div
-                              class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
+                          <div class="flex min-w-0 flex-col gap-0.5">
+                            <span
+                              class="truncate font-medium text-foreground text-sm"
+                              >{comp.Name}</span
                             >
-                              <Calendar class="size-4" />
-                            </div>
-                            <div class="flex flex-col">
-                              <span
-                                class="font-medium text-foreground text-sm sm:text-base"
-                                >{comp.Name}</span
-                              >
-                              <span class="text-muted-foreground text-xs">
-                                {new Date(comp.Date).toLocaleDateString(
-                                  "fi-FI",
-                                  {
-                                    day: "numeric",
-                                    month: "long",
-                                    year: "numeric",
-                                  },
-                                )}
-                              </span>
-                            </div>
+                            <span
+                              class="truncate text-muted-foreground text-xs tabular-nums"
+                            >
+                              {[
+                                new Date(comp.Date).toLocaleDateString("fi-FI"),
+                                comp.Stadion?.Name,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </span>
                           </div>
-                          <ArrowRight
-                            class="size-4 text-muted-foreground opacity-0 group-data-selected:text-primary group-data-selected:opacity-100"
+                          <ChevronRight
+                            class="size-4 shrink-0 text-primary opacity-0 group-data-selected:opacity-100"
                           />
                         </div>
                       </CommandItem>
@@ -332,7 +318,7 @@
                         search.navigatingTo !== null && !isNavigating}
                       <div>
                         <CommandItem
-                          class="group cursor-pointer rounded-xl px-2 py-2 data-selected:bg-primary/10 active:bg-primary/15 disabled:pointer-events-none sm:px-3 sm:py-2.5"
+                          class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [&>.cn-command-item-indicator]:hidden disabled:pointer-events-none"
                           disabled={isDisabled}
                           onmousedown={(e) => {
                             e.preventDefault();
@@ -343,47 +329,36 @@
                           value={`${evt.EventName}-${evt.Id}`}
                         >
                           <div
-                            class="flex w-full items-center justify-between gap-2 sm:gap-3"
+                            class="grid w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2"
                           >
-                            <div class="flex items-center gap-2 sm:gap-3">
-                              <div
-                                class="relative flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground group-data-selected:bg-primary group-data-selected:text-primary-foreground sm:size-9"
-                              >
-                                {#if isNavigating}
-                                  <LoaderCircle class="size-4 animate-spin" />
-                                {:else}
-                                  <Clock class="size-4" />
-                                {/if}
-                              </div>
-                              <div class="flex flex-col">
-                                <span
-                                  class="font-medium text-foreground text-sm sm:text-base"
-                                  >{evt.EventName}</span
-                                >
-                                <span class="text-muted-foreground text-xs">
-                                  {isNavigating ? "Siirrytään..." : evt.Name}
-                                </span>
-                              </div>
-                            </div>
-                            <div class="flex items-center gap-2 sm:gap-3">
-                              <div
-                                class="hidden items-center gap-2 text-muted-foreground text-xs sm:flex"
-                              >
-                                <span
-                                  class="rounded-md bg-muted px-2 py-0.5 font-mono"
-                                  >{evt.Time}</span
-                                >
-                                <span>{evt.Date}</span>
-                              </div>
+                            <span
+                              class="text-[13px] text-muted-foreground tabular-nums"
+                              >{evt.Time}</span
+                            >
+                            <div class="flex min-w-0 flex-col gap-0.5">
                               <span
-                                class="rounded-md bg-muted px-1.5 py-0.5 font-mono text-muted-foreground text-xs sm:hidden"
-                                >{evt.Time}</span
+                                class="truncate font-medium text-foreground text-sm"
+                                >{evt.EventName}</span
                               >
+                              <span
+                                class="truncate text-muted-foreground text-xs"
+                              >
+                                {isNavigating ? "Siirrytään..." : evt.Name}
+                              </span>
+                            </div>
+                            <div
+                              class="flex items-center gap-2 text-muted-foreground text-xs tabular-nums"
+                            >
+                              {#if multipleEventDates}<span
+                                  class="max-sm:hidden">{evt.Date}</span
+                                >{/if}
                               {#if isNavigating}
-                                <div class="size-4"></div>
+                                <LoaderCircle
+                                  class="size-4 animate-spin text-primary"
+                                />
                               {:else}
                                 <ChevronRight
-                                  class="size-4 text-muted-foreground opacity-0 group-data-selected:text-primary group-data-selected:opacity-100"
+                                  class="size-4 text-primary opacity-0 group-data-selected:opacity-100"
                                 />
                               {/if}
                             </div>
@@ -396,7 +371,7 @@
               </CommandList>
               {#if !search.isLoading && !search.loadError && search.hasResults}
                 <div
-                  class="mt-1 flex items-center justify-between gap-3 border-t border-border/60 px-2 pt-2 text-xs text-muted-foreground"
+                  class="-mx-2 -mb-2 flex items-center justify-between gap-3 border-t px-[1.125rem] py-2 text-xs text-muted-foreground"
                 >
                   <span aria-live="polite"
                     >Näytetään {Math.min(
@@ -428,13 +403,16 @@
 </div>
 
 <style>
+  /* Rows fade out at the bottom edge: a hint there is more to scroll to. */
+  :global(.search-list) {
+    mask-image: linear-gradient(
+      to bottom,
+      black calc(100% - 14px),
+      transparent
+    );
+  }
   .recent-row:has(:global([data-selected])),
   .recent-row:focus-within {
     background: color-mix(in oklch, var(--primary) 10%, transparent);
-  }
-  .recent-row:has(:global([data-selected])) .recent-icon,
-  .recent-row:focus-within .recent-icon {
-    background: var(--primary);
-    color: var(--primary-foreground);
   }
 </style>

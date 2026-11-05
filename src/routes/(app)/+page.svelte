@@ -1,19 +1,20 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { ChevronRight } from "@lucide/svelte";
   import SearchForm from "$lib/components/search-form.svelte";
   import { SearchWorkflow } from "$lib/search-workflow.svelte";
   import type { CompetitionList } from "~/types/comp";
 
-  // One line under the search: resume followed events, offer the newest
-  // competitions, or step back out of a chosen competition.
+  // Under the search: resume followed events, offer the newest competitions,
+  // or step back out of a chosen competition.
   const search = new SearchWorkflow(goto);
   let form = $state<SearchForm>();
 
-  const recent = $derived(search.recentSearches.slice(0, 2));
+  const recent = $derived(search.recentSearches.slice(0, 4));
   const newest = $derived(
     [...search.competitions]
       .sort((a, b) => b.Date.localeCompare(a.Date))
-      .slice(0, 3),
+      .slice(0, 4),
   );
 
   function openCompetition(comp: CompetitionList) {
@@ -29,6 +30,12 @@
   // "Kilpailu / M Moukari / Alkuerät" → "M Moukari, Alkuerät"
   const shortLabel = (label: string) =>
     label.split(" / ").slice(1).join(", ") || label;
+  const competitionLabel = (label: string) => label.split(" / ")[0];
+
+  const competitionMeta = (comp: CompetitionList) =>
+    [new Date(comp.Date).toLocaleDateString("fi-FI"), comp.Stadion?.Name]
+      .filter(Boolean)
+      .join(" · ");
 </script>
 
 <svelte:head>
@@ -43,42 +50,60 @@
   <div class="home-content">
     <section class="home-search" aria-labelledby="home-title">
       <h1 id="home-title">Kilpailun jokainen <span>hetki.</span></h1>
+      <p class="introduction">
+        Yleisurheilun tulokset. Kentän laidalta kotikatsomoon.
+      </p>
       <div class="search-field"><SearchForm bind:this={form} {search} /></div>
       {#if search.selectedComp}
-        <p class="quick">
+        <p class="change">
           <button type="button" onclick={changeCompetition}
             >Vaihda kilpailu</button
           >
         </p>
       {:else if recent.length > 0}
-        <p class="quick">
-          <span class="quick-label">Jatka:</span>
-          {#each recent as item, index (item.id)}
-            {#if index > 0}<span aria-hidden="true">·</span>{/if}
-            <a href={item.url} title={item.label}>{shortLabel(item.label)}</a>
-          {/each}
-        </p>
+        <section class="quick" aria-labelledby="quick-title">
+          <h2 id="quick-title">Jatka seuraamista</h2>
+          <ul class="data-frame">
+            {#each recent as item (item.id)}
+              <li>
+                <a href={item.url} title={item.label}>
+                  <span class="row-text">
+                    <span class="row-title">{shortLabel(item.label)}</span>
+                    <span class="row-meta">{competitionLabel(item.label)}</span>
+                  </span>
+                  <ChevronRight class="row-arrow" aria-hidden="true" />
+                </a>
+              </li>
+            {/each}
+          </ul>
+        </section>
       {:else if newest.length > 0}
-        <p class="quick">
-          <span class="quick-label">Uusimmat:</span>
-          {#each newest as comp, index (comp.Id)}
-            {#if index > 0}<span aria-hidden="true">·</span>{/if}
-            <button type="button" onclick={() => openCompetition(comp)}
-              >{comp.Name}</button
-            >
-          {/each}
-        </p>
+        <section class="quick" aria-labelledby="quick-title">
+          <h2 id="quick-title">Uusimmat kilpailut</h2>
+          <ul class="data-frame">
+            {#each newest as comp (comp.Id)}
+              <li>
+                <button type="button" onclick={() => openCompetition(comp)}>
+                  <span class="row-text">
+                    <span class="row-title">{comp.Name}</span>
+                    <span class="row-meta">{competitionMeta(comp)}</span>
+                  </span>
+                  <ChevronRight class="row-arrow" aria-hidden="true" />
+                </button>
+              </li>
+            {/each}
+          </ul>
+        </section>
       {/if}
-      <p class="introduction">
-        Yleisurheilun tulokset. Kentän laidalta kotikatsomoon.
-      </p>
     </section>
   </div>
 </main>
 <footer class="home-footer">
-  <span>Livetila</span><a href="https://live.tuloslista.com"
-    >Tulostiedot: Tuloslista</a
-  >
+  <div class="page-width">
+    <span>Livetila</span><a href="https://live.tuloslista.com"
+      >Tulostiedot: Tuloslista</a
+    >
+  </div>
 </footer>
 
 <style>
@@ -86,87 +111,123 @@
     position: relative;
     isolation: isolate;
     flex: 1;
-    padding: 3.5rem 1.25rem 3rem;
+    padding: clamp(2.5rem, 9vh, 5.5rem) 1rem 3rem;
   }
   .search-field {
-    margin-top: 2rem;
+    margin-top: 1.75rem;
   }
   .home-content {
-    max-width: 640px;
+    max-width: 600px;
     margin-inline: auto;
   }
   .home-search {
-    text-align: center;
     position: relative;
     z-index: 2;
   }
   h1 {
-    max-width: 16ch;
-    margin: 0 auto;
-    font-size: clamp(2.25rem, 4vw, 3.25rem);
+    margin: 0;
+    text-align: center;
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
     font-weight: 600;
-    letter-spacing: -0.055em;
-    line-height: 1.12;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
     text-wrap: balance;
   }
   h1 span {
     color: var(--primary);
   }
-  .quick {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.25rem 0.5rem;
-    margin: 1rem 0 0;
+  .introduction {
+    margin: 0.875rem 0 0;
+    text-align: center;
+    color: var(--muted-foreground);
+    font-size: 1rem;
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+  .change {
+    margin: 0.875rem 0 0;
+    text-align: center;
     font-size: 0.875rem;
+  }
+  .change button {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .quick {
+    margin-top: 2rem;
+  }
+  .quick h2 {
+    margin: 0 0 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
     color: var(--muted-foreground);
   }
-  .quick-label {
-    color: color-mix(in oklch, var(--muted-foreground) 70%, transparent);
+  .quick li + li {
+    border-top: 1px solid var(--border);
   }
   .quick :is(a, button) {
-    max-width: 22ch;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.6875rem 0.875rem;
+    text-align: left;
+    transition: background-color var(--motion-fast) ease;
+  }
+  .quick :is(a, button):hover {
+    background: var(--accent);
+  }
+  .quick :is(a, button):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+    border-radius: var(--radius);
+  }
+  .row-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.0625rem;
+  }
+  .row-title,
+  .row-meta {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--foreground);
-    text-decoration: underline;
-    text-decoration-color: color-mix(
-      in oklch,
-      var(--foreground) 25%,
-      transparent
-    );
-    text-underline-offset: 3px;
-    transition: text-decoration-color var(--motion-fast) ease;
   }
-  .quick :is(a, button):hover {
-    text-decoration-color: var(--primary);
-  }
-  .introduction {
-    margin: 1.75rem auto 0;
-    color: var(--muted-foreground);
+  .row-title {
     font-size: 0.875rem;
-    line-height: 1.7;
-    text-wrap: balance;
+    font-weight: 500;
+  }
+  .row-meta {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+  .quick :global(.row-arrow) {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: var(--muted-foreground);
   }
   .home-footer {
+    padding-block: 1.25rem;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+  }
+  .home-footer > div {
     display: flex;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1.25rem 2rem;
-    font-size: 0.75rem;
-    color: var(--muted-foreground);
+  }
+  @media (max-width: 480px) {
+    .home-page {
+      padding-top: 2.25rem;
+    }
   }
   .home-footer a {
     text-decoration: underline;
     text-underline-offset: 3px;
-  }
-  @media (max-width: 480px) {
-    .home-page {
-      padding-top: 2rem;
-    }
-    .home-footer {
-      padding: 1.25rem;
-    }
   }
 </style>

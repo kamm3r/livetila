@@ -1,6 +1,7 @@
 <script lang="ts">
   // How to add the overlay link in common broadcast tools. The overlay is
   // laid out for a 1280×720 page with a transparent background.
+  import { ChevronRight } from "@lucide/svelte";
   import { cn } from "$lib/utils";
 
   const tools = [
@@ -38,8 +39,12 @@
 
 <details class="group rounded-lg border text-sm">
   <summary
-    class="cursor-pointer select-none px-3 py-2 font-medium outline-none focus-visible:outline-2 focus-visible:outline-primary"
+    class="flex cursor-pointer select-none list-none items-center gap-1.5 rounded-lg px-3 py-2 font-medium text-[13px] outline-none focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden"
   >
+    <ChevronRight
+      class="size-4 text-muted-foreground transition-transform group-open:rotate-90"
+      aria-hidden="true"
+    />
     Asetukset lähetysohjelmassa
   </summary>
   <div class="flex flex-col gap-3 px-3 pb-3">

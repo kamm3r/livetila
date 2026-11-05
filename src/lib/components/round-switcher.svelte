@@ -12,7 +12,7 @@
 </script>
 
 {#if ctx.rounds.length > 1}
-  <div class="inline-flex items-center rounded-full bg-muted p-[3px]">
+  <div class="inline-flex h-9 items-center rounded-lg bg-muted p-[3px]">
     {#each ctx.rounds as round (round.Index)}
       {@const text = label(round.RoundTypeCategory, round.Name)}
       {@const selected = ctx.selectedRound === round.Index}
@@ -20,9 +20,9 @@
         type="button"
         aria-pressed={selected}
         class={cn(
-          "motion-control h-7 rounded-full px-3.5 font-medium text-xs focus-visible:outline-2 focus-visible:outline-primary",
+          "motion-control h-full rounded-md px-3 font-medium text-[13px] focus-visible:outline-2 focus-visible:outline-primary",
           selected
-            ? "bg-background text-foreground shadow-sm"
+            ? "bg-card text-foreground shadow-xs"
             : "text-muted-foreground hover:text-foreground",
         )}
         onclick={() => ctx.handleRoundChange(round.Index)}

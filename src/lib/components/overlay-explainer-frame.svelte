@@ -76,22 +76,24 @@
   });
 </script>
 
-{#if style === "ticker"}
-  <!-- The ticker pins itself to the bottom of the screen; the transform makes
-       this box its screen. -->
-  <div class="relative h-36 w-full transform-[translateZ(0)]">
-    <Ticker {view} inHeat={false} {records} />
-  </div>
-{:else if style === "timetable"}
-  <div style:zoom class="w-[44rem]">
-    <Timetable {events} competitionName={view.competitionName} />
-  </div>
-{:else if style === "broadcast-results"}
-  <div style:zoom class="w-[44rem]">
-    <BroadcastResults {view} inHeat={false} {gaps} {records} />
-  </div>
-{:else}
-  <div style:zoom>
-    <BroadcastFrame {view} inHeat={false} {gaps} {records} />
-  </div>
-{/if}
+<div class="broadcast-type contents">
+  {#if style === "ticker"}
+    <!-- The ticker pins itself to the bottom of the screen; the transform makes
+         this box its screen. -->
+    <div class="relative h-36 w-full transform-[translateZ(0)]">
+      <Ticker {view} inHeat={false} {records} />
+    </div>
+  {:else if style === "timetable"}
+    <div style:zoom class="w-[44rem]">
+      <Timetable {events} competitionName={view.competitionName} />
+    </div>
+  {:else if style === "broadcast-results"}
+    <div style:zoom class="w-[44rem]">
+      <BroadcastResults {view} inHeat={false} {gaps} {records} />
+    </div>
+  {:else}
+    <div style:zoom>
+      <BroadcastFrame {view} inHeat={false} {gaps} {records} />
+    </div>
+  {/if}
+</div>

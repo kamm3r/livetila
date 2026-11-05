@@ -1,10 +1,9 @@
 <script lang="ts">
   import * as Popover from "$lib/components/ui/popover";
-  import { Calendar, ChevronsUpDown, Clock } from "@lucide/svelte";
+  import { ChevronsUpDown } from "@lucide/svelte";
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy } from "svelte";
   import { goto } from "$app/navigation";
-  import { Badge, type BadgeVariant } from "$lib/components/ui/badge";
   import { cn } from "$lib/utils";
   import type { EventWithDate } from "$lib/events";
 
@@ -25,11 +24,11 @@
     roundFromUrl?: string | null;
   } = $props();
 
-  const statusVariants: Record<string, BadgeVariant> = {
-    Unallocated: "unallocated",
-    Allocated: "allocated",
-    Progress: "progress",
-    Official: "official",
+  const statusDots: Record<string, string> = {
+    Unallocated: "bg-muted-foreground/40",
+    Allocated: "bg-sky-500",
+    Progress: "bg-red-500",
+    Official: "bg-emerald-500",
   };
 
   const eventStatusLabel: Record<string, string> = {
@@ -56,6 +55,11 @@
     ),
   );
 
+  // The date only tells events apart in a competition lasting several days.
+  const multipleDays = $derived(
+    new Set(sortedEvents.map((event) => event.date)).size > 1,
+  );
+
   const currentEvent = $derived(
     findSelectedEvent(events, currentEventId, roundFromUrl),
   );
@@ -77,7 +81,7 @@
 
 <Popover.Root bind:open>
   <Popover.Trigger
-    class="motion-control -ml-2 inline-flex h-9 min-w-0 max-w-full items-center gap-1.5 rounded-md px-2 text-[15px] hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
+    class="toolbar-control motion-control min-w-0 max-w-full justify-start px-3 font-normal text-sm max-sm:w-full"
   >
     {#if currentEvent}
       <span class="truncate font-semibold sm:overflow-visible"
@@ -90,43 +94,47 @@
       <span class="truncate font-semibold">Valitse laji</span>
     {/if}
     <ChevronsUpDown
-      class="size-3.5 shrink-0 text-muted-foreground"
+      class="ml-auto size-3.5 shrink-0 text-muted-foreground"
       aria-hidden="true"
     />
   </Popover.Trigger>
   <Popover.Content
-    class="max-h-96 w-[min(400px,calc(100vw-2rem))] overflow-auto p-1"
+    class="max-h-96 w-[min(420px,calc(100vw-2rem))] overflow-auto p-1.5"
     align="start"
   >
     {#each sortedEvents as event, i (`${event.Id}-${event.BeginDateTimeWithTZ}`)}
+      {@const selected =
+        event.EventId === Number(currentEventId) &&
+        event.Name === currentEvent?.Name}
       <button
+        aria-current={selected ? "true" : undefined}
         class={cn(
-          "flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
-          event.EventId === Number(currentEventId) &&
-            event.Name === currentEvent?.Name &&
-            "bg-accent",
+          "grid w-full cursor-pointer grid-cols-[3rem_minmax(0,1fr)_8.25rem] items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary",
+          selected && "bg-accent",
         )}
         onclick={() => handleSelect(i.toString())}
       >
-        <div class="flex w-full items-center justify-between gap-2">
-          <div class="flex flex-col gap-1">
-            <span>{event.EventName} {event.Name}</span>
-            <Badge variant={statusVariants[event.Status] || "default"}>
-              {eventStatusLabel[event.Status] || event.Status}
-            </Badge>
-          </div>
-          <div
-            class="flex min-w-[90px] flex-col items-end gap-1 text-muted-foreground text-xs"
-          >
-            <span class="flex items-center gap-1"
-              >{formatTime(event.BeginDateTimeWithTZ)}
-              <Clock class="size-3" /></span
-            >
-            <span class="flex items-center gap-1"
-              >{event.date} <Calendar class="size-3" /></span
-            >
-          </div>
-        </div>
+        <span class="text-[13px] text-muted-foreground tabular-nums">
+          {formatTime(event.BeginDateTimeWithTZ)}
+          {#if multipleDays}<span class="block text-[11px]">{event.date}</span
+            >{/if}
+        </span>
+        <span class="truncate"
+          ><span class="font-medium">{event.EventName}</span>
+          <span class="text-muted-foreground">{event.Name}</span></span
+        >
+        <span
+          class="flex items-center gap-1.5 whitespace-nowrap text-muted-foreground text-xs"
+        >
+          <span
+            class={cn(
+              "size-1.5 rounded-full",
+              statusDots[event.Status] ?? "bg-muted-foreground/40",
+            )}
+            aria-hidden="true"
+          ></span>
+          {eventStatusLabel[event.Status] || event.Status}
+        </span>
       </button>
     {/each}
   </Popover.Content>

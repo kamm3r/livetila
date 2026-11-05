@@ -47,7 +47,7 @@
   }
 </script>
 
-<div class="mt-2 w-full {className}">
+<div class="w-full {className}">
   <Tabs.Root value={activeTab} onValueChange={handleTabChange}>
     <div class="border-b">
       <Tabs.List
@@ -60,7 +60,7 @@
             value={tab.value}
             class="motion-tab-trigger h-full gap-1.5 rounded-none px-3 text-xs sm:px-4 sm:text-[13px]"
           >
-            {@render tab.icon()}
+            <span class="max-sm:hidden">{@render tab.icon()}</span>
             <span class="sm:hidden" aria-hidden="true"
               >{tab.shortLabel ?? tab.label}</span
             >
@@ -85,7 +85,7 @@
       </Tabs.List>
     </div>
     {#each tabs as tab (tab.value)}
-      <Tabs.Content value={tab.value}>
+      <Tabs.Content value={tab.value} class="mt-2">
         {@render tab.content()}
       </Tabs.Content>
     {/each}
