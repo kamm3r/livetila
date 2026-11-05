@@ -21,7 +21,7 @@
         class={cn(
           "motion-control h-full rounded-md px-3 font-medium text-[13px] focus-visible:outline-2 focus-visible:outline-primary",
           selected
-            ? "bg-card text-foreground shadow-xs"
+            ? "bg-card text-primary shadow-xs"
             : "text-muted-foreground hover:text-foreground",
         )}
         onclick={() => ctx.handleRoundChange(round.Index)}

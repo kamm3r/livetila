@@ -42,7 +42,7 @@
       {#each heats as heat (heat.index)}
         <tbody>
           {#if showHeatRows}
-            <tr class="h-[34px] border-t bg-muted/45">
+            <tr class="h-[34px] border-t bg-primary/5">
               <th
                 class="pl-3 text-left font-normal text-muted-foreground text-xs"
                 colspan="6"
@@ -102,7 +102,7 @@
     {#each heats as heat (heat.index)}
       {#if showHeatRows}
         <li
-          class="border-t bg-muted/60 px-3 py-2 text-muted-foreground text-xs first:border-t-0"
+          class="border-t bg-primary/5 px-3 py-2 text-muted-foreground text-xs first:border-t-0"
         >
           {@render heatLabel(heat.index, heat.allocations.length)}
         </li>

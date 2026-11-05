@@ -146,7 +146,7 @@
           aria-current={selected ? "true" : undefined}
           class={cn(
             "grid w-full cursor-pointer snap-start grid-cols-[3rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary items-baseline sm:grid-cols-[3rem_minmax(0,1fr)_8.25rem]",
-            selected && "bg-accent",
+            selected && "bg-primary/10",
           )}
           onclick={() => handleSelect(i.toString())}
         >

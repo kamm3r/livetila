@@ -21,7 +21,7 @@
 {#snippet status(enrollment: Enrollment)}
   {#if enrollment.Confirmed}
     <Check
-      class="size-4 text-green-700 dark:text-green-400"
+      class="size-4 text-emerald-700 dark:text-emerald-400"
       aria-hidden="true"
     />
     <span class="sr-only">Vahvistettu</span>
@@ -141,7 +141,7 @@
     >
       <li class="flex items-center gap-1">
         <Check
-          class="size-3.5 text-green-700 dark:text-green-400"
+          class="size-3.5 text-emerald-700 dark:text-emerald-400"
           aria-hidden="true"
         />
         = vahvistanut

@@ -95,9 +95,9 @@
   // heat wins no medal.
   const showMedals = $derived(ctx.currentRound?.RoundTypeCategory === "Final");
   const medals = [
-    "bg-amber-400/25 text-amber-900 dark:bg-amber-300/25 dark:text-amber-200",
-    "bg-slate-400/25 text-slate-800 dark:bg-slate-300/20 dark:text-slate-200",
-    "bg-orange-700/15 text-orange-900 dark:bg-orange-500/25 dark:text-orange-300",
+    "bg-amber-300 text-amber-950 dark:bg-amber-400 dark:text-amber-950",
+    "bg-slate-300 text-slate-900 dark:bg-slate-300 dark:text-slate-900",
+    "bg-orange-300 text-orange-950 dark:bg-orange-400 dark:text-orange-950",
   ];
   const moveDuration = $derived(prefersReducedMotion.current ? 0 : 250);
 
@@ -199,8 +199,8 @@
     <span
       class={cn(
         "pt-[3px] pl-[3px] text-left font-semibold text-[10px] uppercase leading-none",
-        tag === "PB" && "text-emerald-700 dark:text-emerald-300",
-        tag === "SB" && "text-sky-700 dark:text-sky-300",
+        tag === "PB" && "font-bold text-emerald-700 dark:text-emerald-400",
+        tag === "SB" && "font-bold text-sky-700 dark:text-sky-400",
       )}
       >{#if tag}<span aria-hidden="true">{tag}</span><span class="sr-only"
           >{tag === "PB" ? "Ennätys" : "Kauden paras"}</span
@@ -302,7 +302,7 @@
               class={cn(
                 "w-[58px] text-center font-medium",
                 i + 1 === currentRound &&
-                  "font-semibold text-foreground underline decoration-foreground/50 decoration-2 underline-offset-4",
+                  "font-bold text-primary underline decoration-primary/60 decoration-2 underline-offset-4",
               )}
               scope="col"
               >{layout.labels[i]}{#if i + 1 === currentRound}<span
@@ -402,7 +402,7 @@
     {#if sharedLabels}
       <li
         aria-hidden="true"
-        class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_oklch,var(--muted)_45%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
+        class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
       >
         <span class="hidden text-left md:col-span-2 md:block">Sija</span>
         <span class="hidden text-left md:col-start-3 md:block">Urheilija</span>
@@ -411,7 +411,7 @@
             <span
               class={cn(
                 i + 1 === currentRound &&
-                  "font-semibold text-foreground underline decoration-foreground/50 decoration-2 underline-offset-4",
+                  "font-bold text-primary underline decoration-primary/60 decoration-2 underline-offset-4",
               )}>{label}</span
             >
           {/each}
@@ -540,7 +540,7 @@
         {#each [...ctx.heats].sort((a, b) => a.Index - b.Index) as heat (heat.Index)}
           <ToggleGroup.Item
             value={String(heat.Index)}
-            class="rounded-md px-3 text-[13px] text-muted-foreground hover:bg-transparent data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs"
+            class="rounded-md px-3 text-[13px] text-muted-foreground hover:bg-transparent data-[state=on]:bg-card data-[state=on]:text-primary data-[state=on]:shadow-xs"
           >
             Erä {heat.Index}
           </ToggleGroup.Item>
