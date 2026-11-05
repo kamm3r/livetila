@@ -68,7 +68,7 @@
                 </span>
               </td>
               <td
-                class="max-w-56 truncate px-2 text-[13px] text-muted-foreground"
+                class="max-w-56 truncate px-2 pt-0.5 text-[13px] leading-5 text-muted-foreground"
               >
                 {alloc.Organization?.Name ?? "-"}
               </td>

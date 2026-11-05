@@ -1566,3 +1566,23 @@ test("the switcher leaves the round to the round control beside it", async ({
     page.getByRole("button", { name: "Loppukilpailu", exact: true }),
   ).toBeVisible();
 });
+
+test("the chosen competition can be cleared by tapping it or with Backspace", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const input = page.getByRole("combobox");
+  await input.click();
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await expect(input).toHaveAttribute("placeholder", /lajeja/);
+  await page
+    .getByRole("button", { name: "Vaihda kilpailu: Test Games" })
+    .click();
+  await expect(input).toHaveAttribute("placeholder", /kilpailuja/);
+  await expect(input).toBeFocused();
+
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await expect(input).toHaveAttribute("placeholder", /lajeja/);
+  await input.press("Backspace");
+  await expect(input).toHaveAttribute("placeholder", /kilpailuja/);
+});

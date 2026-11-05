@@ -114,7 +114,17 @@
   const typeset = (mark: string) =>
     mark === "-" ? "–" : mark.replace(/^-/, "−");
 
-  // Below table width the gap has no column header to name it.
+  // Rows with attempts have a header naming the gap from tablet width; other
+  // lists have none until the table.
+  const gapHeaderAtTablet = $derived.by(() => {
+    const columns = attemptLayout(
+      primary,
+      eventCategory,
+      eventSubCategory,
+      isCombinedEvent,
+    ).labels.length;
+    return columns > 0 && columns <= 8;
+  });
   const showsGap = $derived(
     [sortedAllocs, showTotal ? sortedTotal : []].some((list) => {
       const leader = leadingResult(list, eventCategory);
@@ -340,7 +350,7 @@
               </span>
             </td>
             <td
-              class="truncate pr-4 pl-2 text-[13px] text-muted-foreground"
+              class="truncate pt-0.5 pr-4 pl-2 text-[13px] leading-5 text-muted-foreground"
               title={entry.Organization?.Name}
             >
               {entry.Organization?.Name ?? "-"}
@@ -592,7 +602,7 @@
         </li>
       {/each}
       {#if showsGap}
-        <li class="xl:hidden">
+        <li class={gapHeaderAtTablet ? "md:hidden" : "xl:hidden"}>
           <span class="font-medium text-foreground/75">Ero</span> = ero kärkeen
         </li>
       {/if}

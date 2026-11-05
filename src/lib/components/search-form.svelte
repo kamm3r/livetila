@@ -207,9 +207,19 @@
           </span>
 
           {#if search.selectedComp}
+            <button
+              type="button"
+              class="max-w-[45%] shrink-0 truncate rounded-sm font-medium text-base text-foreground hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-primary"
+              aria-label={`Vaihda kilpailu: ${search.selectedComp.Name}`}
+              onmousedown={(event) => event.preventDefault()}
+              onclick={() => {
+                search.input("");
+                inputEl?.focus();
+              }}>{search.selectedComp.Name}</button
+            >
             <span
-              class="max-w-[45%] shrink-0 truncate font-medium text-base text-foreground"
-              >{search.selectedComp.Name}</span
+              class="-mx-1 shrink-0 text-muted-foreground"
+              aria-hidden="true">/</span
             >
           {/if}
           <CommandPrimitive.Input
@@ -424,7 +434,7 @@
                   >
                   <button
                     type="button"
-                    class="rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    class="-mr-2 rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     onkeydown={(event) => event.stopPropagation()}
                     onclick={() => {
                       search.loadMore();

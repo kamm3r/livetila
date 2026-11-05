@@ -42,7 +42,7 @@
     class="flex cursor-pointer select-none list-none items-center gap-1.5 rounded-md py-1 font-medium text-[13px] outline-none focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden"
   >
     <ChevronRight
-      class="size-4 text-muted-foreground transition-transform group-open:rotate-90"
+      class="-ml-1 size-4 text-muted-foreground transition-transform group-open:rotate-90"
       aria-hidden="true"
     />
     Asetukset lähetysohjelmassa
