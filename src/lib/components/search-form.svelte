@@ -61,24 +61,31 @@
     void search.selectedComp;
     if (listEl) listEl.scrollTop = 0;
   });
-  // The list fades at the bottom only while there is more to scroll to.
-  let moreBelow = $state(false);
-  function updateMoreBelow() {
+  // The list ends on a whole row, so no row is ever cut through. It keeps a
+  // thin scrollbar and the count below it while there is more to scroll to.
+  let fittedHeight = $state<number | null>(null);
+  let overflows = $state(false);
+  function fitList() {
     if (!listEl) return;
-    moreBelow =
-      listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight > 1;
+    const top = listEl.getBoundingClientRect().top - listEl.scrollTop;
+    const bottoms = [
+      ...listEl.querySelectorAll('[data-slot="command-item"]'),
+    ].map((row) => row.getBoundingClientRect().bottom - top);
+    const fits = bottoms.filter((bottom) => bottom <= listHeight + 0.5);
+    overflows = listEl.scrollHeight > listHeight + 0.5;
+    fittedHeight = overflows ? (fits.at(-1) ?? bottoms[0] ?? null) : null;
   }
   $effect(() => {
     void search.results.length;
     void search.visibleCount;
     void search.isLoading;
+    void search.matchingRecent.length;
     void listHeight;
     if (!listEl) return;
-    const frame = requestAnimationFrame(updateMoreBelow);
+    const frame = requestAnimationFrame(fitList);
     return () => cancelAnimationFrame(frame);
   });
   function handleScroll(event: Event) {
-    updateMoreBelow();
     const list = event.currentTarget as HTMLElement;
     if (
       search.hasMore &&
@@ -255,10 +262,9 @@
                 bind:ref={listEl}
                 onscroll={handleScroll}
                 class={cn(
-                  "overflow-y-auto overscroll-contain",
-                  moreBelow && "fade-below",
+                  "overflow-y-auto overscroll-contain [scrollbar-width:thin]",
                 )}
-                style={`max-height: ${listHeight}px`}
+                style={`max-height: ${fittedHeight ?? listHeight}px`}
               >
                 {#if search.matchingRecent.length}
                   {#each search.matchingRecent as item (item.id)}
@@ -421,7 +427,7 @@
                   </CommandGroup>
                 {/if}
               </CommandList>
-              {#if !search.isLoading && !search.loadError && search.hasMore}
+              {#if !search.isLoading && !search.loadError && (search.hasMore || overflows)}
                 <div
                   class="-mx-2 -mb-2 flex items-center justify-between gap-3 border-t px-[1.125rem] py-2 text-xs text-muted-foreground"
                 >
@@ -431,17 +437,19 @@
                       search.results.length,
                     )} / {search.results.length}</span
                   >
-                  <button
-                    type="button"
-                    class="-mr-2 rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                    onkeydown={(event) => event.stopPropagation()}
-                    onclick={() => {
-                      search.loadMore();
-                      if (!search.hasMore) inputEl?.focus();
-                    }}
-                  >
-                    Näytä lisää
-                  </button>
+                  {#if search.hasMore}
+                    <button
+                      type="button"
+                      class="-mr-2 rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      onkeydown={(event) => event.stopPropagation()}
+                      onclick={() => {
+                        search.loadMore();
+                        if (!search.hasMore) inputEl?.focus();
+                      }}
+                    >
+                      Näytä lisää
+                    </button>
+                  {/if}
                 </div>
               {/if}
             </div>

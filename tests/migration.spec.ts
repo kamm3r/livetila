@@ -1586,3 +1586,40 @@ test("the chosen competition can be cleared by tapping it or with Backspace", as
   await input.press("Backspace");
   await expect(input).toHaveAttribute("placeholder", /kilpailuja/);
 });
+
+test("the search list ends on a whole row and keeps its footer once expanded", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1510, height: 966 });
+  await page.route("**/api/v1/competition", (route) =>
+    route.fulfill({
+      json: Array.from({ length: 12 }, (_, i) => ({
+        Id: i + 1,
+        Name: `Games ${i + 1}`,
+        Date: "2026-09-09",
+        Stadion: { Name: "Stadion" },
+      })),
+    }),
+  );
+  await page.goto("/");
+  await page.getByRole("combobox").click();
+  const list = page.getByRole("listbox");
+  const cutRows = () =>
+    list.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      return [...el.querySelectorAll('[role="option"]')].filter((row) => {
+        const { top, bottom } = row.getBoundingClientRect();
+        return top < box.bottom - 0.5 && bottom > box.bottom + 0.5;
+      }).length;
+    });
+  await expect(page.getByRole("option")).toHaveCount(10);
+  await expect.poll(cutRows).toBe(0);
+  const footer = page.getByText(/^Näytetään/);
+  const panelHeight = async () => (await list.boundingBox())!.height;
+  const before = await panelHeight();
+  await page.getByRole("button", { name: "Näytä lisää" }).click();
+  await expect(page.getByRole("option")).toHaveCount(12);
+  await expect(footer).toHaveText("Näytetään 12 / 12");
+  await expect.poll(cutRows).toBe(0);
+  expect(await panelHeight()).toBe(before);
+});
