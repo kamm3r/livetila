@@ -92,10 +92,12 @@
   <ul class="data-frame lg:hidden">
     <li
       aria-hidden="true"
-      class="data-head flex items-center justify-between border-b-0 px-3"
+      class="data-head flex h-auto items-center justify-between border-b-0 px-3 py-1.5"
     >
       <span></span>
-      <span>PB / SB</span>
+      <span class="flex flex-col text-right leading-tight"
+        ><span>PB</span><span>SB</span></span
+      >
     </li>
     {#each sorted as enrollment (enrollment.Id)}
       <li
@@ -137,7 +139,7 @@
           class="size-3.5 text-green-700 dark:text-green-400"
           aria-hidden="true"
         />
-        = vahvistettu
+        = vahvistanut
       </li>
       <li class="flex items-center gap-1">
         <span

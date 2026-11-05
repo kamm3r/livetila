@@ -208,9 +208,10 @@
   {@const attempt = entry.Attempts?.[index]}
   {#if attempt?.Line1}
     <span
+      data-best={index === best ? "" : undefined}
       class={cn(
         "inline-flex flex-col items-center rounded-md px-1.5 py-0.5",
-        !height && index === best && "font-semibold text-primary",
+        index === best && "font-semibold text-primary",
         isFoul(attempt.Line1) && "text-muted-foreground",
         attempt.Line1 === "–" || attempt.Line1 === "-"
           ? "text-muted-foreground"
@@ -263,11 +264,11 @@
               ),
         )
       : 0}
-  <div class="data-frame hidden overflow-x-auto lg:block">
+  <div class="data-frame hidden overflow-x-auto xl:block">
     <!-- Fixed columns line up stacked tables; names and clubs share the rest. -->
     <table
       class="w-full table-fixed text-sm"
-      style={`min-width: ${columns > 0 ? 562 + columns * 58 : 708}px`}
+      style={`min-width: ${columns > 0 ? 672 + columns * 58 : 708}px`}
     >
       <thead>
         <tr class="data-head">
@@ -277,10 +278,7 @@
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
           <th
-            class={cn(
-              "px-2 text-left font-medium",
-              columns > 0 && "w-36 xl:w-56",
-            )}
+            class={cn("px-2 text-left font-medium", columns > 0 && "w-56")}
             scope="col">Seura</th
           >
           {#each { length: columns }, i (i)}
@@ -313,7 +311,8 @@
             data-changed={change ? "" : undefined}
             class={cn(
               "h-12 border-t transition-colors duration-1000 first:border-t-0",
-              isOut && "text-muted-foreground [&_img]:opacity-80",
+              isOut &&
+                "text-muted-foreground [&_[data-best]]:text-inherit [&_img]:opacity-80",
               change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
             )}
           >
@@ -381,7 +380,7 @@
     : undefined}
   <!-- From tablet width a row fits on one line: name, attempts, result. -->
   <ul
-    class="data-frame overflow-clip lg:hidden"
+    class="data-frame overflow-clip xl:hidden"
     style={`--attempts: ${columns * 44}px`}
   >
     {#if sharedLabels}
@@ -417,7 +416,8 @@
           "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
           sharedLabels &&
             "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem] md:items-center",
-          isOut && "text-muted-foreground [&_img]:opacity-80",
+          isOut &&
+            "text-muted-foreground [&_[data-best]]:text-inherit [&_img]:opacity-80",
           change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
         )}
       >
@@ -445,14 +445,14 @@
           <!-- Fixed columns keep attempt N aligned across rows. -->
           <ul
             class={cn(
-              "col-span-full row-start-2 mt-1.5 grid items-center text-center text-xs tabular-nums",
+              "col-span-full row-start-2 mt-1.5 grid text-center text-xs tabular-nums",
               sharedLabels
-                ? "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0"
-                : "grid-cols-[repeat(auto-fill,44px)]",
+                ? "items-center md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0"
+                : "grid-cols-[repeat(auto-fill,44px)] items-start",
             )}
             style={attemptGrid}
           >
-            {#each { length: isOut ? 3 : columns }, i (i)}
+            {#each { length: isOut ? 3 : sharedLabels || !layout.vertical ? columns : layout.labels.findLastIndex( (label) => entry.Attempts?.some((attempt) => attempt.Line1 === label) ) + 1 }, i (i)}
               <li>
                 <span
                   class={cn(
@@ -592,7 +592,7 @@
         </li>
       {/each}
       {#if showsGap}
-        <li class="lg:hidden">
+        <li class="xl:hidden">
           <span class="font-medium text-foreground/75">Ero</span> = ero kärkeen
         </li>
       {/if}

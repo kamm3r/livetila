@@ -27,9 +27,9 @@
     form?.focus();
   }
 
-  // "Kilpailu / M Moukari / Alkuerät" → "M Moukari, Alkuerät"
-  const shortLabel = (label: string) =>
-    label.split(" / ").slice(1).join(", ") || label;
+  // "Kilpailu / M Moukari / Alkuerät" → "M Moukari" and "Alkuerät"
+  const eventLabel = (label: string) => label.split(" / ")[1] ?? label;
+  const roundLabel = (label: string) => label.split(" / ").slice(2).join(" / ");
   const competitionLabel = (label: string) => label.split(" / ")[0];
 
   const competitionMeta = (comp: CompetitionList) =>
@@ -51,7 +51,8 @@
     <section class="home-search" aria-labelledby="home-title">
       <h1 id="home-title">Kilpailun jokainen <span>hetki.</span></h1>
       <p class="introduction">
-        Yleisurheilun tulokset. Kentän laidalta kotikatsomoon.
+        <span class="inline-block">Yleisurheilun tulokset.</span>
+        <span class="inline-block">Kentän laidalta kotikatsomoon.</span>
       </p>
       <div class="search-field"><SearchForm bind:this={form} {search} /></div>
       <div class="below-search">
@@ -69,7 +70,11 @@
                 <li>
                   <a href={item.url} title={item.label}>
                     <span class="row-text">
-                      <span class="row-title">{shortLabel(item.label)}</span>
+                      <span class="row-title"
+                        >{eventLabel(item.label)}
+                        <span class="row-round">{roundLabel(item.label)}</span
+                        ></span
+                      >
                       <span class="row-meta"
                         >{competitionLabel(item.label)}</span
                       >
@@ -228,6 +233,10 @@
   .row-title {
     font-size: 0.875rem;
     font-weight: 500;
+  }
+  .row-round {
+    font-weight: 400;
+    color: var(--muted-foreground);
   }
   .row-meta {
     font-size: 0.75rem;

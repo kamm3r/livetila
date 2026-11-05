@@ -37,9 +37,9 @@
   let selected = $state(0);
 </script>
 
-<details class="group rounded-lg border text-sm">
+<details class="group text-sm">
   <summary
-    class="flex cursor-pointer select-none list-none items-center gap-1.5 rounded-lg px-3 py-2 font-medium text-[13px] outline-none focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden"
+    class="flex cursor-pointer select-none list-none items-center gap-1.5 rounded-md py-1 font-medium text-[13px] outline-none focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-details-marker]:hidden"
   >
     <ChevronRight
       class="size-4 text-muted-foreground transition-transform group-open:rotate-90"
@@ -47,7 +47,7 @@
     />
     Asetukset lähetysohjelmassa
   </summary>
-  <div class="flex flex-col gap-3 px-3 pb-3">
+  <div class="flex flex-col gap-3 pt-2 pb-1">
     <div class="flex gap-1" role="group" aria-label="Ohjelma">
       {#each tools as tool, i (tool.name)}
         <button

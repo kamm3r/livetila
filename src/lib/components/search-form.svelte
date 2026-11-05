@@ -87,9 +87,18 @@
     )
       search.loadMore();
   }
+  // The chosen competition stays in the query but shows as a scope beside the
+  // field, so people only edit the part they typed.
+  const scope = $derived(
+    search.selectedComp ? `${search.selectedComp.Name} / ` : "",
+  );
   function handleInput(value: string) {
-    search.input(value);
+    search.input(value.startsWith(scope) ? value : scope + value);
     isOpen = true;
+  }
+  function handleInputKeydown(event: KeyboardEvent) {
+    if (event.key === "Backspace" && scope && search.query === scope)
+      search.input("");
   }
   const { trigger, destroy } = createWebHaptics();
   onDestroy(() => {
@@ -197,8 +206,15 @@
             <Search class="size-[18px]" />
           </span>
 
+          {#if search.selectedComp}
+            <span
+              class="max-w-[45%] shrink-0 truncate font-medium text-base text-foreground"
+              >{search.selectedComp.Name}</span
+            >
+          {/if}
           <CommandPrimitive.Input
             bind:ref={inputEl}
+            onkeydown={handleInputKeydown}
             onclick={handleFocus}
             class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none sm:text-base"
             aria-label="Hae kilpailuja tai lajeja"
@@ -206,7 +222,7 @@
               ? "Hae lajeja..."
               : "Hae kilpailuja nimellä..."}
             type="text"
-            bind:value={() => search.query, handleInput}
+            bind:value={() => search.query.slice(scope.length), handleInput}
           />
 
           {#if search.isLoading}
@@ -304,7 +320,7 @@
                   {#each search.filteredCompetitions.slice(0, search.visibleCount) as comp (comp.Id)}
                     <div>
                       <CommandItem
-                        class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [&>.cn-command-item-indicator]:hidden"
+                        class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [@media(hover:none)]:data-selected:bg-transparent [&>.cn-command-item-indicator]:hidden"
                         onmousedown={(e) => {
                           e.preventDefault();
                         }}
@@ -331,7 +347,7 @@
                             </span>
                           </div>
                           <ChevronRight
-                            class="size-4 shrink-0 text-primary opacity-0 group-data-selected:opacity-100"
+                            class="size-4 shrink-0 text-primary opacity-0 group-data-selected:opacity-100 [@media(hover:none)]:group-data-selected:opacity-0"
                           />
                         </div>
                       </CommandItem>
@@ -345,7 +361,7 @@
                         search.navigatingTo !== null && !isNavigating}
                       <div>
                         <CommandItem
-                          class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [&>.cn-command-item-indicator]:hidden disabled:pointer-events-none"
+                          class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [@media(hover:none)]:data-selected:bg-transparent [&>.cn-command-item-indicator]:hidden disabled:pointer-events-none"
                           disabled={isDisabled}
                           onmousedown={(e) => {
                             e.preventDefault();
@@ -385,7 +401,7 @@
                                 />
                               {:else}
                                 <ChevronRight
-                                  class="size-4 text-primary opacity-0 group-data-selected:opacity-100"
+                                  class="size-4 text-primary opacity-0 group-data-selected:opacity-100 [@media(hover:none)]:group-data-selected:opacity-0"
                                 />
                               {/if}
                             </div>

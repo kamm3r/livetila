@@ -89,10 +89,12 @@
   <ul class="data-frame lg:hidden">
     <li
       aria-hidden="true"
-      class="data-head flex items-center justify-between border-b-0 px-3"
+      class="data-head flex h-auto items-center justify-between border-b-0 px-3 py-1.5"
     >
       <span>{leadLabel}</span>
-      <span>PB / SB</span>
+      <span class="flex flex-col text-right leading-tight"
+        ><span>PB</span><span>SB</span></span
+      >
     </li>
     {#each heats as heat (heat.index)}
       {#if showHeatRows}
@@ -106,7 +108,7 @@
         <li
           class="grid grid-cols-[24px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2 first:border-t-0"
         >
-          <span class="text-center font-semibold text-sm tabular-nums"
+          <span class="text-left font-semibold text-sm tabular-nums"
             >{alloc.Position || "-"}</span
           >
           <!-- The cell stays when there is no logo, so the columns hold. -->

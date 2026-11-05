@@ -646,8 +646,10 @@ test("search remains usable with unavailable history storage and competition nam
   await page.getByRole("option", { name: /Test \/ Games/ }).click();
   await input.fill("Test / Games / 100");
   await expect(page.getByRole("option")).toHaveCount(2);
-  await input.fill("Test / Games");
+  await input.fill("");
+  await input.press("Backspace");
   await expect(input).toHaveValue("");
+  await expect(input).toHaveAttribute("placeholder", /kilpailuja/);
   await page.getByRole("option", { name: /Test \/ Games/ }).click();
   await page.getByRole("option", { name: /Alkuerät/ }).click();
   await expect(page).toHaveURL(/competition\/1-10\?round=Qualify/);
