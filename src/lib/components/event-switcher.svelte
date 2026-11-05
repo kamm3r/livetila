@@ -72,6 +72,20 @@
 
   let open = $state(false);
 
+  // The list fades at the bottom only while there is more to scroll to.
+  let listEl = $state<HTMLElement | null>(null);
+  let moreBelow = $state(false);
+  function updateMoreBelow() {
+    if (!listEl) return;
+    moreBelow =
+      listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight > 1;
+  }
+  $effect(() => {
+    if (!listEl) return;
+    const frame = requestAnimationFrame(updateMoreBelow);
+    return () => cancelAnimationFrame(frame);
+  });
+
   function handleSelect(value: string) {
     trigger("selection");
     const event = sortedEvents[Number(value)];
@@ -104,44 +118,47 @@
       aria-hidden="true"
     />
   </Popover.Trigger>
-  <Popover.Content
-    class="max-h-96 w-[min(420px,calc(100vw-2rem))] overflow-auto p-1.5"
-    align="start"
-  >
-    {#each sortedEvents as event, i (`${event.Id}-${event.BeginDateTimeWithTZ}`)}
-      {@const selected =
-        event.EventId === Number(currentEventId) &&
-        event.Name === currentEvent?.Name}
-      <button
-        aria-current={selected ? "true" : undefined}
-        class={cn(
-          "grid w-full cursor-pointer grid-cols-[3rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary sm:grid-cols-[3rem_minmax(0,1fr)_8.25rem] sm:items-center",
-          selected && "bg-accent",
-        )}
-        onclick={() => handleSelect(i.toString())}
-      >
-        <span class="text-[13px] text-muted-foreground tabular-nums">
-          {formatTime(event.BeginDateTimeWithTZ)}
-          {#if multipleDays}<span class="block text-[11px]">{event.date}</span
-            >{/if}
-        </span>
-        <span
-          ><span class="font-medium">{event.EventName}</span>
-          <span class="text-muted-foreground">{event.Name}</span></span
+  <Popover.Content class="w-[min(420px,calc(100vw-2rem))] p-0" align="start">
+    <div
+      bind:this={listEl}
+      onscroll={updateMoreBelow}
+      class={cn("max-h-96 overflow-auto p-1.5", moreBelow && "fade-below")}
+    >
+      {#each sortedEvents as event, i (`${event.Id}-${event.BeginDateTimeWithTZ}`)}
+        {@const selected =
+          event.EventId === Number(currentEventId) &&
+          event.Name === currentEvent?.Name}
+        <button
+          aria-current={selected ? "true" : undefined}
+          class={cn(
+            "grid w-full cursor-pointer grid-cols-[3rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary sm:grid-cols-[3rem_minmax(0,1fr)_8.25rem] sm:items-center",
+            selected && "bg-accent",
+          )}
+          onclick={() => handleSelect(i.toString())}
         >
-        <span
-          class="flex items-center gap-1.5 whitespace-nowrap text-muted-foreground text-xs max-sm:col-start-2"
-        >
+          <span class="text-[13px] text-muted-foreground tabular-nums">
+            {formatTime(event.BeginDateTimeWithTZ)}
+            {#if multipleDays}<span class="block text-[11px]">{event.date}</span
+              >{/if}
+          </span>
           <span
-            class={cn(
-              "size-1.5 rounded-full",
-              statusDots[event.Status] ?? "bg-muted-foreground/40",
-            )}
-            aria-hidden="true"
-          ></span>
-          {eventStatusLabel[event.Status] || event.Status}
-        </span>
-      </button>
-    {/each}
+            ><span class="font-medium">{event.EventName}</span>
+            <span class="text-muted-foreground">{event.Name}</span></span
+          >
+          <span
+            class="flex items-center gap-1.5 whitespace-nowrap text-muted-foreground text-xs max-sm:col-start-2"
+          >
+            <span
+              class={cn(
+                "size-1.5 rounded-full",
+                statusDots[event.Status] ?? "bg-muted-foreground/40",
+              )}
+              aria-hidden="true"
+            ></span>
+            {eventStatusLabel[event.Status] || event.Status}
+          </span>
+        </button>
+      {/each}
+    </div>
   </Popover.Content>
 </Popover.Root>

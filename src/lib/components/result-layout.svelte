@@ -263,7 +263,7 @@
     <!-- Fixed columns line up stacked tables; names and clubs share the rest. -->
     <table
       class="w-full table-fixed text-sm"
-      style={`min-width: ${columns > 0 ? 604 + columns * 58 : 708}px`}
+      style={`min-width: ${columns > 0 ? 562 + columns * 58 : 708}px`}
     >
       <thead>
         <tr class="data-head">
@@ -275,7 +275,7 @@
           <th
             class={cn(
               "px-2 text-left font-medium",
-              columns > 0 && "w-44 xl:w-56",
+              columns > 0 && "w-36 xl:w-56",
             )}
             scope="col">Seura</th
           >
@@ -383,7 +383,7 @@
     {#if sharedLabels}
       <li
         aria-hidden="true"
-        class="data-head sticky top-0 z-10 grid h-7 items-center gap-x-2.5 border-b-0 bg-muted px-3 text-center tracking-normal normal-case md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_5.5rem]"
+        class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_oklch,var(--muted)_45%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
       >
         <span class="hidden text-left md:col-start-3 md:block">Urheilija</span>
         <span class="grid md:col-start-4" style={attemptGrid}>
@@ -394,7 +394,9 @@
             >
           {/each}
         </span>
-        <span class="hidden pr-5 text-right md:block">Tulos / Ero</span>
+        <span class="hidden whitespace-nowrap pr-5 text-right md:block"
+          >Tulos / Ero</span
+        >
       </li>
     {/if}
     {#each entries as entry (entry.Id)}
@@ -409,7 +411,7 @@
         class={cn(
           "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
           sharedLabels &&
-            "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_5.5rem] md:items-center",
+            "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem] md:items-center",
           isOut && "text-muted-foreground [&_img]:opacity-80",
           change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
         )}

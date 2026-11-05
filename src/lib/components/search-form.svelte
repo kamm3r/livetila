@@ -230,7 +230,7 @@
                 onscroll={handleScroll}
                 class={cn(
                   "overflow-y-auto overscroll-contain",
-                  moreBelow && "search-fade",
+                  moreBelow && "fade-below",
                 )}
                 style={`max-height: ${listHeight}px`}
               >
@@ -428,14 +428,6 @@
 </div>
 
 <style>
-  /* Rows fade out at the bottom edge: a hint there is more to scroll to. */
-  :global(.search-fade) {
-    mask-image: linear-gradient(
-      to bottom,
-      black calc(100% - 2.5rem),
-      transparent
-    );
-  }
   .recent-row:has(:global([data-selected])),
   .recent-row:focus-within {
     background: color-mix(in oklch, var(--primary) 10%, transparent);

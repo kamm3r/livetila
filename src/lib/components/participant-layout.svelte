@@ -90,6 +90,13 @@
   </div>
 
   <ul class="data-frame lg:hidden">
+    <li
+      aria-hidden="true"
+      class="data-head flex items-center justify-between border-b-0 px-3"
+    >
+      <span></span>
+      <span>PB / SB</span>
+    </li>
     {#each sorted as enrollment (enrollment.Id)}
       <li
         class={cn(
@@ -112,13 +119,11 @@
             {enrollment.Organization?.Name ?? "-"}
           </p>
         </div>
-        <dl
-          class="grid grid-cols-[auto_minmax(3.25rem,auto)] gap-x-1.5 text-right text-muted-foreground text-xs leading-tight tabular-nums"
-        >
-          <dt>PB</dt>
-          <dd class="text-foreground">{enrollment.PB || "–"}</dd>
-          <dt>SB</dt>
-          <dd class="text-foreground">{enrollment.SB || "–"}</dd>
+        <dl class="text-right text-xs leading-tight tabular-nums">
+          <dt class="sr-only">PB</dt>
+          <dd>{enrollment.PB || "–"}</dd>
+          <dt class="sr-only">SB</dt>
+          <dd class="text-muted-foreground">{enrollment.SB || "–"}</dd>
         </dl>
       </li>
     {/each}
