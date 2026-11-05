@@ -329,16 +329,11 @@
                   </div>
                 {:else if !search.hasResults}
                   <div>
-                    <CommandEmpty
-                      class="flex flex-col items-center gap-2 py-8 text-center"
-                    >
-                      <div class="rounded-full bg-muted p-3">
-                        <Search class="size-5 text-muted-foreground" />
-                      </div>
+                    <CommandEmpty class="py-8 text-center">
                       <p class="text-muted-foreground text-sm">
                         {search.step === "events"
-                          ? "Ei lajeja löytynyt"
-                          : "Ei kilpailuja löytynyt"}
+                          ? "Lajeja ei löytynyt"
+                          : "Kilpailuja ei löytynyt"}
                       </p>
                     </CommandEmpty>
                   </div>

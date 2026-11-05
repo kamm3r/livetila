@@ -205,9 +205,11 @@
       <Skeleton class="h-9 w-56 max-w-full" />
       <Skeleton class="mb-1 h-5 w-72 max-w-full" />
       <div class="data-frame">
-        <div class="data-head"></div>
+        <div class="data-head h-9"></div>
         {#each { length: 8 }, i (i)}
-          <div class="flex h-12 items-center gap-3 border-t px-3">
+          <div
+            class="flex h-12 items-center gap-3 border-t px-3 [.data-head+&]:border-t-0"
+          >
             <Skeleton class="size-6 shrink-0 rounded-full" />
             <Skeleton class="h-4 w-40 max-w-1/2" />
             <Skeleton class="ml-auto h-4 w-12" />

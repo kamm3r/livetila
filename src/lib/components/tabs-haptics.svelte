@@ -88,7 +88,7 @@
           <Tabs.Trigger
             value={tab.value}
             class={cn(
-              "motion-tab-trigger h-full gap-1.5 rounded-none px-0",
+              "motion-tab-trigger h-full gap-1.5 rounded-none px-0 focus-visible:rounded-sm focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:ring-0",
               lone ? "cursor-default font-semibold text-sm" : "text-[13px]",
             )}
           >
