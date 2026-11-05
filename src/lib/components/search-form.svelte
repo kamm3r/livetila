@@ -129,6 +129,13 @@
     };
   });
 
+  // Opening can move the field on a phone, so measure once it has settled.
+  $effect(() => {
+    if (!showDropdown) return;
+    const frame = requestAnimationFrame(measureSpace);
+    return () => cancelAnimationFrame(frame);
+  });
+
   function handleFocus() {
     measureSpace();
     if (blurTimeout) clearTimeout(blurTimeout);

@@ -5,16 +5,15 @@
   const ctx = getRoundContext();
 
   function label(category: string, name: string) {
-    if (category === "Qualify") return { full: "Alkuerät", short: "Alku" };
-    if (category === "Final") return { full: "Loppukilpailu", short: "Loppu" };
-    return { full: name, short: name };
+    if (category === "Qualify") return "Alkuerät";
+    if (category === "Final") return "Loppukilpailu";
+    return name;
   }
 </script>
 
 {#if ctx.rounds.length > 1}
   <div class="inline-flex h-9 items-center rounded-lg bg-muted p-[3px]">
     {#each ctx.rounds as round (round.Index)}
-      {@const text = label(round.RoundTypeCategory, round.Name)}
       {@const selected = ctx.selectedRound === round.Index}
       <button
         type="button"
@@ -27,8 +26,7 @@
         )}
         onclick={() => ctx.handleRoundChange(round.Index)}
       >
-        <span class="sm:hidden" aria-hidden="true">{text.short}</span>
-        <span class="sr-only sm:not-sr-only">{text.full}</span>
+        {label(round.RoundTypeCategory, round.Name)}
       </button>
     {/each}
   </div>

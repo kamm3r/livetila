@@ -2,6 +2,7 @@
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy, untrack } from "svelte";
   import * as Tabs from "$lib/components/ui/tabs";
+  import { cn } from "$lib/utils";
   import type { Snippet } from "svelte";
 
   type Tab = {
@@ -38,6 +39,9 @@
     ),
   );
 
+  // With nothing to switch to, the tab reads as the list's heading.
+  const lone = $derived(tabs.length === 1);
+
   // Tabs hug their labels, so the indicator takes its size from the active one.
   let listEl = $state<HTMLElement | null>(null);
   let indicator = $state<{ left: number; width: number } | null>(null);
@@ -65,12 +69,15 @@
 
 <div class="w-full {className}">
   <Tabs.Root value={activeTab} onValueChange={handleTabChange}>
-    <div class="border-b">
+    <div class={lone ? "" : "border-b"}>
       <Tabs.List
         bind:ref={listEl}
-        class="motion-tabs h-10 w-fit gap-4 rounded-none bg-transparent p-0 sm:gap-6"
+        class={cn(
+          "motion-tabs w-fit gap-4 rounded-none bg-transparent p-0 sm:gap-6",
+          lone ? "h-6" : "h-10",
+        )}
       >
-        {#if indicator}
+        {#if indicator && !lone}
           <span
             class="motion-tab-indicator"
             aria-hidden="true"
@@ -80,7 +87,10 @@
         {#each tabs as tab (tab.value)}
           <Tabs.Trigger
             value={tab.value}
-            class="motion-tab-trigger h-full gap-1.5 rounded-none px-0 text-[13px]"
+            class={cn(
+              "motion-tab-trigger h-full gap-1.5 rounded-none px-0",
+              lone ? "cursor-default font-semibold text-sm" : "text-[13px]",
+            )}
           >
             {tab.label}
             {#if tab.count !== undefined}

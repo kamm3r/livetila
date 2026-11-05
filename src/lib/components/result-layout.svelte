@@ -364,19 +364,24 @@
   {@const attemptGrid = sharedLabels
     ? `grid-template-columns: repeat(${columns}, minmax(0, 1fr))`
     : undefined}
-  <ul class="data-frame overflow-clip lg:hidden">
+  <!-- From tablet width a row fits on one line: name, attempts, result. -->
+  <ul
+    class="data-frame overflow-clip lg:hidden"
+    style={`--attempts: ${columns * (layout.vertical ? 44 : 52)}px`}
+  >
     {#if sharedLabels}
       <li
         aria-hidden="true"
-        class="data-head sticky top-0 z-10 grid h-7 items-center border-b-0 bg-muted px-3 text-center tracking-normal normal-case"
-        style={attemptGrid}
+        class="data-head sticky top-0 z-10 grid h-7 items-center gap-x-2.5 border-b-0 bg-muted px-3 text-center tracking-normal normal-case md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_5.5rem]"
       >
-        {#each layout.labels as label, i (label)}
-          <span
-            class={cn(i + 1 === currentRound && "font-semibold text-primary")}
-            >{label}</span
-          >
-        {/each}
+        <span class="grid md:col-start-4" style={attemptGrid}>
+          {#each layout.labels as label, i (label)}
+            <span
+              class={cn(i + 1 === currentRound && "font-semibold text-primary")}
+              >{label}</span
+            >
+          {/each}
+        </span>
       </li>
     {/if}
     {#each entries as entry (entry.Id)}
@@ -390,11 +395,13 @@
         data-changed={change ? "" : undefined}
         class={cn(
           "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
+          sharedLabels &&
+            "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_5.5rem] md:items-center",
           isOut && "text-muted-foreground [&_img]:opacity-80",
           change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
         )}
       >
-        <div class="-mt-0.5 flex flex-col items-center leading-tight">
+        <div class="-mt-0.5 flex flex-col items-center leading-tight md:mt-0">
           {@render rankMark(rank, isOut)}
           {#if change?.gained}{@render gainedPlaces(change.gained)}{/if}
         </div>
@@ -419,7 +426,9 @@
           <ul
             class={cn(
               "col-span-full row-start-2 mt-1.5 grid items-center text-center text-xs tabular-nums",
-              !sharedLabels && "grid-cols-[repeat(auto-fill,44px)]",
+              sharedLabels
+                ? "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0"
+                : "grid-cols-[repeat(auto-fill,44px)]",
             )}
             style={attemptGrid}
           >
@@ -452,7 +461,10 @@
           </ul>
         {/if}
         <div
-          class="col-start-4 row-start-1 flex flex-col items-end leading-tight"
+          class={cn(
+            "col-start-4 row-start-1 flex flex-col items-end leading-tight",
+            sharedLabels && "md:col-start-5",
+          )}
         >
           {@render result(entry, true)}
           {#if gap && gap !== "—"}

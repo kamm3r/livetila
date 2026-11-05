@@ -112,16 +112,14 @@
             {enrollment.Organization?.Name ?? "-"}
           </p>
         </div>
-        <div
-          class="text-right text-muted-foreground text-xs leading-tight tabular-nums"
+        <dl
+          class="grid grid-cols-[auto_minmax(3.25rem,auto)] gap-x-1.5 text-right text-muted-foreground text-xs leading-tight tabular-nums"
         >
-          <div>
-            PB <span class="text-foreground">{enrollment.PB || "–"}</span>
-          </div>
-          <div>
-            SB <span class="text-foreground">{enrollment.SB || "–"}</span>
-          </div>
-        </div>
+          <dt>PB</dt>
+          <dd class="text-foreground">{enrollment.PB || "–"}</dd>
+          <dt>SB</dt>
+          <dd class="text-foreground">{enrollment.SB || "–"}</dd>
+        </dl>
       </li>
     {/each}
   </ul>

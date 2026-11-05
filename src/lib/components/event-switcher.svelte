@@ -17,11 +17,14 @@
     events = [],
     currentEventId,
     roundFromUrl,
+    roundShownElsewhere = false,
   }: {
     competitionId: string;
     events: EventWithDate[];
     currentEventId: string;
     roundFromUrl?: string | null;
+    // A round control beside the trigger already names the round.
+    roundShownElsewhere?: boolean;
   } = $props();
 
   const statusDots: Record<string, string> = {
@@ -34,7 +37,7 @@
   const eventStatusLabel: Record<string, string> = {
     Unallocated: "Eräjaot puuttuvat",
     Allocated: "Eräjaot tehty",
-    Progress: "Käynnissä",
+    Progress: "Live",
     Official: "Tulokset valmiit",
   };
 
@@ -87,7 +90,10 @@
       <span class="truncate font-semibold sm:overflow-visible"
         >{currentEvent.EventName}</span
       >
-      <span class="truncate text-muted-foreground sm:overflow-visible"
+      <span
+        class={roundShownElsewhere
+          ? "sr-only"
+          : "truncate text-muted-foreground sm:overflow-visible"}
         >{currentEvent.Name}</span
       >
     {:else}

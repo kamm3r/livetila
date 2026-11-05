@@ -264,7 +264,7 @@
   <Drawer {open} onOpenChange={handleOpenChange}>
     <DrawerTrigger
       aria-label="Lähetysgrafiikka"
-      class="toolbar-control motion-control size-9 border-transparent bg-transparent text-muted-foreground shadow-none hover:text-foreground sm:hidden"
+      class="toolbar-control motion-control -mr-2.5 size-9 border-transparent bg-transparent text-muted-foreground shadow-none hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground sm:hidden"
     >
       <Cast class="size-4" aria-hidden="true" />
     </DrawerTrigger>
@@ -285,7 +285,7 @@
   <Popover {open} onOpenChange={handleOpenChange}>
     <PopoverTrigger
       aria-label="Lähetysgrafiikka"
-      class="toolbar-control motion-control whitespace-nowrap border-transparent bg-transparent px-3 text-muted-foreground shadow-none hover:text-foreground max-sm:hidden"
+      class="toolbar-control motion-control -mr-3 whitespace-nowrap border-transparent bg-transparent px-3 text-muted-foreground shadow-none hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-foreground max-sm:hidden"
     >
       <Cast class="size-4" aria-hidden="true" />
       Grafiikka

@@ -122,6 +122,16 @@
   .home-search:has(:global([data-search-open])) .below-search {
     visibility: hidden;
   }
+  /* On a phone an active search also takes the headline's space. */
+  @media (max-width: 639px) {
+    .home-search:has(:global([data-search-open]))
+      :is(h1, .introduction, .below-search) {
+      display: none;
+    }
+    .home-search:has(:global([data-search-open])) .search-field {
+      margin-top: 0;
+    }
+  }
   .home-content {
     width: 100%;
     max-width: 600px;

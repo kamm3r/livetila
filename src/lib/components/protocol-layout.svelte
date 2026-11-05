@@ -42,7 +42,7 @@
       {#each heats as heat (heat.index)}
         <tbody>
           {#if showHeatRows}
-            <tr class="h-[34px] border-t bg-muted/45 first:border-t-0">
+            <tr class="h-[34px] border-t bg-muted/45">
               <th
                 class="pl-4 text-left font-normal text-muted-foreground text-xs"
                 colspan="6"
@@ -116,16 +116,14 @@
               {alloc.Organization?.Name ?? "-"}
             </p>
           </div>
-          <div
-            class="text-right text-muted-foreground text-xs leading-tight tabular-nums"
+          <dl
+            class="grid grid-cols-[auto_minmax(3.25rem,auto)] gap-x-1.5 text-right text-muted-foreground text-xs leading-tight tabular-nums"
           >
-            <div>
-              PB <span class="text-foreground">{alloc.PB || "–"}</span>
-            </div>
-            <div>
-              SB <span class="text-foreground">{alloc.SB || "–"}</span>
-            </div>
-          </div>
+            <dt>PB</dt>
+            <dd class="text-foreground">{alloc.PB || "–"}</dd>
+            <dt>SB</dt>
+            <dd class="text-foreground">{alloc.SB || "–"}</dd>
+          </dl>
         </li>
       {/each}
     {/each}

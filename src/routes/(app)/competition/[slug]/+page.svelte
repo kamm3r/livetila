@@ -14,6 +14,7 @@
   import ParticipantLayout from "$lib/components/participant-layout.svelte";
   import ProtocolLayout from "$lib/components/protocol-layout.svelte";
   import ResultLayout from "$lib/components/result-layout.svelte";
+  import { Button } from "$lib/components/ui/button";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import {
     competitionQueries,
@@ -187,7 +188,7 @@
 <main class="page-width relative flex grow flex-col py-4 sm:py-8">
   {#if !data.identity}
     <div
-      class="flex flex-col items-center justify-center gap-2 py-20 text-center"
+      class="flex flex-1 flex-col items-center justify-center gap-2 pb-14 text-center"
     >
       <h2 class="font-semibold text-2xl tracking-tight">Virheellinen linkki</h2>
       <a href="/" class="mt-2 text-primary text-sm underline underline-offset-4"
@@ -207,16 +208,12 @@
     </div>
   {:else if error}
     <div
-      class="flex flex-col items-center justify-center gap-2 py-20 text-center"
+      class="flex flex-1 flex-col items-center justify-center gap-2 pb-14 text-center"
     >
       <h2 class="font-semibold text-2xl tracking-tight">{error}</h2>
-      <div class="mt-2 flex gap-4 text-sm">
-        <button
-          type="button"
-          class="text-primary underline underline-offset-4"
-          onclick={() => location.reload()}>Yritä uudelleen</button
-        >
-        <a href="/" class="text-primary underline underline-offset-4"
+      <div class="mt-3 flex items-center gap-4 text-sm">
+        <Button onclick={() => location.reload()}>Yritä uudelleen</Button>
+        <a href="/" class="text-muted-foreground underline underline-offset-4"
           >Palaa etusivulle</a
         >
       </div>
@@ -238,7 +235,8 @@
 
       {#key slug}
         <RoundProvider rounds={competition.Rounds} roundCategory={roundFromUrl}>
-          <!-- Mobile: switcher and overlay button on one line, status and rounds below. -->
+          <!-- Event, then round, then status. On a phone the event and the
+               overlay button share the first line. -->
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
             <div class="order-1 min-w-0 max-sm:flex-1 sm:shrink-0">
               <EventSwitcher
@@ -246,6 +244,7 @@
                 currentEventId={eventId}
                 events={compEvents}
                 roundFromUrl={selectedRound?.RoundTypeCategory}
+                roundShownElsewhere={competition.Rounds.length > 1}
               />
             </div>
             <div class="order-2 sm:order-9">
@@ -258,6 +257,7 @@
               />
             </div>
             <div class="order-3 basis-full sm:hidden"></div>
+            <div class="order-4 empty:hidden sm:order-2"><RoundSwitcher /></div>
             <div class="order-5 has-[>[role=status]:empty]:hidden">
               <LiveIndicator
                 live={isLive}
@@ -270,10 +270,7 @@
                 >{eventMeta}</span
               >
             {/if}
-            <div class="order-7 flex-1"></div>
-            <div class="order-8">
-              <RoundSwitcher />
-            </div>
+            <div class="order-7 flex-1 max-sm:hidden"></div>
           </div>
 
           {#if confirmation}
