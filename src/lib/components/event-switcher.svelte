@@ -109,7 +109,7 @@
       <button
         aria-current={selected ? "true" : undefined}
         class={cn(
-          "grid w-full cursor-pointer grid-cols-[3rem_minmax(0,1fr)_8.25rem] items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary",
+          "grid w-full cursor-pointer grid-cols-[3rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary sm:grid-cols-[3rem_minmax(0,1fr)_8.25rem] sm:items-center",
           selected && "bg-accent",
         )}
         onclick={() => handleSelect(i.toString())}
@@ -119,12 +119,12 @@
           {#if multipleDays}<span class="block text-[11px]">{event.date}</span
             >{/if}
         </span>
-        <span class="truncate"
+        <span
           ><span class="font-medium">{event.EventName}</span>
           <span class="text-muted-foreground">{event.Name}</span></span
         >
         <span
-          class="flex items-center gap-1.5 whitespace-nowrap text-muted-foreground text-xs"
+          class="flex items-center gap-1.5 whitespace-nowrap text-muted-foreground text-xs max-sm:col-start-2"
         >
           <span
             class={cn(

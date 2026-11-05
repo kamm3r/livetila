@@ -3,7 +3,6 @@
   import { isTimed } from "$lib/results";
   import { page } from "$app/state";
   import { replaceState } from "$app/navigation";
-  import { ClipboardList, Trophy, Users } from "@lucide/svelte";
   import { createQuery } from "@tanstack/svelte-query";
   import OverlayPopover from "$lib/components/overlay-popover.svelte";
   import LiveIndicator from "$lib/components/live-indicator.svelte";
@@ -185,35 +184,49 @@
   <title>{compDetails?.Competition.Name ?? "Kilpailu"} - Livetila</title>
 </svelte:head>
 
-<main class="page-width relative flex grow flex-col py-5 sm:py-8">
+<main class="page-width relative flex grow flex-col py-4 sm:py-8">
   {#if !data.identity}
-    <div class="flex flex-col items-center justify-center py-20">
-      <h2 class="font-bold text-2xl">Virheellinen linkki</h2>
-      <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
+    <div
+      class="flex flex-col items-center justify-center gap-2 py-20 text-center"
+    >
+      <h2 class="font-semibold text-2xl tracking-tight">Virheellinen linkki</h2>
+      <a href="/" class="mt-2 text-primary text-sm underline underline-offset-4"
+        >Palaa etusivulle</a
+      >
     </div>
   {:else if isLoading}
-    <div class="flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <Skeleton class="h-8 w-28 rounded-md" />
-        <Skeleton class="h-10 w-48 rounded-md" />
+    <!-- Same frame as the loaded page, so nothing jumps when data arrives. -->
+    <div class="flex flex-col gap-3 sm:gap-4" aria-hidden="true">
+      <div class="flex flex-col gap-1.5">
+        <Skeleton class="h-7 w-64 max-w-full" />
+        <Skeleton class="h-4 w-48" />
       </div>
-      <div class="mt-2 flex flex-col gap-3">
-        <Skeleton class="h-10 w-full" />
-        <Skeleton class="h-14 w-full" />
-        <Skeleton class="h-14 w-full" />
-        <Skeleton class="h-14 w-full" />
-      </div>
+      <Skeleton class="h-9 w-56 max-w-full" />
+      <Skeleton class="mb-1 h-5 w-72 max-w-full" />
+      <Skeleton class="h-96 w-full rounded-xl" />
     </div>
   {:else if error}
-    <div class="flex flex-col items-center justify-center py-20">
-      <h2 class="font-bold text-2xl">Virhe</h2>
-      <p class="mt-2 text-muted-foreground">{error}</p>
-      <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
+    <div
+      class="flex flex-col items-center justify-center gap-2 py-20 text-center"
+    >
+      <h2 class="font-semibold text-2xl tracking-tight">{error}</h2>
+      <div class="mt-2 flex gap-4 text-sm">
+        <button
+          type="button"
+          class="text-primary underline underline-offset-4"
+          onclick={() => location.reload()}>Yritä uudelleen</button
+        >
+        <a href="/" class="text-primary underline underline-offset-4"
+          >Palaa etusivulle</a
+        >
+      </div>
     </div>
   {:else if competition}
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-col gap-1">
-        <h2 class="font-semibold text-2xl tracking-tight text-balance">
+    <div class="flex flex-col gap-3 sm:gap-4">
+      <div class="flex flex-col gap-0.5 sm:gap-1">
+        <h2
+          class="font-semibold text-xl tracking-tight text-balance sm:text-2xl"
+        >
           {compDetails?.Competition.Name ?? ""}
         </h2>
         {#if subline}
@@ -274,28 +287,22 @@
               {
                 value: "participants" as const,
                 label: "Ilmoittautuneet",
-                shortLabel: "Osanottajat",
                 count: confirmedCount
                   ? `${confirmedCount}/${competition.Enrollments.length}`
                   : competition.Enrollments.length,
                 countLabel: confirmedCount
                   ? `${confirmedCount}/${competition.Enrollments.length} vahvistanut`
                   : undefined,
-                icon: usersIcon,
                 content: participantsContent,
               },
               {
                 value: "protocol" as const,
                 label: "Pöytäkirjat",
-                count: allocations.length,
-                icon: clipboardIcon,
                 content: protocolContent,
               },
               {
                 value: "results" as const,
                 label: "Tulokset",
-                count: resultCount,
-                icon: trophyIcon,
                 content: resultsContent,
               },
             ].filter((tab) => visibleTabs.includes(tab.value))}
@@ -305,18 +312,6 @@
     </div>
   {/if}
 </main>
-
-{#snippet usersIcon()}
-  <Users class="size-4" />
-{/snippet}
-
-{#snippet clipboardIcon()}
-  <ClipboardList class="size-4" />
-{/snippet}
-
-{#snippet trophyIcon()}
-  <Trophy class="size-4" />
-{/snippet}
 
 {#snippet participantsContent()}
   <ParticipantLayout enrollments={competition!.Enrollments} />

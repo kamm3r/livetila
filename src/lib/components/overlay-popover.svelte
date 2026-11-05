@@ -187,7 +187,7 @@
 
   {#if available.length > 0}
     <fieldset class="flex flex-col gap-3">
-      <legend class="mb-1.5 font-medium text-[13px]">Asetukset</legend>
+      <legend class="sr-only">Asetukset</legend>
       {#each available as feature (feature.id)}
         <label class="flex cursor-pointer items-start gap-3">
           <input
@@ -264,7 +264,7 @@
   <Drawer {open} onOpenChange={handleOpenChange}>
     <DrawerTrigger
       aria-label="Lähetysgrafiikka"
-      class="toolbar-control motion-control size-9 text-muted-foreground hover:text-foreground sm:hidden"
+      class="toolbar-control motion-control size-9 border-transparent bg-transparent text-muted-foreground shadow-none hover:text-foreground sm:hidden"
     >
       <Cast class="size-4" aria-hidden="true" />
     </DrawerTrigger>
@@ -285,7 +285,7 @@
   <Popover {open} onOpenChange={handleOpenChange}>
     <PopoverTrigger
       aria-label="Lähetysgrafiikka"
-      class="toolbar-control motion-control whitespace-nowrap px-3 max-sm:hidden"
+      class="toolbar-control motion-control whitespace-nowrap border-transparent bg-transparent px-3 text-muted-foreground shadow-none hover:text-foreground max-sm:hidden"
     >
       <Cast class="size-4" aria-hidden="true" />
       Grafiikka

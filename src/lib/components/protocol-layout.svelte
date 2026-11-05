@@ -18,7 +18,7 @@
 </script>
 
 {#snippet heatLabel(index: number, count: number)}
-  <span class="font-semibold text-foreground">Erä {index}</span>
+  <span class="text-foreground">Erä {index}</span>
   · {count} urheilijaa
 {/snippet}
 
@@ -97,7 +97,7 @@
       {/if}
       {#each heat.allocations as alloc (alloc.Id)}
         <li
-          class="grid grid-cols-[24px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2.5 first:border-t-0"
+          class="grid grid-cols-[24px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2 first:border-t-0"
         >
           <span class="text-center font-semibold text-sm tabular-nums"
             >{alloc.Position || "-"}</span
@@ -105,14 +105,14 @@
           <!-- The cell stays when there is no logo, so the columns hold. -->
           <span class="flex"><AthleteBadge entry={alloc} /></span>
           <div class="min-w-0">
-            <div class="flex min-w-0 items-center gap-1.5">
-              <span class="truncate font-medium text-sm">{alloc.Name}</span>
+            <p class="wrap-break-word text-sm leading-5">
+              <span class="font-medium">{alloc.Name}</span>
               {#if alloc.Number}<span
-                  class="shrink-0 text-[11px] text-muted-foreground tabular-nums"
+                  class="ml-0.5 text-[11px] text-muted-foreground tabular-nums"
                   >#{alloc.Number}</span
                 >{/if}
-            </div>
-            <p class="truncate text-muted-foreground text-xs">
+            </p>
+            <p class="truncate text-muted-foreground text-xs leading-4">
               {alloc.Organization?.Name ?? "-"}
             </p>
           </div>
@@ -120,14 +120,10 @@
             class="text-right text-muted-foreground text-xs leading-tight tabular-nums"
           >
             <div>
-              PB <span class="font-semibold text-foreground"
-                >{alloc.PB || "–"}</span
-              >
+              PB <span class="text-foreground">{alloc.PB || "–"}</span>
             </div>
             <div>
-              SB <span class="font-semibold text-foreground"
-                >{alloc.SB || "–"}</span
-              >
+              SB <span class="text-foreground">{alloc.SB || "–"}</span>
             </div>
           </div>
         </li>

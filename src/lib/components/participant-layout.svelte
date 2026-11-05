@@ -93,7 +93,7 @@
     {#each sorted as enrollment (enrollment.Id)}
       <li
         class={cn(
-          "grid grid-cols-[20px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2.5 first:border-t-0",
+          "grid grid-cols-[20px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2 first:border-t-0",
           !enrollment.Confirmed && "text-muted-foreground [&_img]:opacity-80",
         )}
       >
@@ -101,14 +101,14 @@
         <!-- The cell stays when there is no logo, so the columns hold. -->
         <span class="flex"><AthleteBadge entry={enrollment} /></span>
         <div class="min-w-0">
-          <div class="flex min-w-0 items-center gap-1.5">
-            <span class="truncate font-medium text-sm">{enrollment.Name}</span>
+          <p class="wrap-break-word text-sm leading-5">
+            <span class="font-medium">{enrollment.Name}</span>
             {#if enrollment.Number}<span
-                class="shrink-0 text-[11px] text-muted-foreground tabular-nums"
+                class="ml-0.5 text-[11px] text-muted-foreground tabular-nums"
                 >#{enrollment.Number}</span
               >{/if}
-          </div>
-          <p class="truncate text-muted-foreground text-xs">
+          </p>
+          <p class="truncate text-muted-foreground text-xs leading-4">
             {enrollment.Organization?.Name ?? "-"}
           </p>
         </div>
@@ -116,14 +116,10 @@
           class="text-right text-muted-foreground text-xs leading-tight tabular-nums"
         >
           <div>
-            PB <span class="font-semibold text-foreground"
-              >{enrollment.PB || "–"}</span
-            >
+            PB <span class="text-foreground">{enrollment.PB || "–"}</span>
           </div>
           <div>
-            SB <span class="font-semibold text-foreground"
-              >{enrollment.SB || "–"}</span
-            >
+            SB <span class="text-foreground">{enrollment.SB || "–"}</span>
           </div>
         </div>
       </li>
