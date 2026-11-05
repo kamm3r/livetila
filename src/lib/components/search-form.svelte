@@ -382,7 +382,7 @@
                           value={`${evt.EventName}-${evt.Id}`}
                         >
                           <div
-                            class="grid w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2"
+                            class="grid w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-baseline gap-2"
                           >
                             <span
                               class="text-[13px] text-muted-foreground tabular-nums"
@@ -400,7 +400,7 @@
                               </span>
                             </div>
                             <div
-                              class="flex items-center gap-2 text-muted-foreground text-xs tabular-nums"
+                              class="flex items-center gap-2 self-center text-muted-foreground text-xs tabular-nums"
                             >
                               {#if multipleEventDates}<span
                                   class="max-sm:hidden">{evt.Date}</span

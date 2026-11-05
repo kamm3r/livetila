@@ -153,7 +153,7 @@
       vertical && marks.some((mark) => /o/i.test(mark)) && "o = onnistunut",
       marks.some((mark) => /x/i.test(mark)) && "x = hylätty",
       marks.some((mark) => /[–-]/.test(mark)) && "– = ei suoritusta",
-      eliminated && "viivoitus = karsiutui kolmen kierroksen jälkeen",
+      eliminated && "viivoitus = karsiutui 3. kierroksen jälkeen",
       ...resultCodeLegend(entries),
       tags.includes("PB") && "PB = ennätys",
       tags.includes("SB") && "SB = kauden paras",
@@ -326,7 +326,7 @@
               change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
             )}
           >
-            <td class="pl-3">
+            <td class="pt-0.5 pl-3">
               <span class="grid grid-cols-[24px_22px] items-center gap-1">
                 {@render rankMark(rank, isOut)}
                 <span>
@@ -372,7 +372,7 @@
             {/each}
             <td class="text-right">{@render result(entry, false)}</td>
             <td
-              class="pr-4 text-right text-[13px] text-muted-foreground tabular-nums"
+              class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
             >
               {gapToLeader(entry.Result, leader, eventCategory) ?? ""}
             </td>

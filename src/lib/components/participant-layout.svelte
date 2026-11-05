@@ -76,11 +76,12 @@
             >
               {enrollment.Organization?.Name ?? "-"}
             </td>
-            <td class="px-2 text-right text-[13px] tabular-nums"
+            <td
+              class="px-2 pt-0.5 text-right text-[13px] leading-5 tabular-nums"
               >{enrollment.PB || "–"}</td
             >
             <td
-              class="pr-4 text-right text-[13px] text-muted-foreground tabular-nums"
+              class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
               >{enrollment.SB || "–"}</td
             >
           </tr>

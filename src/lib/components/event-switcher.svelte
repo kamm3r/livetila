@@ -122,7 +122,10 @@
     <div
       bind:this={listEl}
       onscroll={updateMoreBelow}
-      class={cn("max-h-96 overflow-auto p-1.5", moreBelow && "fade-below")}
+      class={cn(
+        "max-h-96 overflow-auto p-1.5 sm:max-h-100",
+        moreBelow && "fade-below",
+      )}
     >
       {#each sortedEvents as event, i (`${event.Id}-${event.BeginDateTimeWithTZ}`)}
         {@const selected =
@@ -146,11 +149,11 @@
             <span class="text-muted-foreground">{event.Name}</span></span
           >
           <span
-            class="flex items-center gap-1.5 whitespace-nowrap text-muted-foreground text-xs max-sm:col-start-2"
+            class="flex items-baseline gap-1.5 whitespace-nowrap text-muted-foreground text-xs max-sm:col-start-2"
           >
             <span
               class={cn(
-                "size-1.5 rounded-full",
+                "size-1.5 self-center rounded-full",
                 statusDots[event.Status] ?? "bg-muted-foreground/40",
               )}
               aria-hidden="true"
