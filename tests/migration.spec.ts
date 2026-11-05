@@ -1501,3 +1501,66 @@ for (const variant of [
     await expect(indicator).toHaveCount(0);
   });
 }
+
+test("an open search replaces the list behind it, and the headline on a phone", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const list = page.getByRole("heading", { name: "Uusimmat kilpailut" });
+  const headline = page.getByRole("heading", { level: 1 });
+  await expect(list).toBeVisible();
+  await page.getByRole("combobox").click();
+  await expect(page.getByRole("option", { name: /Test Games/ })).toBeVisible();
+  await expect(list).toBeHidden();
+  await expect(headline).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(headline).toBeHidden();
+  await page.getByRole("combobox").press("Escape");
+  await expect(headline).toBeVisible();
+});
+
+test("the legend appears once and explains only what the page shows", async ({
+  page,
+}) => {
+  const dnf = { ...runners[0]!, Result: "DNF", HeatRank: 0 };
+  await page.route("**/api/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "100 m",
+        EventCategory: "Track",
+        Enrollments: [],
+        Rounds: [
+          {
+            ...rounds[1]!,
+            Heats: [
+              { Index: 1, Allocations: [dnf, runners[1]] },
+              { Index: 2, Allocations: [] },
+            ],
+            TotalResults: [dnf, runners[1]],
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/competition/1-10?round=Final&tab=results");
+  await expect(
+    page.getByRole("heading", { name: "Kokonaistulokset" }),
+  ).toBeVisible();
+  const legend = page.getByRole("listitem");
+  await expect(legend.filter({ hasText: "DNF = keskeytti" })).toHaveCount(1);
+  await expect(legend.filter({ hasText: "x = hylätty" })).toHaveCount(0);
+  await expect(legend.filter({ hasText: "PB = ennätys" })).toHaveCount(0);
+});
+
+test("the switcher leaves the round to the round control beside it", async ({
+  page,
+}) => {
+  await page.goto("/competition/1-10?round=Final");
+  const trigger = page.locator("[data-popover-trigger]").first();
+  await expect(trigger).toHaveAccessibleName(/100 m Loppukilpailu/);
+  await expect(trigger.getByText("Loppukilpailu")).toHaveClass(/sr-only/);
+  await expect(
+    page.getByRole("button", { name: "Loppukilpailu", exact: true }),
+  ).toBeVisible();
+});
