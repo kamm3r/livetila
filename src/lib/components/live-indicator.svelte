@@ -40,7 +40,9 @@
       >
     </span>
   {:else if live}
-    <span class="inline-flex items-center gap-2 py-1">
+    <span
+      class="inline-flex h-6 items-center gap-1.5 rounded-full bg-red-500/10 px-2.5 dark:bg-red-400/15"
+    >
       <span class="relative flex size-2 shrink-0" aria-hidden="true">
         <span
           class="absolute inline-flex size-full animate-ping rounded-full bg-red-500/60 motion-reduce:animate-none"
@@ -49,7 +51,7 @@
         ></span>
       </span>
       <span
-        class="font-bold text-red-600 text-xs tracking-[0.08em] dark:text-red-400"
+        class="font-semibold text-[11px] text-red-700 tracking-[0.08em] dark:text-red-300"
         >LIVE</span
       >
     </span>

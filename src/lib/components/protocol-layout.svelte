@@ -23,14 +23,14 @@
 {/snippet}
 
 {#if heats.some((heat) => heat.allocations.length > 0)}
-  <div class="hidden overflow-x-auto rounded-lg border lg:block">
-    <table class="w-full text-sm">
+  <div class="data-frame hidden overflow-x-auto lg:block">
+    <table class="w-full min-w-[42rem] table-fixed text-sm">
       <thead>
-        <tr class="h-[34px] border-b text-[11px] text-muted-foreground">
-          <th class="w-14 pl-4 text-left font-medium" scope="col"
+        <tr class="data-head">
+          <th class="w-16 pl-4 text-left font-medium" scope="col"
             >{leadLabel}</th
           >
-          <th class="w-10" scope="col"
+          <th class="w-11" scope="col"
             ><span class="sr-only">Seuran logo</span></th
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
@@ -42,7 +42,7 @@
       {#each heats as heat (heat.index)}
         <tbody>
           {#if showHeatRows}
-            <tr class="h-[34px] border-t bg-muted/60 first:border-t-0">
+            <tr class="h-[34px] border-t bg-muted/45 first:border-t-0">
               <th
                 class="pl-4 text-left font-normal text-muted-foreground text-xs"
                 colspan="6"
@@ -53,17 +53,16 @@
             </tr>
           {/if}
           {#each heat.allocations as alloc (alloc.Id)}
-            <tr class="h-[46px] border-t first:border-t-0">
-              <td class="pl-4 font-bold text-[15px] tabular-nums"
+            <tr class="h-12 border-t first:border-t-0">
+              <td class="pl-4 font-semibold text-sm tabular-nums"
                 >{alloc.Position || ""}</td
               >
-              <td class="px-1"><AthleteBadge entry={alloc} kind="club" /></td>
+              <td class="px-1"><AthleteBadge entry={alloc} /></td>
               <td class="px-2">
                 <span class="flex items-center gap-2 whitespace-nowrap">
-                  <AthleteBadge entry={alloc} kind="flag" />
-                  <span class="font-semibold">{alloc.Name}</span>
+                  <span class="truncate font-medium">{alloc.Name}</span>
                   {#if alloc.Number}<span
-                      class="text-muted-foreground text-xs tabular-nums"
+                      class="shrink-0 text-muted-foreground text-xs tabular-nums"
                       >#{alloc.Number}</span
                     >{/if}
                 </span>
@@ -73,8 +72,13 @@
               >
                 {alloc.Organization?.Name ?? "-"}
               </td>
-              <td class="px-2 text-right tabular-nums">{alloc.PB || "–"}</td>
-              <td class="pr-4 text-right tabular-nums">{alloc.SB || "–"}</td>
+              <td class="px-2 text-right text-[13px] tabular-nums"
+                >{alloc.PB || "–"}</td
+              >
+              <td
+                class="pr-4 text-right text-[13px] text-muted-foreground tabular-nums"
+                >{alloc.SB || "–"}</td
+              >
             </tr>
           {/each}
         </tbody>
@@ -82,7 +86,7 @@
     </table>
   </div>
 
-  <ul class="overflow-hidden rounded-lg border lg:hidden">
+  <ul class="data-frame lg:hidden">
     {#each heats as heat (heat.index)}
       {#if showHeatRows}
         <li
@@ -95,14 +99,14 @@
         <li
           class="grid grid-cols-[24px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2.5 first:border-t-0"
         >
-          <span class="text-center font-bold text-[15px] tabular-nums"
+          <span class="text-center font-semibold text-sm tabular-nums"
             >{alloc.Position || "-"}</span
           >
-          <AthleteBadge entry={alloc} kind="club" />
+          <!-- The cell stays when there is no logo, so the columns hold. -->
+          <span class="flex"><AthleteBadge entry={alloc} /></span>
           <div class="min-w-0">
-            <div class="flex min-w-0 items-baseline gap-1.5">
-              <AthleteBadge entry={alloc} kind="flag" />
-              <span class="truncate font-semibold text-sm">{alloc.Name}</span>
+            <div class="flex min-w-0 items-center gap-1.5">
+              <span class="truncate font-medium text-sm">{alloc.Name}</span>
               {#if alloc.Number}<span
                   class="shrink-0 text-[11px] text-muted-foreground tabular-nums"
                   >#{alloc.Number}</span

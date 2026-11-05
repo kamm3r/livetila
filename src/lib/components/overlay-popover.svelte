@@ -152,14 +152,13 @@
   pick: (value: string) => void,
 )}
   <fieldset class="flex flex-col gap-1.5">
-    <legend class="mb-1.5 font-medium text-sm">{legend}</legend>
+    <legend class="mb-1.5 font-medium text-[13px]">{legend}</legend>
     <div class="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
       {#each options as option (option.value)}
         <label
           class={cn(
             "flex-1 cursor-pointer whitespace-nowrap rounded-md px-2 py-1 text-center text-muted-foreground text-xs has-focus-visible:outline-2 has-focus-visible:outline-primary",
-            selected === option.value &&
-              "bg-background text-foreground shadow-xs",
+            selected === option.value && "bg-card text-foreground shadow-xs",
           )}
         >
           <input
@@ -188,7 +187,7 @@
 
   {#if available.length > 0}
     <fieldset class="flex flex-col gap-3">
-      <legend class="mb-1.5 font-medium text-sm">Asetukset</legend>
+      <legend class="mb-1.5 font-medium text-[13px]">Asetukset</legend>
       {#each available as feature (feature.id)}
         <label class="flex cursor-pointer items-start gap-3">
           <input
@@ -265,7 +264,7 @@
   <Drawer {open} onOpenChange={handleOpenChange}>
     <DrawerTrigger
       aria-label="Lähetysgrafiikka"
-      class="sm:hidden inline-flex size-9 items-center justify-center rounded-md text-muted-foreground outline-none select-none hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary motion-control"
+      class="toolbar-control motion-control size-9 text-muted-foreground hover:text-foreground sm:hidden"
     >
       <Cast class="size-4" aria-hidden="true" />
     </DrawerTrigger>
@@ -286,7 +285,7 @@
   <Popover {open} onOpenChange={handleOpenChange}>
     <PopoverTrigger
       aria-label="Lähetysgrafiikka"
-      class="hidden sm:inline-flex h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 font-medium text-[13px] text-muted-foreground outline-none select-none hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary motion-control"
+      class="toolbar-control motion-control whitespace-nowrap px-3 max-sm:hidden"
     >
       <Cast class="size-4" aria-hidden="true" />
       Grafiikka
@@ -296,7 +295,7 @@
       class="max-h-[calc(100dvh-6rem)] w-[44rem] max-w-[calc(100vw-2rem)] overflow-y-auto p-0"
     >
       <PopoverHeader class="border-b p-4">
-        <PopoverTitle>Lähetysgrafiikka</PopoverTitle>
+        <PopoverTitle class="font-semibold">Lähetysgrafiikka</PopoverTitle>
         <PopoverDescription>
           Tulokset lähetykseen OBS:n tai muun ohjelman selainlähteenä.
         </PopoverDescription>

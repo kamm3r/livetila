@@ -1195,7 +1195,10 @@ test("results explain the status codes that appear in them", async ({
     }),
   );
   await page.goto("/competition/1-10?round=Final");
-  const legend = page.getByText("DNS = ei startannut");
+  const legend = page
+    .getByRole("list")
+    .filter({ hasText: "DNS = ei startannut" })
+    .first();
   await expect(legend).toBeVisible();
   await expect(legend).toContainText("DNF = keskeytti");
   // Only codes in these results are explained.
