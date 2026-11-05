@@ -27,7 +27,7 @@
     <table class="w-full min-w-[42rem] table-fixed text-sm">
       <thead>
         <tr class="data-head">
-          <th class="w-16 pl-4 text-left font-medium" scope="col"
+          <th class="w-16 pl-3 text-left font-medium" scope="col"
             >{leadLabel}</th
           >
           <th class="w-11" scope="col"
@@ -35,8 +35,8 @@
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
           <th class="px-2 text-left font-medium" scope="col">Seura</th>
-          <th class="w-20 px-2 text-right font-medium" scope="col">PB</th>
-          <th class="w-24 pr-4 text-right font-medium" scope="col">SB</th>
+          <th class="w-24 pr-5 text-right font-medium" scope="col">PB</th>
+          <th class="w-20 pr-4 text-right font-medium" scope="col">SB</th>
         </tr>
       </thead>
       {#each heats as heat (heat.index)}
@@ -44,7 +44,7 @@
           {#if showHeatRows}
             <tr class="h-[34px] border-t bg-muted/45">
               <th
-                class="pl-4 text-left font-normal text-muted-foreground text-xs"
+                class="pl-3 text-left font-normal text-muted-foreground text-xs"
                 colspan="6"
                 scope="colgroup"
               >
@@ -54,7 +54,7 @@
           {/if}
           {#each heat.allocations as alloc (alloc.Id)}
             <tr class="h-12 border-t first:border-t-0">
-              <td class="pl-4 font-semibold text-sm tabular-nums"
+              <td class="pl-3 font-semibold text-sm tabular-nums"
                 >{alloc.Position || ""}</td
               >
               <td class="px-1"><AthleteBadge entry={alloc} /></td>
@@ -73,7 +73,7 @@
                 {alloc.Organization?.Name ?? "-"}
               </td>
               <td
-                class="px-2 pt-0.5 text-right text-[13px] leading-5 tabular-nums"
+                class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
                 >{alloc.PB || "–"}</td
               >
               <td

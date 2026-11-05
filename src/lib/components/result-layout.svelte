@@ -114,6 +114,12 @@
   const typeset = (mark: string) =>
     mark === "-" ? "–" : mark.replace(/^-/, "−");
 
+  // The leader has no gap to show.
+  function shownGap(entry: Entry, leader: ReturnType<typeof leadingResult>) {
+    const gap = gapToLeader(entry.Result, leader, eventCategory);
+    return gap && gap !== "—" ? gap : "";
+  }
+
   // Rows with attempts have a header naming the gap from tablet width; other
   // lists have none until the table.
   const gapHeaderAtTablet = $derived.by(() => {
@@ -278,7 +284,7 @@
     <!-- Fixed columns line up stacked tables; names and clubs share the rest. -->
     <table
       class="w-full table-fixed text-sm"
-      style={`min-width: ${columns > 0 ? 672 + columns * 58 : 708}px`}
+      style={`min-width: ${columns > 0 ? 688 + columns * 58 : 724}px`}
     >
       <thead>
         <tr class="data-head">
@@ -295,8 +301,7 @@
             <th
               class={cn(
                 "w-[58px] text-center font-medium",
-                i + 1 === currentRound &&
-                  "font-semibold text-primary shadow-[inset_0_-2px_0_var(--primary)]",
+                i + 1 === currentRound && "font-semibold text-primary",
               )}
               scope="col"
               >{layout.labels[i]}{#if i + 1 === currentRound}<span
@@ -307,7 +312,7 @@
             >
           {/each}
           <th class="w-24 pr-5 text-right font-medium" scope="col">Tulos</th>
-          <th class="w-16 pr-4 text-right font-medium" scope="col">Ero</th>
+          <th class="w-20 pr-4 text-right font-medium" scope="col">Ero</th>
         </tr>
       </thead>
       <tbody>
@@ -374,7 +379,7 @@
             <td
               class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
             >
-              {gapToLeader(entry.Result, leader, eventCategory) ?? ""}
+              {shownGap(entry, leader)}
             </td>
           </tr>
         {/each}
@@ -457,7 +462,7 @@
             class={cn(
               "col-span-full row-start-2 mt-1.5 grid text-center text-xs tabular-nums",
               sharedLabels
-                ? "items-center md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0"
+                ? "items-center md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0 md:self-stretch"
                 : "grid-cols-[repeat(auto-fill,44px)] items-start",
             )}
             style={attemptGrid}
@@ -482,7 +487,7 @@
             {/each}
             {#if isOut && columns > 3}
               <li
-                class="hatch h-5 rounded-[3px]"
+                class="hatch h-5 rounded-[3px] md:-my-2 md:h-auto md:self-stretch md:rounded-none"
                 style={`grid-column: span ${columns - 3}`}
               >
                 <span class="sr-only">Karsiutui</span>

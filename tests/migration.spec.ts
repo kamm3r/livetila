@@ -1036,7 +1036,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
   const first = table.locator("tbody tr").first();
   const second = table.locator("tbody tr").nth(1);
   await expect(first.locator("td").nth(-2)).toHaveText("7,40");
-  await expect(first.locator("td").last()).toHaveText("—");
+  await expect(first.locator("td").last()).toHaveText("");
   await expect(second.locator("td").last()).toHaveText("−0,20");
   await expect(first).not.toHaveAttribute("data-changed");
   // Round 2 is complete, so the first athlete in order starts round 3.
@@ -1161,7 +1161,7 @@ test("track results show gaps for hand and long times without attempt columns", 
     "Ero",
   ]);
   const gaps = table.locator("tbody tr td:last-child");
-  await expect(gaps).toHaveText(["—", "+15,22", "+1.01,41"]);
+  await expect(gaps).toHaveText(["", "+15,22", "+1.01,41"]);
   await expect(page.getByText("h = käsiajanotto")).toBeVisible();
 });
 
@@ -1247,7 +1247,7 @@ test("cross-country results are timed and show gaps to the leader", async ({
     /Winner/,
     /Second/,
   ]);
-  await expect(rows.locator("td:last-child")).toHaveText(["—", "+9,20"]);
+  await expect(rows.locator("td:last-child")).toHaveText(["", "+9,20"]);
 });
 
 test("vertical results align attempts by height without six-slot padding or gap centimetre marks", async ({
@@ -1294,7 +1294,7 @@ test("vertical results align attempts by height without six-slot padding or gap 
     "Tulos",
     "Ero",
   ]);
-  await expect(table.locator("tbody tr td:last-child")).toHaveText(["—", "−5"]);
+  await expect(table.locator("tbody tr td:last-child")).toHaveText(["", "−5"]);
 });
 
 test("protocol lists every heat in one table with heat rows", async ({

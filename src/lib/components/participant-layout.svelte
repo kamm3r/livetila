@@ -39,7 +39,7 @@
     <table class="w-full min-w-[42rem] table-fixed text-sm">
       <thead>
         <tr class="data-head">
-          <th class="w-16 pl-4 text-left font-medium" scope="col"
+          <th class="w-16 pl-3 text-left font-medium" scope="col"
             ><span class="sr-only">Vahvistus</span></th
           >
           <th class="w-11" scope="col"
@@ -47,8 +47,8 @@
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
           <th class="px-2 text-left font-medium" scope="col">Seura</th>
-          <th class="w-20 px-2 text-right font-medium" scope="col">PB</th>
-          <th class="w-24 pr-4 text-right font-medium" scope="col">SB</th>
+          <th class="w-24 pr-5 text-right font-medium" scope="col">PB</th>
+          <th class="w-20 pr-4 text-right font-medium" scope="col">SB</th>
         </tr>
       </thead>
       <tbody>
@@ -60,7 +60,7 @@
                 "text-muted-foreground [&_img]:opacity-80",
             )}
           >
-            <td class="pl-4">{@render status(enrollment)}</td>
+            <td class="pl-3">{@render status(enrollment)}</td>
             <td class="px-1"><AthleteBadge entry={enrollment} /></td>
             <td class="px-2">
               <span class="flex items-center gap-2 whitespace-nowrap">
@@ -77,7 +77,7 @@
               {enrollment.Organization?.Name ?? "-"}
             </td>
             <td
-              class="px-2 pt-0.5 text-right text-[13px] leading-5 tabular-nums"
+              class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
               >{enrollment.PB || "–"}</td
             >
             <td
