@@ -204,7 +204,7 @@
               <CommandList
                 bind:ref={listEl}
                 onscroll={handleScroll}
-                class="search-list overflow-y-auto overscroll-contain pb-3"
+                class="search-list overflow-y-auto overscroll-contain pb-10"
                 style={`max-height: ${listHeight}px`}
               >
                 {#if search.matchingRecent.length}
@@ -407,7 +407,7 @@
   :global(.search-list) {
     mask-image: linear-gradient(
       to bottom,
-      black calc(100% - 14px),
+      black calc(100% - 2.5rem),
       transparent
     );
   }

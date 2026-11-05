@@ -54,47 +54,51 @@
         Yleisurheilun tulokset. Kentän laidalta kotikatsomoon.
       </p>
       <div class="search-field"><SearchForm bind:this={form} {search} /></div>
-      {#if search.selectedComp}
-        <p class="change">
-          <button type="button" onclick={changeCompetition}
-            >Vaihda kilpailu</button
-          >
-        </p>
-      {:else if recent.length > 0}
-        <section class="quick" aria-labelledby="quick-title">
-          <h2 id="quick-title">Jatka seuraamista</h2>
-          <ul class="data-frame">
-            {#each recent as item (item.id)}
-              <li>
-                <a href={item.url} title={item.label}>
-                  <span class="row-text">
-                    <span class="row-title">{shortLabel(item.label)}</span>
-                    <span class="row-meta">{competitionLabel(item.label)}</span>
-                  </span>
-                  <ChevronRight class="row-arrow" aria-hidden="true" />
-                </a>
-              </li>
-            {/each}
-          </ul>
-        </section>
-      {:else if newest.length > 0}
-        <section class="quick" aria-labelledby="quick-title">
-          <h2 id="quick-title">Uusimmat kilpailut</h2>
-          <ul class="data-frame">
-            {#each newest as comp (comp.Id)}
-              <li>
-                <button type="button" onclick={() => openCompetition(comp)}>
-                  <span class="row-text">
-                    <span class="row-title">{comp.Name}</span>
-                    <span class="row-meta">{competitionMeta(comp)}</span>
-                  </span>
-                  <ChevronRight class="row-arrow" aria-hidden="true" />
-                </button>
-              </li>
-            {/each}
-          </ul>
-        </section>
-      {/if}
+      <div class="below-search">
+        {#if search.selectedComp}
+          <p class="change">
+            <button type="button" onclick={changeCompetition}
+              >Vaihda kilpailu</button
+            >
+          </p>
+        {:else if recent.length > 0}
+          <section class="quick" aria-labelledby="quick-title">
+            <h2 id="quick-title">Jatka seuraamista</h2>
+            <ul class="data-frame">
+              {#each recent as item (item.id)}
+                <li>
+                  <a href={item.url} title={item.label}>
+                    <span class="row-text">
+                      <span class="row-title">{shortLabel(item.label)}</span>
+                      <span class="row-meta"
+                        >{competitionLabel(item.label)}</span
+                      >
+                    </span>
+                    <ChevronRight class="row-arrow" aria-hidden="true" />
+                  </a>
+                </li>
+              {/each}
+            </ul>
+          </section>
+        {:else if newest.length > 0}
+          <section class="quick" aria-labelledby="quick-title">
+            <h2 id="quick-title">Uusimmat kilpailut</h2>
+            <ul class="data-frame">
+              {#each newest as comp (comp.Id)}
+                <li>
+                  <button type="button" onclick={() => openCompetition(comp)}>
+                    <span class="row-text">
+                      <span class="row-title">{comp.Name}</span>
+                      <span class="row-meta">{competitionMeta(comp)}</span>
+                    </span>
+                    <ChevronRight class="row-arrow" aria-hidden="true" />
+                  </button>
+                </li>
+              {/each}
+            </ul>
+          </section>
+        {/if}
+      </div>
     </section>
   </div>
 </main>
@@ -117,8 +121,21 @@
     margin-top: 1.75rem;
   }
   .home-content {
+    width: 100%;
     max-width: 600px;
     margin-inline: auto;
+  }
+  /* Centred on roomy screens. The list's height stays reserved, so the search
+     field does not move when the list loads or gives way to a selection. */
+  @media (min-width: 640px) and (min-height: 760px) {
+    .home-page {
+      display: flex;
+      align-items: center;
+    }
+    .below-search {
+      display: flow-root;
+      min-height: 20rem;
+    }
   }
   .home-search {
     position: relative;
