@@ -251,16 +251,18 @@
 {/snippet}
 
 {#snippet preview(wide: boolean)}
-  <p class="-mb-3 text-muted-foreground text-xs">Esimerkki</p>
-  <OverlayExplainer
-    {features}
-    context={featureContext}
-    {labels}
-    athletes={exampleAthletes}
-    {events}
-    {eventCategory}
-    {wide}
-  />
+  <div class="flex flex-col gap-1.5">
+    <p class="text-muted-foreground text-xs">Esimerkki</p>
+    <OverlayExplainer
+      {features}
+      context={featureContext}
+      {labels}
+      athletes={exampleAthletes}
+      {events}
+      {eventCategory}
+      {wide}
+    />
+  </div>
 {/snippet}
 
 {#if isMobile}
