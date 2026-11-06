@@ -111,7 +111,7 @@
       </Tabs.List>
     </div>
     {#each tabs as tab (tab.value)}
-      <Tabs.Content value={tab.value} class="mt-3 sm:mt-4">
+      <Tabs.Content value={tab.value} class="mt-2.5 sm:mt-4">
         {@render tab.content()}
       </Tabs.Content>
     {/each}

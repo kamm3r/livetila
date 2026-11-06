@@ -10,7 +10,7 @@
   const search = new SearchWorkflow(goto);
   let form = $state<SearchForm>();
 
-  const recent = $derived(search.recentSearches.slice(0, 4));
+  const recent = $derived(search.recentSearches.slice(0, 2));
   const newest = $derived(
     [...search.competitions]
       .sort((a, b) => b.Date.localeCompare(a.Date))
@@ -86,9 +86,10 @@
               {/each}
             </ul>
           </section>
-        {:else if newest.length > 0}
-          <section class="quick" aria-labelledby="quick-title">
-            <h2 id="quick-title">Uusimmat kilpailut</h2>
+        {/if}
+        {#if !search.selectedComp && newest.length > 0}
+          <section class="quick" aria-labelledby="newest-title">
+            <h2 id="newest-title">Uusimmat kilpailut</h2>
             <ul class="data-frame">
               {#each newest as comp (comp.Id)}
                 <li>
@@ -191,6 +192,9 @@
   }
   .quick {
     margin-top: 2rem;
+  }
+  .quick + .quick {
+    margin-top: 1.5rem;
   }
   .quick h2 {
     margin: 0 0 0.625rem;

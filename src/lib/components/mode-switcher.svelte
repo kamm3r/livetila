@@ -57,7 +57,7 @@
     </svg>
     <span class="sr-only">Vaihda teema</span>
   </Tooltip.Trigger>
-  <Tooltip.Content>
+  <Tooltip.Content align="end">
     Paina <Kbd.Root>D</Kbd.Root> vaihtaaksesi teemaa
   </Tooltip.Content>
 </Tooltip.Root>

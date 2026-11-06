@@ -29,14 +29,19 @@
     eventSubCategory,
     isCombinedEvent = false,
     live = false,
+    fresh = true,
   }: {
     eventCategory: EventCategory;
     eventSubCategory?: string;
     isCombinedEvent?: boolean;
     live?: boolean;
+    // False while refreshes fail: the turn may have moved on since.
+    fresh?: boolean;
   } = $props();
 
-  const activeIds = $derived(activeAllocationIds(ctx.currentRound));
+  const activeIds = $derived(
+    fresh ? activeAllocationIds(ctx.currentRound) : new Set<number>(),
+  );
 
   const sortedAllocs = $derived(
     ctx.currentHeat && ctx.heats.length > 0
@@ -89,7 +94,7 @@
     if (!mark) return null;
     return { entry, attempt, mark, gained: seen?.gained ?? 0 };
   });
-  const next = $derived(latest ? order.next : null);
+  const next = $derived(latest && fresh ? order.next : null);
 
   // Gold, silver and bronze mark the podium on the rank itself; placing in a
   // heat wins no medal.
@@ -97,7 +102,7 @@
   const medals = [
     "bg-amber-300 text-amber-950 dark:bg-amber-400 dark:text-amber-950",
     "bg-slate-300 text-slate-900 dark:bg-slate-300 dark:text-slate-900",
-    "bg-orange-300 text-orange-950 dark:bg-orange-400 dark:text-orange-950",
+    "bg-orange-300 text-orange-950 dark:bg-orange-800 dark:text-orange-100",
   ];
   const moveDuration = $derived(prefersReducedMotion.current ? 0 : 250);
 
@@ -577,7 +582,9 @@
       <span class="hidden text-muted-foreground sm:inline"
         >{latest.attempt + 1}. suoritus</span
       >
-      <span class="font-semibold text-[15px] tabular-nums">{latest.mark}</span>
+      <span class="font-semibold text-[15px] tabular-nums max-sm:ml-auto"
+        >{latest.mark}</span
+      >
       {#if latest.gained && latestRank}
         <span
           class="rounded-full bg-green-100 px-2 py-0.5 font-bold text-[11px] text-green-700 dark:bg-green-400/15 dark:text-green-300"

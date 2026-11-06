@@ -35,7 +35,7 @@
   };
 
   const eventStatusLabel: Record<string, string> = {
-    Unallocated: "Eräjaot puuttuvat",
+    Unallocated: "Eräjako tulossa",
     Allocated: "Eräjaot tehty",
     Progress: "LIVE",
     Official: "Tulokset valmiit",
@@ -74,13 +74,19 @@
 
   // Opens on the current event and ends on a whole row. The count below says
   // there are more rows than fit.
-  const maxListHeight = 400;
+  // Phones give the list the rest of the screen below the trigger, measured
+  // once the popover has its place; elsewhere it stays compact.
+  let maxListHeight = $state(400);
   let listEl = $state<HTMLElement | null>(null);
   let fittedHeight = $state<number | null>(null);
   $effect(() => {
     if (!listEl) return;
     const list = listEl;
     const frame = requestAnimationFrame(() => {
+      if (window.matchMedia("(max-width: 639px)").matches) {
+        const top = list.getBoundingClientRect().top;
+        maxListHeight = Math.max(240, window.innerHeight - top - 64);
+      }
       const rows = [...list.children] as HTMLElement[];
       const fits = rows.filter(
         (row) => row.offsetTop + row.offsetHeight <= maxListHeight,

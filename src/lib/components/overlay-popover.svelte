@@ -251,6 +251,7 @@
 {/snippet}
 
 {#snippet preview(wide: boolean)}
+  <p class="-mb-3 text-muted-foreground text-xs">Esimerkki</p>
   <OverlayExplainer
     {features}
     context={featureContext}
