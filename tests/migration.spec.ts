@@ -1040,7 +1040,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
   await expect(first).not.toHaveAttribute("data-changed");
   // Round 2 is complete, so the first athlete in order starts round 3.
   await expect(latest).toContainText("Second Jumper");
-  await expect(latest).toContainText("Seuraavana");
+  await expect(latest).toContainText("Vuorossa");
   await expect(latest).toContainText("First Jumper");
 
   athletes = [
@@ -1049,7 +1049,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
   ];
   await page.clock.runFor(30_000);
   await expect(latest).toContainText(/Viimeisin.*First Jumper.*x/);
-  await expect(latest).toContainText(/Seuraavana.*Second Jumper/);
+  await expect(latest).toContainText(/Vuorossa.*Second Jumper/);
 
   athletes = [
     jumper(2, "Second Jumper", ["7,20", "x", "7,55"], "7,55", 1),
@@ -1064,7 +1064,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
   await expect(second.locator("td").last()).toHaveText("−0,15");
   await expect(latest).toContainText("▲ sijalle 1");
   // After the third round the order may change, so no next athlete is shown.
-  await expect(latest).not.toContainText("Seuraavana");
+  await expect(latest).not.toContainText("Vuorossa");
   await page.clock.runFor(5000);
   await expect(first).not.toHaveAttribute("data-changed");
 });
@@ -1113,7 +1113,7 @@ test("latest attempt bar is hidden when the event is not live", async ({
   const panel = page.getByRole("tabpanel", { name: "Tulokset" });
   await expect(panel.getByRole("table")).toContainText("Jumper 1");
   await expect(panel.getByText("Viimeisin suoritus")).toHaveCount(0);
-  await expect(panel.getByText("Seuraavana")).toHaveCount(0);
+  await expect(panel.getByRole("status").getByText("Vuorossa")).toHaveCount(0);
 });
 
 test("track results show gaps for hand and long times without attempt columns", async ({

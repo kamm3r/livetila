@@ -305,6 +305,9 @@
                       >
                     </div>
                   {/each}
+                  {#if search.hasResults && !search.isLoading}
+                    <div class="mx-2.5 my-1.5 h-px bg-border"></div>
+                  {/if}
                 {/if}
                 {#if search.isLoading}
                   <div class="flex flex-col items-center gap-3 py-8">

@@ -402,11 +402,12 @@
   <!-- From tablet width a row fits on one line: name, attempts, result. -->
   <ul
     class="data-frame overflow-clip xl:hidden"
-    style={`--attempts: ${columns * 44}px`}
+    style={`--attempts: ${columns * (layout.vertical ? 52 : 44)}px`}
   >
-    {#if sharedLabels}
+    {#if fitsRow}
       <li
         aria-hidden="true"
+        class:max-md:hidden={!sharedLabels}
         class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
       >
         <span class="hidden text-left md:col-span-2 md:block">Sija</span>
@@ -437,7 +438,7 @@
         data-changed={change ? "" : undefined}
         class={cn(
           "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
-          sharedLabels &&
+          fitsRow &&
             "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem] md:items-center",
           // With no attempts a row is two lines, laid out like the start list.
           columns === 0 && "items-center",
@@ -479,12 +480,10 @@
           <ul
             class={cn(
               "col-span-full row-start-2 mt-1.5 grid text-center text-xs tabular-nums",
-              sharedLabels
-                ? "items-center md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0 md:self-stretch"
-                : cn(
-                    "items-start",
-                    !fitsRow && "grid-cols-[repeat(auto-fill,44px)]",
-                  ),
+              fitsRow
+                ? "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0 md:self-stretch md:items-center"
+                : "grid-cols-[repeat(auto-fill,44px)]",
+              sharedLabels ? "items-center" : "items-start",
             )}
             style={attemptGrid}
           >
@@ -495,6 +494,7 @@
                     sharedLabels
                       ? "sr-only"
                       : "block text-[10px] text-muted-foreground",
+                    !sharedLabels && fitsRow && "md:sr-only",
                   )}>{layout.labels[i]}</span
                 >
                 {@render attemptMark(
@@ -519,7 +519,7 @@
         <div
           class={cn(
             "col-start-4 row-start-1 flex flex-col items-end self-start leading-tight",
-            sharedLabels && "md:col-start-5",
+            fitsRow && "md:col-start-5",
           )}
         >
           {@render result(entry, true)}
@@ -567,8 +567,6 @@
       role="status"
       class="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border bg-card px-3.5 py-2.5 text-[13px] shadow-xs"
     >
-      <span class="size-2 shrink-0 rounded-full bg-amber-400" aria-hidden="true"
-      ></span>
       <span
         class="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[5.5rem]"
         ><span class="sm:hidden">Viimeisin</span><span class="hidden sm:inline"
@@ -588,11 +586,11 @@
       {/if}
       {#if next}
         <span
-          class="flex min-w-0 items-center gap-2.5 sm:gap-1.5 max-sm:basis-full max-sm:pl-4.5 sm:ml-auto sm:border-l sm:pl-3"
+          class="flex min-w-0 items-center gap-2.5 sm:gap-1.5 max-sm:basis-full sm:ml-auto sm:border-l sm:pl-3"
         >
           <span
             class="shrink-0 font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[5.5rem]"
-            >Seuraavana</span
+            >Vuorossa</span
           >
           <span class="truncate font-semibold">{next.Name}</span>
           {#if next.Number}<span

@@ -115,7 +115,8 @@
   const eventMeta = $derived(
     [
       !isLive && selectedEvent ? statusLabel[selectedEvent.Status] : null,
-      eventTime,
+      eventTime &&
+        `${selectedEvent?.Status === "Progress" || selectedEvent?.Status === "Official" ? "alkoi" : "alkaa"} ${eventTime}`,
       eventDate,
     ]
       .filter(Boolean)
