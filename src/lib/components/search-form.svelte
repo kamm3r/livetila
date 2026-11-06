@@ -18,6 +18,7 @@
     CommandList,
   } from "$lib/components/ui/command";
   import { cn } from "$lib/utils.js";
+  import { eventStatusDot, eventStatusLabel } from "$lib/event-status";
 
   // A page may own the workflow to drive the search from outside the field.
   let { search = new SearchWorkflow(goto) }: { search?: SearchWorkflow } =
@@ -418,6 +419,18 @@
                               {#if multipleEventDates}<span
                                   class="max-sm:hidden">{evt.Date}</span
                                 >{/if}
+                              <span
+                                class="flex items-center gap-1.5 whitespace-nowrap"
+                                ><span
+                                  class={cn(
+                                    "size-1.5 rounded-full",
+                                    eventStatusDot[evt.Status] ??
+                                      "bg-muted-foreground/40",
+                                  )}
+                                  aria-hidden="true"
+                                ></span>{eventStatusLabel[evt.Status] ??
+                                  evt.Status}</span
+                              >
                               {#if isNavigating}
                                 <LoaderCircle
                                   class="size-4 animate-spin text-primary"

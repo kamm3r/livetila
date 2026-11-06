@@ -235,7 +235,7 @@ test("tab indicator follows pointer selection but keyboard navigation stays imme
     .poll(async () => {
       const tab = await results.boundingBox();
       const highlight = await indicator.boundingBox();
-      return Math.abs(tab!.x - highlight!.x);
+      return Math.abs(tab!.x + 6 - highlight!.x);
     })
     .toBeLessThan(2);
   // Panel content is available immediately, without outgoing/incoming panel animations.
@@ -257,7 +257,7 @@ test("tab indicator follows pointer selection but keyboard navigation stays imme
         .getByRole("tab", { name: "Ilmoittautuneet" })
         .boundingBox();
       const highlight = await indicator.boundingBox();
-      return Math.abs(tab!.x - highlight!.x);
+      return Math.abs(tab!.x + 6 - highlight!.x);
     })
     .toBeLessThan(2);
 });

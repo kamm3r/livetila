@@ -5,6 +5,7 @@
   import { onDestroy } from "svelte";
   import { goto } from "$app/navigation";
   import { cn } from "$lib/utils";
+  import { eventStatusDot, eventStatusLabel } from "$lib/event-status";
   import type { EventWithDate } from "$lib/events";
 
   import {
@@ -26,20 +27,6 @@
     // A round control beside the trigger already names the round.
     roundShownElsewhere?: boolean;
   } = $props();
-
-  const statusDots: Record<string, string> = {
-    Unallocated: "bg-muted-foreground/40",
-    Allocated: "bg-sky-500",
-    Progress: "bg-red-500",
-    Official: "bg-emerald-500",
-  };
-
-  const eventStatusLabel: Record<string, string> = {
-    Unallocated: "Eräjako tulossa",
-    Allocated: "Eräjaot tehty",
-    Progress: "LIVE",
-    Official: "Tulokset valmiit",
-  };
 
   const timeFormatter = new Intl.DateTimeFormat("fi-FI", {
     hour: "2-digit",
@@ -177,7 +164,7 @@
             <span
               class={cn(
                 "size-1.5 self-center rounded-full",
-                statusDots[event.Status] ?? "bg-muted-foreground/40",
+                eventStatusDot[event.Status] ?? "bg-muted-foreground/40",
               )}
               aria-hidden="true"
             ></span>

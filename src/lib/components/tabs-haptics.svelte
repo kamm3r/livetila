@@ -48,7 +48,10 @@
   function measure() {
     const tab =
       listEl?.querySelectorAll<HTMLElement>('[role="tab"]')[activeIndex];
-    if (tab) indicator = { left: tab.offsetLeft, width: tab.offsetWidth };
+    // The trigger's padding leaves room for the focus ring; the underline
+    // spans the label only.
+    if (tab)
+      indicator = { left: tab.offsetLeft + 6, width: tab.offsetWidth - 12 };
   }
   $effect(() => {
     void activeIndex;
@@ -88,7 +91,7 @@
           <Tabs.Trigger
             value={tab.value}
             class={cn(
-              "motion-tab-trigger h-full gap-1.5 rounded-none px-0 data-active:text-primary focus-visible:rounded-sm focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:ring-0",
+              "motion-tab-trigger h-full gap-1.5 rounded-none data-active:text-primary -mx-1.5 px-1.5 focus-visible:rounded-md focus-visible:border-transparent focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-primary focus-visible:ring-0",
               lone
                 ? "cursor-default font-semibold text-foreground text-sm data-active:text-foreground"
                 : "text-[13px]",
