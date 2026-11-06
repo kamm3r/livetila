@@ -102,7 +102,7 @@
   const medals = [
     "bg-amber-300 text-amber-950 dark:bg-amber-400 dark:text-amber-950",
     "bg-slate-300 text-slate-900 dark:bg-slate-300 dark:text-slate-900",
-    "bg-orange-300 text-orange-950 dark:bg-[oklch(0.74_0.07_55)] dark:text-orange-950",
+    "bg-[oklch(0.74_0.07_55)] text-orange-950",
   ];
   const moveDuration = $derived(prefersReducedMotion.current ? 0 : 250);
 
