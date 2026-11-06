@@ -15,6 +15,10 @@
   const sorted = $derived(
     [...enrollments].sort((a, b) => Number(b.Confirmed) - Number(a.Confirmed)),
   );
+  // Without a single PB or SB the columns would only repeat dashes.
+  const hasRecords = $derived(
+    enrollments.some((entry) => entry.PB || entry.SB),
+  );
   const anyPending = $derived(enrollments.some((entry) => !entry.Confirmed));
 </script>
 
@@ -47,8 +51,10 @@
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
           <th class="px-2 text-left font-medium" scope="col">Seura</th>
-          <th class="w-24 pr-5 text-right font-medium" scope="col">PB</th>
-          <th class="w-20 pr-4 text-right font-medium" scope="col">SB</th>
+          {#if hasRecords}
+            <th class="w-24 pr-5 text-right font-medium" scope="col">PB</th>
+            <th class="w-20 pr-4 text-right font-medium" scope="col">SB</th>
+          {/if}
         </tr>
       </thead>
       <tbody>
@@ -80,14 +86,16 @@
             >
               {enrollment.Organization?.Name ?? "-"}
             </td>
-            <td
-              class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
-              >{enrollment.PB || "–"}</td
-            >
-            <td
-              class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
-              >{enrollment.SB || "–"}</td
-            >
+            {#if hasRecords}
+              <td
+                class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
+                >{enrollment.PB || "–"}</td
+              >
+              <td
+                class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
+                >{enrollment.SB || "–"}</td
+              >
+            {/if}
           </tr>
         {/each}
       </tbody>
@@ -100,9 +108,11 @@
       class="data-head sticky top-0 z-10 flex h-auto items-center justify-between border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3 py-1.5"
     >
       <span></span>
-      <span class="flex flex-col text-right leading-tight"
-        ><span>PB</span><span>SB</span></span
-      >
+      {#if hasRecords}
+        <span class="flex flex-col text-right leading-tight"
+          ><span>PB</span><span>SB</span></span
+        >
+      {/if}
     </li>
     {#each sorted as enrollment (enrollment.Id)}
       <li
@@ -126,12 +136,14 @@
             {enrollment.Organization?.Name ?? "-"}
           </p>
         </div>
-        <dl class="text-right text-xs leading-tight tabular-nums">
-          <dt class="sr-only">PB</dt>
-          <dd>{enrollment.PB || "–"}</dd>
-          <dt class="sr-only">SB</dt>
-          <dd class="text-muted-foreground">{enrollment.SB || "–"}</dd>
-        </dl>
+        {#if hasRecords}
+          <dl class="text-right text-xs leading-tight tabular-nums">
+            <dt class="sr-only">PB</dt>
+            <dd>{enrollment.PB || "–"}</dd>
+            <dt class="sr-only">SB</dt>
+            <dd class="text-muted-foreground">{enrollment.SB || "–"}</dd>
+          </dl>
+        {/if}
       </li>
     {/each}
   </ul>

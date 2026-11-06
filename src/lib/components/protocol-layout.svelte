@@ -13,6 +13,12 @@
   const ctx = getRoundContext();
   // Every heat in one table; a heat row only separates them when there are several.
   const heats = $derived(protocolOrder(ctx.heats));
+  // Without a single PB or SB the columns would only repeat dashes.
+  const hasRecords = $derived(
+    heats
+      .flatMap((heat) => heat.allocations)
+      .some((entry) => entry.PB || entry.SB),
+  );
   const showHeatRows = $derived(heats.length > 1);
   const leadLabel = $derived(isTrack ? "Rata" : "Järj.");
 </script>
@@ -35,8 +41,10 @@
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
           <th class="px-2 text-left font-medium" scope="col">Seura</th>
-          <th class="w-24 pr-5 text-right font-medium" scope="col">PB</th>
-          <th class="w-20 pr-4 text-right font-medium" scope="col">SB</th>
+          {#if hasRecords}
+            <th class="w-24 pr-5 text-right font-medium" scope="col">PB</th>
+            <th class="w-20 pr-4 text-right font-medium" scope="col">SB</th>
+          {/if}
         </tr>
       </thead>
       {#each heats as heat (heat.index)}
@@ -45,7 +53,7 @@
             <tr class="h-[34px] border-t bg-primary/5">
               <th
                 class="pl-3 text-left font-normal text-muted-foreground text-xs"
-                colspan="6"
+                colspan={hasRecords ? 6 : 4}
                 scope="colgroup"
               >
                 {@render heatLabel(heat.index, heat.allocations.length)}
@@ -74,14 +82,16 @@
               >
                 {alloc.Organization?.Name ?? "-"}
               </td>
-              <td
-                class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
-                >{alloc.PB || "–"}</td
-              >
-              <td
-                class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
-                >{alloc.SB || "–"}</td
-              >
+              {#if hasRecords}
+                <td
+                  class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
+                  >{alloc.PB || "–"}</td
+                >
+                <td
+                  class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
+                  >{alloc.SB || "–"}</td
+                >
+              {/if}
             </tr>
           {/each}
         </tbody>
@@ -95,9 +105,11 @@
       class="data-head sticky top-0 z-10 flex h-auto items-center justify-between border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3 py-1.5"
     >
       <span>{leadLabel}</span>
-      <span class="flex flex-col text-right leading-tight"
-        ><span>PB</span><span>SB</span></span
-      >
+      {#if hasRecords}
+        <span class="flex flex-col text-right leading-tight"
+          ><span>PB</span><span>SB</span></span
+        >
+      {/if}
     </li>
     {#each heats as heat (heat.index)}
       {#if showHeatRows}
@@ -128,12 +140,14 @@
               {alloc.Organization?.Name ?? "-"}
             </p>
           </div>
-          <dl class="text-right text-xs leading-tight tabular-nums">
-            <dt class="sr-only">PB</dt>
-            <dd>{alloc.PB || "–"}</dd>
-            <dt class="sr-only">SB</dt>
-            <dd class="text-muted-foreground">{alloc.SB || "–"}</dd>
-          </dl>
+          {#if hasRecords}
+            <dl class="text-right text-xs leading-tight tabular-nums">
+              <dt class="sr-only">PB</dt>
+              <dd>{alloc.PB || "–"}</dd>
+              <dt class="sr-only">SB</dt>
+              <dd class="text-muted-foreground">{alloc.SB || "–"}</dd>
+            </dl>
+          {/if}
         </li>
       {/each}
     {/each}
