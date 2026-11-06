@@ -167,6 +167,6 @@
   {/if}
 {:else}
   <Empty.Root class="data-frame py-12">
-    <Empty.Description>Ei ilmoittautuneita.</Empty.Description>
+    <Empty.Description>Ei ilmoittautuneita</Empty.Description>
   </Empty.Root>
 {/if}

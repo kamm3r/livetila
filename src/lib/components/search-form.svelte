@@ -420,7 +420,7 @@
                                   class="max-sm:hidden">{evt.Date}</span
                                 >{/if}
                               <span
-                                class="flex items-center gap-1.5 whitespace-nowrap"
+                                class="flex items-center gap-1.5 whitespace-nowrap sm:w-[8.25rem]"
                                 ><span
                                   class={cn(
                                     "size-1.5 rounded-full",
