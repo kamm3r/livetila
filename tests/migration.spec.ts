@@ -316,7 +316,7 @@ test("search options appear together with no stagger or focus zoom", async ({
   );
 });
 
-test("search reveals more competitions on scroll and resets after filtering", async ({
+test("search lists every competition and resets scroll after filtering", async ({
   page,
 }) => {
   await page.route("**/api/v1/competition", (route) =>
@@ -331,31 +331,25 @@ test("search reveals more competitions on scroll and resets after filtering", as
   await page.goto("/");
   const input = page.getByRole("combobox");
   await input.click();
-  await expect(page.getByRole("option")).toHaveCount(10);
+  await expect(page.getByRole("option")).toHaveCount(26);
+  await expect(page.getByText("26 kilpailua", { exact: true })).toBeVisible();
+  // Scrolling moves through the list; it never changes what is in it.
   await page.getByRole("listbox").evaluate((el) => {
     el.scrollTop = el.scrollHeight;
   });
-  await expect(page.getByRole("option")).toHaveCount(20);
-  // The explicit control also works with keyboard focus without closing the panel.
-  await page.getByRole("button", { name: "Näytä lisää" }).focus();
-  await page.keyboard.press("Enter");
   await expect(page.getByRole("option")).toHaveCount(26);
-  await expect(page.getByRole("button", { name: "Näytä lisää" })).toHaveCount(
-    0,
-  );
+  await expect(page.getByText("26 kilpailua", { exact: true })).toBeVisible();
   await input.fill("Games 26");
   await expect(page.getByRole("option")).toHaveCount(1);
   await expect(page.getByRole("option")).toContainText("Games 26");
   await input.fill("Games");
-  await expect(page.getByRole("option")).toHaveCount(10);
+  await expect(page.getByRole("option")).toHaveCount(26);
   await expect
     .poll(() => page.getByRole("listbox").evaluate((el) => el.scrollTop))
     .toBe(0);
 });
 
-test("event search can reach events beyond the first batch", async ({
-  page,
-}) => {
+test("event search lists every event", async ({ page }) => {
   await page.route("**/api/v1/competition/1", (route) =>
     route.fulfill({
       json: {
@@ -371,10 +365,6 @@ test("event search can reach events beyond the first batch", async ({
   await page.goto("/");
   await page.getByRole("combobox").fill("Test Games");
   await page.getByRole("option", { name: /Test Games/ }).click();
-  await expect(page.getByRole("option")).toHaveCount(15);
-  await page.getByRole("button", { name: "Näytä lisää" }).click();
-  await expect(page.getByRole("option")).toHaveCount(30);
-  await page.getByRole("button", { name: "Näytä lisää" }).click();
   await expect(page.getByRole("option")).toHaveCount(32);
   await page.getByRole("option", { name: /Event 32/ }).click();
   await expect(page).toHaveURL(/competition\/1-131\?round=Qualify/);
@@ -1590,7 +1580,7 @@ test("the chosen competition can be cleared by tapping it or with Backspace", as
   await expect(input).toHaveAttribute("placeholder", /kilpailuja/);
 });
 
-test("the search list ends on a whole row and keeps its footer once expanded", async ({
+test("the search list ends on a whole row and keeps its footer while scrolling", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1510, height: 966 });
@@ -1615,12 +1605,18 @@ test("the search list ends on a whole row and keeps its footer once expanded", a
         return top < box.bottom - 0.5 && bottom > box.bottom + 0.5;
       }).length;
     });
-  await expect(page.getByRole("option")).toHaveCount(10);
+  await expect(page.getByRole("option")).toHaveCount(12);
   await expect.poll(cutRows).toBe(0);
   const footer = page.getByText("12 kilpailua", { exact: true });
+  await expect(footer).toBeVisible();
   const panelHeight = async () => (await list.boundingBox())!.height;
   const before = await panelHeight();
-  await page.getByRole("button", { name: "Näytä lisää" }).click();
+  await list.evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+  });
+  await expect
+    .poll(() => list.evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(0);
   await expect(page.getByRole("option")).toHaveCount(12);
   await expect(footer).toBeVisible();
   await expect.poll(cutRows).toBe(0);

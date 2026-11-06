@@ -62,8 +62,8 @@
     void search.selectedComp;
     if (listEl) listEl.scrollTop = 0;
   });
-  // The list ends on a whole row, so no row is ever cut through. It keeps a
-  // thin scrollbar and the count below it while there is more to scroll to.
+  // Every match is listed. The list ends on a whole row, so no row is ever cut
+  // through, and keeps a thin scrollbar and the count below it while it scrolls.
   let fittedHeight = $state<number | null>(null);
   let overflows = $state(false);
   function fitList() {
@@ -78,7 +78,6 @@
   }
   $effect(() => {
     void search.results.length;
-    void search.visibleCount;
     void search.isLoading;
     void search.matchingRecent.length;
     void listHeight;
@@ -86,15 +85,6 @@
     const frame = requestAnimationFrame(fitList);
     return () => cancelAnimationFrame(frame);
   });
-  function handleScroll(event: Event) {
-    const list = event.currentTarget as HTMLElement;
-    if (
-      search.hasMore &&
-      list.scrollTop > 0 &&
-      list.scrollHeight - list.scrollTop - list.clientHeight < 80
-    )
-      search.loadMore();
-  }
   // The chosen competition stays in the query but shows as a scope beside the
   // field, so people only edit the part they typed.
   const scope = $derived(
@@ -261,7 +251,6 @@
             <div class="p-2">
               <CommandList
                 bind:ref={listEl}
-                onscroll={handleScroll}
                 class={cn(
                   "scroll-visible snap-y overflow-y-auto overscroll-contain **:data-[slot=command-item]:snap-start",
                 )}
@@ -342,7 +331,7 @@
                     </CommandEmpty>
                   </div>
                 {:else if search.step === "competitions" && search.hasResults}
-                  {#each search.filteredCompetitions.slice(0, search.visibleCount) as comp (comp.Id)}
+                  {#each search.filteredCompetitions as comp (comp.Id)}
                     <div>
                       <CommandItem
                         class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [&>.cn-command-item-indicator]:hidden"
@@ -380,7 +369,7 @@
                   {/each}
                 {:else if search.step === "events" && search.hasResults}
                   <CommandGroup class="p-0">
-                    {#each search.filteredEvents.slice(0, search.visibleCount) as evt (evt.Id)}
+                    {#each search.filteredEvents as evt (evt.Id)}
                       {@const isNavigating = search.navigatingTo === evt.Id}
                       {@const isDisabled =
                         search.navigatingTo !== null && !isNavigating}
@@ -448,27 +437,14 @@
                   </CommandGroup>
                 {/if}
               </CommandList>
-              {#if !search.isLoading && !search.loadError && (search.hasMore || overflows)}
+              {#if !search.isLoading && !search.loadError && overflows}
                 <div
-                  class="-mx-2 -mb-2 flex items-center justify-between gap-3 border-t px-[1.125rem] py-2 text-xs text-muted-foreground"
+                  class="-mx-2 -mb-2 flex items-center border-t px-[1.125rem] py-2 text-xs text-muted-foreground"
                 >
                   <span aria-live="polite"
                     >{search.results.length}
                     {search.step === "events" ? "lajia" : "kilpailua"}</span
                   >
-                  {#if search.hasMore}
-                    <button
-                      type="button"
-                      class="-mr-2 rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                      onkeydown={(event) => event.stopPropagation()}
-                      onclick={() => {
-                        search.loadMore();
-                        if (!search.hasMore) inputEl?.focus();
-                      }}
-                    >
-                      Näytä lisää
-                    </button>
-                  {/if}
                 </div>
               {/if}
             </div>
