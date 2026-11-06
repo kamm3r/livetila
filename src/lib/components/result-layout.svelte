@@ -193,7 +193,7 @@
       class={cn(
         "text-right font-semibold tabular-nums",
         large ? "text-base leading-5" : "text-[15px]",
-      )}>{entry.Result || "-"}</span
+      )}>{entry.Result ? typeset(entry.Result) : "–"}</span
     >
     <span
       class={cn(
@@ -395,8 +395,9 @@
   <!-- Heights are values to read, not a count, so each card names its own. -->
   {@const fitsRow = columns > 0 && columns <= 8}
   {@const sharedLabels = fitsRow && !layout.vertical}
+  <!-- Heights keep a fixed width, so a few never spread across the card. -->
   {@const attemptGrid = fitsRow
-    ? `grid-template-columns: repeat(${columns}, minmax(0, 1fr))`
+    ? `grid-template-columns: repeat(${columns}, minmax(0, ${layout.vertical ? "3.25rem" : "1fr"}))`
     : undefined}
   <!-- From tablet width a row fits on one line: name, attempts, result. -->
   <ul
