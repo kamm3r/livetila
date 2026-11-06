@@ -132,6 +132,12 @@
       aria-hidden="true"
     />
   </Popover.Trigger>
+  {#if open}
+    <div
+      class="fixed inset-0 z-40 bg-black/10 backdrop-blur-xs sm:hidden"
+      aria-hidden="true"
+    ></div>
+  {/if}
   <Popover.Content class="w-[min(420px,calc(100vw-2rem))] p-0" align="start">
     <div
       bind:this={listEl}

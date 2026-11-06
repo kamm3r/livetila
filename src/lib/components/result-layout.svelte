@@ -593,10 +593,6 @@
             >Vuorossa</span
           >
           <span class="truncate font-semibold">{next.Name}</span>
-          {#if next.Number}<span
-              class="text-muted-foreground text-xs tabular-nums"
-              >#{next.Number}</span
-            >{/if}
         </span>
       {/if}
     </div>

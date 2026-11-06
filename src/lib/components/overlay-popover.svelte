@@ -294,7 +294,7 @@
   <Popover {open} onOpenChange={handleOpenChange}>
     <PopoverTrigger
       aria-label="Lähetysgrafiikka"
-      class="toolbar-control motion-control whitespace-nowrap border-transparent bg-transparent text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground data-[state=open]:text-foreground max-sm:hidden"
+      class="toolbar-control motion-control whitespace-nowrap border-transparent bg-transparent text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground data-[state=open]:bg-primary/10 data-[state=open]:text-primary max-sm:hidden"
     >
       <Cast class="size-4" aria-hidden="true" />
       Grafiikka
