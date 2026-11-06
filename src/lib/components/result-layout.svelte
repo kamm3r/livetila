@@ -163,7 +163,6 @@
       ...resultCodeLegend(entries),
       tags.includes("PB") && "PB = ennätys",
       tags.includes("SB") && "SB = kauden paras",
-      entries.some((entry) => activeIds.has(entry.AllocId)) && "••• = vuorossa",
     ].filter((item) => typeof item === "string");
   });
 </script>
@@ -351,7 +350,10 @@
                     >#{entry.Number}</span
                   >{/if}
                 <span class="text-primary"
-                  ><ActiveAttempt active={activeIds.has(entry.AllocId)} /></span
+                  ><ActiveAttempt
+                    active={activeIds.has(entry.AllocId)}
+                    labelled
+                  /></span
                 >
               </span>
             </td>
@@ -390,8 +392,10 @@
 
   <!-- One sticky label row while the attempts fit a card's width; more heights
        than that wrap, so each mark keeps its own label. -->
-  {@const sharedLabels = columns > 0 && columns <= 8}
-  {@const attemptGrid = sharedLabels
+  <!-- Heights are values to read, not a count, so each card names its own. -->
+  {@const fitsRow = columns > 0 && columns <= 8}
+  {@const sharedLabels = fitsRow && !layout.vertical}
+  {@const attemptGrid = fitsRow
     ? `grid-template-columns: repeat(${columns}, minmax(0, 1fr))`
     : undefined}
   <!-- From tablet width a row fits on one line: name, attempts, result. -->
@@ -402,7 +406,7 @@
     {#if sharedLabels}
       <li
         aria-hidden="true"
-        class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_oklch,var(--primary)_8%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
+        class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
       >
         <span class="hidden text-left md:col-span-2 md:block">Sija</span>
         <span class="hidden text-left md:col-start-3 md:block">Urheilija</span>
@@ -459,7 +463,10 @@
                 >#{entry.Number}</span
               >{/if}
             <span class="ml-0.5 text-primary"
-              ><ActiveAttempt active={activeIds.has(entry.AllocId)} /></span
+              ><ActiveAttempt
+                active={activeIds.has(entry.AllocId)}
+                labelled
+              /></span
             >
           </p>
           <p class="truncate text-muted-foreground text-xs leading-4">
@@ -473,7 +480,10 @@
               "col-span-full row-start-2 mt-1.5 grid text-center text-xs tabular-nums",
               sharedLabels
                 ? "items-center md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0 md:self-stretch"
-                : "grid-cols-[repeat(auto-fill,44px)] items-start",
+                : cn(
+                    "items-start",
+                    !fitsRow && "grid-cols-[repeat(auto-fill,44px)]",
+                  ),
             )}
             style={attemptGrid}
           >

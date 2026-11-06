@@ -235,6 +235,30 @@ html:not([data-input="keyboard"])
   opacity: 0;
 }
 
+/* A list that scrolls inside a panel keeps its scrollbar in view, even where
+   the system hides scrollbars until scrolling starts. */
+.scroll-visible::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-visible::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: color-mix(in oklch, var(--muted-foreground) 45%, transparent);
+}
+.scroll-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+@supports not selector(::-webkit-scrollbar) {
+  .scroll-visible {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(
+        in oklch,
+        var(--muted-foreground) 45%,
+        transparent
+      )
+      transparent;
+  }
+}
+
 /* Hatching marks attempts never taken after elimination. The period makes a
    58px attempt column a whole number of stripes, so lines meet across cells. */
 .hatch {

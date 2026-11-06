@@ -135,7 +135,7 @@
   <Popover.Content class="w-[min(420px,calc(100vw-2rem))] p-0" align="start">
     <div
       bind:this={listEl}
-      class="relative snap-y overflow-auto p-1.5 scroll-pt-1.5 [scrollbar-width:thin]"
+      class="scroll-visible relative snap-y overflow-auto p-1.5 scroll-pt-1.5"
       style={`max-height: ${fittedHeight ?? maxListHeight}px`}
     >
       {#each sortedEvents as event, i (`${event.Id}-${event.BeginDateTimeWithTZ}`)}

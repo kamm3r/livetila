@@ -1474,12 +1474,16 @@ for (const variant of [
       await expect(indicator).toHaveCount(1);
     }
 
-    expect(
-      await indicator
-        .locator(".dot")
-        .first()
-        .evaluate((el) => getComputedStyle(el).animationName),
-    ).toBe("none");
+    // Results name the athlete in words; graphics keep the dots, which stay
+    // still under reduced motion.
+    if (competition) await expect(indicator).toHaveText("Vuorossa");
+    else
+      expect(
+        await indicator
+          .locator(".dot")
+          .first()
+          .evaluate((el) => getComputedStyle(el).animationName),
+      ).toBe("none");
     active = 102;
     await page.clock.runFor(30_000);
     await expect(row("Fast Runner")).toHaveCount(1);
@@ -1613,12 +1617,12 @@ test("the search list ends on a whole row and keeps its footer once expanded", a
     });
   await expect(page.getByRole("option")).toHaveCount(10);
   await expect.poll(cutRows).toBe(0);
-  const footer = page.getByText(/^Näytetään/);
+  const footer = page.getByText("12 kilpailua", { exact: true });
   const panelHeight = async () => (await list.boundingBox())!.height;
   const before = await panelHeight();
   await page.getByRole("button", { name: "Näytä lisää" }).click();
   await expect(page.getByRole("option")).toHaveCount(12);
-  await expect(footer).toHaveText("Näytetään 12 / 12");
+  await expect(footer).toBeVisible();
   await expect.poll(cutRows).toBe(0);
   expect(await panelHeight()).toBe(before);
 });

@@ -94,10 +94,10 @@
     </table>
   </div>
 
-  <ul class="data-frame lg:hidden">
+  <ul class="data-frame overflow-clip lg:hidden">
     <li
       aria-hidden="true"
-      class="data-head flex h-auto items-center justify-between border-b-0 px-3 py-1.5"
+      class="data-head sticky top-0 z-10 flex h-auto items-center justify-between border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3 py-1.5"
     >
       <span></span>
       <span class="flex flex-col text-right leading-tight"

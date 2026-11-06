@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy } from "svelte";
-  import { Cast, ExternalLink } from "@lucide/svelte";
+  import { Cast, ExternalLink, X } from "@lucide/svelte";
   import { getRoundContext } from "./round-provider.svelte";
   import Embed from "./embed.svelte";
   import OverlayExplainer from "./overlay-explainer.svelte";
@@ -14,6 +14,7 @@
     PopoverHeader,
     PopoverTitle,
     PopoverDescription,
+    PopoverClose,
   } from "$lib/components/ui/popover";
   import {
     Drawer,
@@ -22,6 +23,7 @@
     DrawerHeader,
     DrawerTitle,
     DrawerDescription,
+    DrawerClose,
   } from "$lib/components/ui/drawer";
 
   import { overlayLink } from "$lib/competition-selection";
@@ -270,8 +272,13 @@
     </DrawerTrigger>
     <DrawerContent class="data-[vaul-drawer-direction=bottom]:max-h-[90vh]">
       <DrawerHeader
-        class="group-data-[vaul-drawer-direction=bottom]/drawer-content:text-left"
+        class="relative pr-12 group-data-[vaul-drawer-direction=bottom]/drawer-content:text-left"
       >
+        <DrawerClose
+          aria-label="Sulje"
+          class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          ><X class="size-4" aria-hidden="true" /></DrawerClose
+        >
         <DrawerTitle>Lähetysgrafiikka</DrawerTitle>
         <DrawerDescription>
           Tulokset lähetykseen OBS:n tai muun ohjelman selainlähteenä.
@@ -296,7 +303,12 @@
       align="end"
       class="max-h-[calc(100dvh-6rem)] w-[44rem] max-w-[calc(100vw-2rem)] overflow-y-auto p-0"
     >
-      <PopoverHeader class="border-b p-4">
+      <PopoverHeader class="relative border-b p-4 pr-12">
+        <PopoverClose
+          aria-label="Sulje"
+          class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          ><X class="size-4" aria-hidden="true" /></PopoverClose
+        >
         <PopoverTitle class="font-semibold">Lähetysgrafiikka</PopoverTitle>
         <PopoverDescription>
           Tulokset lähetykseen OBS:n tai muun ohjelman selainlähteenä.

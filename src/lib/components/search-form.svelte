@@ -262,7 +262,7 @@
                 bind:ref={listEl}
                 onscroll={handleScroll}
                 class={cn(
-                  "snap-y overflow-y-auto overscroll-contain [scrollbar-width:thin] **:data-[slot=command-item]:snap-start",
+                  "scroll-visible snap-y overflow-y-auto overscroll-contain **:data-[slot=command-item]:snap-start",
                 )}
                 style={`max-height: ${fittedHeight ?? listHeight}px`}
               >
@@ -437,10 +437,8 @@
                   class="-mx-2 -mb-2 flex items-center justify-between gap-3 border-t px-[1.125rem] py-2 text-xs text-muted-foreground"
                 >
                   <span aria-live="polite"
-                    >Näytetään {Math.min(
-                      search.visibleCount,
-                      search.results.length,
-                    )} / {search.results.length}</span
+                    >{search.results.length}
+                    {search.step === "events" ? "lajia" : "kilpailua"}</span
                   >
                   {#if search.hasMore}
                     <button
