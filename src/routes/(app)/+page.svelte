@@ -120,7 +120,7 @@
     position: relative;
     isolation: isolate;
     flex: 1;
-    padding: clamp(2.5rem, 9vh, 5.5rem) 1rem 3rem;
+    padding: clamp(2rem, 6vh, 4.5rem) 1rem 2.5rem;
   }
   .search-field {
     margin-top: 1.75rem;

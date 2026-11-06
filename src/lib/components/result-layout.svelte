@@ -102,7 +102,7 @@
   const medals = [
     "bg-amber-300 text-amber-950 dark:bg-amber-400 dark:text-amber-950",
     "bg-slate-300 text-slate-900 dark:bg-slate-300 dark:text-slate-900",
-    "bg-orange-300 text-orange-950 dark:bg-orange-800 dark:text-orange-100",
+    "bg-orange-300 text-orange-950 dark:bg-[oklch(0.74_0.07_55)] dark:text-orange-950",
   ];
   const moveDuration = $derived(prefersReducedMotion.current ? 0 : 250);
 
@@ -573,7 +573,7 @@
       class="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border bg-card px-3.5 py-2.5 text-[13px] shadow-xs"
     >
       <span
-        class="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[5.5rem]"
+        class="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[4.5rem]"
         ><span class="sm:hidden">Viimeisin</span><span class="hidden sm:inline"
           >Viimeisin suoritus</span
         ></span
@@ -596,7 +596,7 @@
           class="flex min-w-0 items-center gap-2.5 sm:gap-1.5 max-sm:basis-full sm:ml-auto sm:border-l sm:pl-3"
         >
           <span
-            class="shrink-0 font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[5.5rem]"
+            class="shrink-0 font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[4.5rem]"
             >Vuorossa</span
           >
           <span class="truncate font-semibold">{next.Name}</span>
