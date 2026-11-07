@@ -162,6 +162,24 @@ test.describe("Lista", () => {
     await expect(page.locator('[style*="--accent: #ff8800"]')).toHaveCount(1);
   });
 
+  test("?records=0 hides the SB and PB tags", async ({ page }) => {
+    const withPb = () =>
+      field().map((entry) =>
+        entry.Id === 1 ? { ...entry, PB: "7,05", SB: "7,05" } : entry,
+      );
+    await serve(page, withPb());
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/overlay/1-10?heat=1&style=broadcast-trail-plain");
+    const rows = standings(page);
+    await expect(rows.nth(0)).toContainText("PB");
+
+    await page.goto(
+      "/overlay/1-10?heat=1&style=broadcast-trail-plain&records=0",
+    );
+    await expect(rows.nth(0)).toContainText("Korhonen");
+    await expect(rows.nth(0)).not.toContainText("PB");
+  });
+
   test("a new attempt shows as pending before the mark and the new order land", async ({
     page,
   }) => {

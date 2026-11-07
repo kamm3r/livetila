@@ -15,7 +15,20 @@
     type OverlayView,
   } from "./overlay";
 
-  let { view, inHeat }: { view: OverlayView; inHeat: boolean } = $props();
+  let {
+    view,
+    inHeat,
+    records,
+  }: {
+    view: OverlayView;
+    inHeat: boolean;
+    // Overrides `?records=0`, for previews outside the overlay page.
+    records?: boolean;
+  } = $props();
+  // `?records=0` drops the SB and PB tags, as in the other overlays.
+  const showRecords = $derived(
+    records ?? page.url.searchParams.get("records") !== "0",
+  );
 
   // `?accent=5ed6cb` matches a stream's branding, as in the other overlays.
   const accent = $derived.by(() => {
@@ -47,7 +60,9 @@
 >
   {#if latest && view.showAttempts}
     {@const name = shortName(latest.entry)}
-    {@const tag = recordTag(latest.entry, view.eventCategory)}
+    {@const tag = showRecords
+      ? recordTag(latest.entry, view.eventCategory)
+      : null}
     <div
       transition:fly={{
         y: 24,

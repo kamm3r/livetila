@@ -2,6 +2,40 @@ import type { Allocation, EventCategory, Heat } from "~/types/comp";
 
 const INVALID_RESULTS = ["DNS", "DQ", "DNF", "DSQ", "NH", "NM"] as const;
 
+// Explained under the results table when they appear there.
+const RESULT_CODES = [
+  ["DNS", "ei startannut"],
+  ["DNF", "keskeytti"],
+  ["DQ", "hylätty kilpailusta"],
+  ["NM", "ei hyväksyttyä tulosta"],
+  ["NH", "ei hyväksyttyä korkeutta"],
+] as const;
+
+export function resultCodeLegend(
+  entries: {
+    Result: string | null;
+    Attempts?: { Line1: string; Line2: string }[] | null;
+  }[],
+): string[] {
+  const marks = entries.flatMap((entry) => [
+    entry.Result,
+    ...(entry.Attempts?.flatMap((attempt) => [attempt.Line1, attempt.Line2]) ??
+      []),
+  ]);
+  const codes = new Set(
+    marks.map((mark) => {
+      const code = mark?.trim().toUpperCase();
+      return code === "DSQ" ? "DQ" : code;
+    }),
+  );
+  const legend: string[] = RESULT_CODES.filter(([code]) => codes.has(code)).map(
+    ([code, label]) => `${code} = ${label}`,
+  );
+  if (marks.some((mark) => mark && TIME_RE.test(mark) && mark.endsWith("h")))
+    legend.push("h = käsiajanotto");
+  return legend;
+}
+
 // Times are "S,FF", "M.SS,FF" or "H:MM.SS,FF"; hand times use tenths and an
 // "h" suffix ("3.12,6h").
 const TIME_RE = /^(?:(\d+):)?(?:(\d+)\.)?(\d+),(\d{1,2})h?$/;

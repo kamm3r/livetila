@@ -117,6 +117,7 @@
           style,
           // A feature that does not apply leaves the link alone.
           gap: offered("gap") ? features.gap : undefined,
+          records: offered("records") ? features.records : undefined,
         },
       ),
   );

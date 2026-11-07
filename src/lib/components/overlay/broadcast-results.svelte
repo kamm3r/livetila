@@ -22,12 +22,22 @@
     view,
     inHeat,
     gaps,
+    records,
   }: {
     view: OverlayView;
     inHeat: boolean;
     // Overrides `?gap=0`, for previews outside the overlay page.
     gaps?: boolean;
+    // Overrides `?records=0`, likewise.
+    records?: boolean;
   } = $props();
+  // `?records=0` drops the SB and PB tags and banners, for competitions whose
+  // entries mostly come without them.
+  const showRecords = $derived(
+    records ?? page.url.searchParams.get("records") !== "0",
+  );
+  const tagOf = (entry: OverlayEntry) =>
+    showRecords ? recordTag(entry, view.eventCategory) : null;
   const showGaps = $derived(gaps ?? page.url.searchParams.get("gap") !== "0");
 
   // A board longer than this no longer fits a 720p frame.
@@ -125,7 +135,7 @@
         {#each rows as entry, index (entry.Id)}
           {@const rank = rankOf(entry, index, inHeat)}
           {@const podium = rank !== null && rank <= 3 ? medal[rank - 1] : null}
-          {@const tag = recordTag(entry, view.eventCategory)}
+          {@const tag = tagOf(entry)}
           {@const q = qualification(entry)}
           {@const from = affiliation(entry)}
           {@const behind = gap(entry)}

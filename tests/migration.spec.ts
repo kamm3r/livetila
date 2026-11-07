@@ -1160,6 +1160,47 @@ test("track results show gaps for hand and long times without attempt columns", 
   ]);
   const gaps = table.locator("tbody tr td:last-child");
   await expect(gaps).toHaveText(["—", "+15,22", "+1.01,41"]);
+  await expect(page.getByText("h = käsiajanotto")).toBeVisible();
+});
+
+test("results explain the status codes that appear in them", async ({
+  page,
+}) => {
+  const athletes = [
+    ["2.57,38", "Leader"],
+    ["DNF", "Quit"],
+    ["DNS", "Absent"],
+  ].map(([Result, Name], i) => ({
+    ...runners[0],
+    Id: i + 1,
+    Name,
+    Result,
+    HeatRank: i + 1,
+    Attempts: [{ Line1: Result, Line2: null }],
+  }));
+  await page.route("**/api/v1/results/**", (route) =>
+    route.fulfill({
+      json: {
+        Name: "1000 m",
+        EventCategory: "Track",
+        Enrollments: [],
+        Rounds: [
+          {
+            ...rounds[1],
+            Heats: [{ Index: 1, Allocations: athletes }],
+            TotalResults: athletes,
+          },
+        ],
+      },
+    }),
+  );
+  await page.goto("/competition/1-10?round=Final");
+  const legend = page.getByText("DNS = ei startannut");
+  await expect(legend).toBeVisible();
+  await expect(legend).toContainText("DNF = keskeytti");
+  // Only codes in these results are explained.
+  await expect(legend).not.toContainText("NM =");
+  await expect(legend).not.toContainText("käsiajanotto");
 });
 
 test("cross-country results are timed and show gaps to the leader", async ({

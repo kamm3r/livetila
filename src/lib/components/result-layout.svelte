@@ -9,6 +9,7 @@
     gapToLeader,
     leadingResult,
     recordTag,
+    resultCodeLegend,
     sortByResult,
     turnOrder,
   } from "$lib/results";
@@ -411,6 +412,7 @@
           : "x = hylätty · – = ei suoritusta"
         : null,
       out.size > 0 ? "viivoitus = karsiutui kolmen kierroksen jälkeen" : null,
+      ...resultCodeLegend(entries),
       "PB = ennätys · SB = kauden paras · Ero = ero kärkeen",
     ]
       .filter(Boolean)

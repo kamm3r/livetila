@@ -49,6 +49,14 @@ test("round and heat identities survive both URL formats", () => {
       { gap: false },
     ),
   ).toBe("/overlay/1-10?round=2&heat=2&gap=0");
+  expect(
+    overlayLink(
+      "1-10",
+      rounds,
+      { round: selection.round!.Index, heat: selection.heat!.Index },
+      { records: false },
+    ),
+  ).toBe("/overlay/1-10?round=2&heat=2&records=0");
   // No heat: the whole round.
   expect(
     overlayLink("1-10", rounds, { round: selection.round!.Index, heat: -1 }),
