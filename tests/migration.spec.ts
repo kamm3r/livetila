@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { nextRefresh } from "./refresh";
 
 const runners = [
   { Id: 1, Name: "Slow Runner", Result: "12,50", HeatRank: 2 },
@@ -102,11 +103,14 @@ test("round navigation, desktop results, and overlay clipboard link stay in sync
     "href",
     "http://127.0.0.1:4173/overlay/1-10?round=1&style=broadcast-trail-plain&gap=0",
   );
+  // The ticker offers the gap too, and keeps the choice made on the list.
   await page.getByText("Tikkeri").click();
-  await expect(page.getByRole("switch", { name: "Näytä erot" })).toHaveCount(0);
+  await expect(
+    page.getByRole("switch", { name: "Näytä erot" }),
+  ).not.toBeChecked();
   await expect(overlay).toHaveAttribute(
     "href",
-    "http://127.0.0.1:4173/overlay/1-10?round=1&style=ticker",
+    "http://127.0.0.1:4173/overlay/1-10?round=1&style=ticker&gap=0",
   );
 });
 
@@ -204,7 +208,7 @@ test("results respect the 30-second interval before live status arrives", async 
   await page.clock.runFor(1000);
   await expect.poll(() => resultRequests).toBe(2);
   live = true;
-  await page.clock.runFor(30_000);
+  await nextRefresh(page, /\/api\/v1\/competition\/1$/);
   await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
   await page.clock.runFor(2000);
   await expect.poll(() => resultRequests).toBeGreaterThan(1);
@@ -543,7 +547,7 @@ for (const path of ["/competition/1-10", "/overlay/1-10"]) {
         .first(),
     ).toBeVisible();
     result = "09,99";
-    await page.clock.runFor(30_000);
+    await nextRefresh(page);
     await expect(
       page
         .getByText("09,99", { exact: true })
@@ -585,7 +589,7 @@ for (const path of ["/competition/1-10", "/overlay/1-10"]) {
         document.dispatchEvent(new Event("visibilitychange"));
       });
       // Foreground polling resumes on the next scheduled refresh.
-      await page.clock.runFor(30_000);
+      await nextRefresh(page);
       await expect.poll(() => requests).toBeGreaterThan(1);
     }
   });
@@ -683,7 +687,8 @@ for (const path of ["/competition/1-10", "/overlay/1-10"]) {
     const delayNotice = page.getByText("Päivitys viivästyy", { exact: true });
     fail = true;
     for (let attempt = 1; attempt <= 4; attempt++) {
-      await page.clock.runFor(attempt === 1 ? 30_000 : 4000);
+      if (attempt === 1) await nextRefresh(page);
+      else await page.clock.runFor(4000);
       await expect.poll(() => failures).toBeGreaterThanOrEqual(attempt);
       // A failed scheduled refresh is already 30 seconds past the last data.
     }
@@ -696,7 +701,7 @@ for (const path of ["/competition/1-10", "/overlay/1-10"]) {
       );
     fail = false;
     result = "09,99";
-    await page.clock.runFor(30_000);
+    await nextRefresh(page);
     await expect(score("09,99")).toBeVisible();
     await expect(delayNotice).toHaveCount(0);
   });
@@ -865,10 +870,7 @@ for (const path of ["/competition/1-10?round=Final", "/overlay/1-10?heat=1"]) {
     await expect(
       page.getByText("Slow Runner", { exact: true }).last(),
     ).toBeVisible();
-    await Promise.all([
-      page.waitForResponse("**/api/v1/results/**"),
-      page.clock.runFor(30_000),
-    ]);
+    await nextRefresh(page);
     await expect(page.locator('img[src*="NakkVire.png"]:visible')).toHaveCount(
       0,
     );
@@ -1037,7 +1039,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
     jumper(1, "First Jumper", ["7,10", "7,40", "x"], "7,40", 1),
     jumper(2, "Second Jumper", ["7,20", "x"], "7,20", 2),
   ];
-  await page.clock.runFor(30_000);
+  await nextRefresh(page);
   await expect(latest).toContainText(/Viimeisin.*First Jumper.*x/);
   await expect(latest).toContainText(/Vuorossa.*Second Jumper/);
 
@@ -1045,7 +1047,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
     jumper(2, "Second Jumper", ["7,20", "x", "7,55"], "7,55", 1),
     jumper(1, "First Jumper", ["7,10", "7,40", "x"], "7,40", 2),
   ];
-  await page.clock.runFor(30_000);
+  await nextRefresh(page);
   await expect(table.getByRole("columnheader")).toHaveCount(12);
   await expect(first).toContainText("Second Jumper");
   await expect(first).toHaveAttribute("data-changed");
@@ -1475,7 +1477,7 @@ for (const variant of [
           .evaluate((el) => getComputedStyle(el).animationName),
       ).toBe("none");
     active = 102;
-    await page.clock.runFor(30_000);
+    await nextRefresh(page);
     await expect(row("Fast Runner")).toHaveCount(1);
     await expect(row("Slow Runner")).toHaveCount(0);
     if (competition) {
@@ -1488,11 +1490,11 @@ for (const variant of [
     }
 
     active = 0;
-    await page.clock.runFor(30_000);
+    await nextRefresh(page);
     await expect(indicator).toHaveCount(0);
     active = 101;
     status = "Official";
-    await page.clock.runFor(30_000);
+    await nextRefresh(page);
     await expect(indicator).toHaveCount(0);
   });
 }

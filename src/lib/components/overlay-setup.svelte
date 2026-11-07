@@ -56,7 +56,7 @@
           onclick={() => (selected = i)}
           class={cn(
             "rounded-md px-2 py-1 text-muted-foreground text-xs hover:bg-muted",
-            selected === i && "bg-muted text-foreground",
+            selected === i && "bg-muted text-primary",
           )}
         >
           {tool.name}

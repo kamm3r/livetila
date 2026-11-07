@@ -96,13 +96,10 @@
 
 <div class="flex min-h-full items-center justify-center p-8">
   {#if shown && rows.length > 0}
-    <div
-      class="w-[40rem] font-semibold text-white tracking-tight"
-      style:--accent={accent}
-    >
+    <div class="w-[32rem] font-semibold text-white" style:--accent={accent}>
       <header in:fly|global={{ y: -12, duration: motion ? 300 : 0 }}>
         <div
-          class="w-fit border-(--accent) border-t-2 bg-neutral-950/90 px-3 py-0.5 text-(--accent) text-sm"
+          class="w-fit border-(--accent) border-t-2 bg-neutral-950 px-3 py-0.5 text-(--accent) text-sm uppercase"
         >
           {dateLabel}
         </div>
@@ -150,11 +147,11 @@
                     duration: motion ? 300 : 0,
                     delay: motion ? 150 + index * 50 : 0,
                   }}
-                  class="flex h-8.5 items-center gap-3 border-neutral-950/90 border-b-2 bg-neutral-800/90 px-3 text-white"
+                  class="flex h-8.5 items-center gap-3 border-neutral-950 border-b-2 bg-neutral-800 px-3 text-white"
                 >
                   <span class="w-12 shrink-0 tabular-nums">{time(start)}</span>
                   <span
-                    class="w-32 shrink-0 truncate text-(--accent) text-sm uppercase"
+                    class="w-32 shrink-0 truncate font-medium text-neutral-400 text-sm"
                     >{event.Name}</span
                   >
                   <span class="min-w-0 flex-1 truncate uppercase"
@@ -183,7 +180,7 @@
           class="border-(--accent) border-t-2"
         >
           <span
-            class="inline-block bg-neutral-950/90 px-3 py-0.5 text-(--accent) text-sm uppercase"
+            class="inline-block bg-neutral-950 px-3 py-0.5 text-(--accent) text-sm uppercase"
           >
             {competitionName ?? ""}
           </span>

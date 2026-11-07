@@ -35,11 +35,7 @@
   });
 </script>
 
-<Button
-  class="w-full gap-2 border-primary"
-  {disabled}
-  onclick={copyUrlToClipboard}
->
+<Button class="w-full gap-2" {disabled} onclick={copyUrlToClipboard}>
   <div class="relative flex size-4 items-center justify-center">
     <span class="motion-copy-icon" data-visible={!copy} aria-hidden="true">
       <CopyIcon data-icon="inline-start" />
