@@ -179,7 +179,7 @@
     >
       <span class="size-2 rounded-full bg-red-500 motion-safe:animate-pulse"
       ></span>
-      <span class="text-red-400 text-xs tracking-[0.12em]">
+      <span class="text-red-400 text-xs">
         {view.isRefreshError ? "VIIVE" : "LIVE"}
       </span>
     </div>

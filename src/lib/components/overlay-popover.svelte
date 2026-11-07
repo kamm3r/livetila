@@ -155,12 +155,14 @@
 )}
   <fieldset class="flex flex-col gap-1.5">
     <legend class="mb-1.5 font-medium text-ui">{legend}</legend>
-    <div class="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
+    <div class="flex flex-wrap gap-1 rounded-lg bg-muted p-[3px]">
       {#each options as option (option.value)}
         <label
           class={cn(
-            "flex-auto cursor-pointer whitespace-nowrap rounded-md px-2 py-1 text-center sm:flex-1 font-medium text-muted-foreground text-ui has-focus-visible:outline-2 has-focus-visible:outline-primary",
-            selected === option.value && "bg-card text-foreground shadow-xs",
+            "flex-auto cursor-pointer whitespace-nowrap rounded-md px-2 py-1 text-center sm:flex-1 font-medium text-muted-foreground text-ui hover:text-foreground has-focus-visible:outline-2 has-focus-visible:outline-primary",
+            // Selected as in the app's round switcher.
+            selected === option.value &&
+              "bg-card text-primary shadow-xs hover:text-primary",
           )}
         >
           <input
