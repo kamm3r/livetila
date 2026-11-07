@@ -314,7 +314,9 @@
           class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
           ><X class="size-4" aria-hidden="true" /></PopoverClose
         >
-        <PopoverTitle class="font-semibold">Lähetysgrafiikka</PopoverTitle>
+        <PopoverTitle class="font-semibold text-base"
+          >Lähetysgrafiikka</PopoverTitle
+        >
         <PopoverDescription>
           Tulokset lähetykseen OBS:n tai muun ohjelman selainlähteenä.
         </PopoverDescription>
