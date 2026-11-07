@@ -265,7 +265,7 @@ test.describe("Lopputulokset", () => {
     await serve(page, field());
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/overlay/1-10?heat=1&style=broadcast-results");
-    await expect(visibleText(page, "Tulokset – Loppukilpailu")).toBeVisible();
+    await expect(visibleText(page, "Loppukilpailu – Tulokset")).toBeVisible();
     const rows = page.locator("ol > li");
     await expect(rows).toHaveCount(3);
     await expect(rows.nth(0)).toContainText("1");

@@ -105,7 +105,8 @@
         <div
           class="w-fit border-(--accent) border-t-2 bg-neutral-950 px-3 py-0.5 text-(--accent) text-sm uppercase"
         >
-          Tulokset{view.roundName ? ` – ${view.roundName}` : ""}{view.heatLabel
+          <!-- Round first, as on the list and the ticker. -->
+          {view.roundName ? `${view.roundName} – ` : ""}Tulokset{view.heatLabel
             ? ` · ${view.heatLabel}`
             : ""}
         </div>

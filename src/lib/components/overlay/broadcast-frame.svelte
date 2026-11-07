@@ -527,8 +527,8 @@
               >
                 <span in:settle class="flex flex-1 items-center justify-center">
                   {banners.get(entry.Id) === "PB"
-                    ? "Personal best"
-                    : "Season best"}
+                    ? "Oma ennätys"
+                    : "Kauden paras"}
                 </span>
                 {#if focused}
                   <span

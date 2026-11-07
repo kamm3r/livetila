@@ -203,7 +203,7 @@
           />
           <span
             aria-hidden="true"
-            class="relative mt-0.5 h-5 w-9 shrink-0 rounded-full bg-input transition-colors after:absolute after:top-0.5 after:left-0.5 after:size-4 after:rounded-full after:bg-background after:shadow-xs after:transition-transform peer-checked:bg-primary peer-checked:after:translate-x-4 peer-focus-visible:outline-2 peer-focus-visible:outline-primary peer-focus-visible:outline-offset-2"
+            class="relative mt-0.5 h-5 w-9 shrink-0 rounded-full bg-input transition-colors after:absolute after:top-0.5 after:left-0.5 after:size-4 after:rounded-full after:bg-background after:shadow-xs after:transition-transform peer-checked:bg-primary dark:peer-checked:bg-[oklch(0.53_0.13_242)] dark:after:bg-white peer-checked:after:translate-x-4 peer-focus-visible:outline-2 peer-focus-visible:outline-primary peer-focus-visible:outline-offset-2"
           ></span>
           <span class="flex flex-col gap-0.5">
             <span class="font-medium text-sm">{feature.label}</span>
