@@ -287,7 +287,14 @@
               ),
         )
       : 0}
-  <div class="data-frame hidden overflow-x-auto xl:block">
+  <!-- A column per height runs off the page once a vertical jump has many,
+       so heights keep the labelled, wrapping rows below at every width. -->
+  <div
+    class={cn(
+      "data-frame hidden overflow-x-auto",
+      !layout.vertical && "xl:block",
+    )}
+  >
     <!-- Fixed columns line up stacked tables; names and clubs share the rest. -->
     <table
       class="w-full table-fixed text-sm"
@@ -402,19 +409,21 @@
   <!-- Heights are values to read, not a count, so each card names its own. -->
   {@const fitsRow = columns > 0 && columns <= 8}
   {@const sharedLabels = fitsRow && !layout.vertical}
+  <!-- Heights always keep their own labels and one width, so from tablet width
+       a jumper's row stays on one line and only wraps inside its strip. -->
+  {@const oneLine = columns > 0 && (layout.vertical || fitsRow)}
   <!-- Heights keep a fixed width, so a few never spread across the card. -->
   {@const attemptGrid = fitsRow
     ? `grid-template-columns: repeat(${columns}, minmax(0, ${layout.vertical ? "3.25rem" : "1fr"}))`
     : undefined}
   <!-- From tablet width a row fits on one line: name, attempts, result. -->
   <ul
-    class="data-frame overflow-clip xl:hidden"
-    style={`--attempts: ${columns * (layout.vertical ? 52 : 44)}px`}
+    class={cn("data-frame overflow-clip", !layout.vertical && "xl:hidden")}
+    style={`--attempts: ${layout.vertical ? 8 * 52 : columns * 44}px`}
   >
-    {#if fitsRow}
+    {#if sharedLabels}
       <li
         aria-hidden="true"
-        class:max-md:hidden={!sharedLabels}
         class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
       >
         <span class="hidden text-left md:col-span-2 md:block">Sija</span>
@@ -445,7 +454,7 @@
         data-changed={change ? "" : undefined}
         class={cn(
           "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
-          fitsRow &&
+          oneLine &&
             "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem] md:items-center",
           // With no attempts a row is two lines, laid out like the start list.
           columns === 0 && "items-center",
@@ -483,25 +492,43 @@
           </p>
         </div>
         {#if columns > 0 && !didNotStart(entry)}
+          <!-- A jumper's strip lists only the heights they took part in. Each
+               mark names its height, so a height others took before this
+               athlete entered would only be an empty label. -->
+          {@const slots = layout.vertical
+            ? layout.labels.flatMap((label, i) =>
+                entry.Attempts?.some((attempt) => attempt.Line1 === label)
+                  ? [i]
+                  : [],
+              )
+            : Array.from({ length: isOut ? 3 : columns }, (_, i) => i)}
           <!-- Fixed columns keep attempt N aligned across rows. -->
           <ul
             class={cn(
               "col-span-full row-start-2 mt-1.5 grid text-center text-xs tabular-nums",
-              fitsRow
-                ? "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0 md:self-stretch md:items-center"
-                : "grid-cols-[repeat(auto-fill,44px)]",
+              oneLine && "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0",
+              // Heights an athlete never jumped have a label and no mark, so
+              // cells sit at the top and every label shares one line.
+              oneLine &&
+                (layout.vertical
+                  ? "md:self-center md:items-start"
+                  : "md:self-stretch md:items-center"),
+              // A height keeps one width however many there are; more than
+              // fit continue in the same columns below.
+              layout.vertical
+                ? "grid-cols-[repeat(auto-fill,3.25rem)] md:gap-y-1"
+                : !fitsRow && "grid-cols-[repeat(auto-fill,44px)]",
               sharedLabels ? "items-center" : "items-start",
             )}
-            style={attemptGrid}
+            style={layout.vertical ? undefined : attemptGrid}
           >
-            {#each { length: isOut ? 3 : sharedLabels || !layout.vertical ? columns : layout.labels.findLastIndex( (label) => entry.Attempts?.some((attempt) => attempt.Line1 === label) ) + 1 }, i (i)}
+            {#each slots as i (i)}
               <li>
                 <span
                   class={cn(
                     sharedLabels
                       ? "sr-only"
                       : "block text-2xs text-muted-foreground",
-                    !sharedLabels && fitsRow && "md:sr-only",
                   )}>{layout.labels[i]}</span
                 >
                 {@render attemptMark(
@@ -526,7 +553,7 @@
         <div
           class={cn(
             "col-start-4 row-start-1 flex flex-col items-end self-start leading-tight",
-            fitsRow && "md:col-start-5",
+            oneLine && "md:col-start-5",
           )}
         >
           {@render result(entry, true)}
