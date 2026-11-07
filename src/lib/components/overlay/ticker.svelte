@@ -108,36 +108,71 @@
     !prefersReducedMotion.current && view.entries.length > 4,
   );
 
-  // A scrolling crawl keeps its order for the pass on screen, as broadcast
-  // tickers do: places update where the athletes stand, and the new order
-  // takes over when the loop starts again. Re-sorting mid-pass would jump
-  // the whole visible strip. A ticker that does not scroll re-sorts at once.
-  let order = $state<number[]>(untrack(() => view.entries.map((e) => e.Id)));
+  // A scrolling crawl keeps its order on screen, as broadcast tickers do:
+  // places, marks and gaps update where the athletes stand. The list runs
+  // twice so the loop has no seam, and the new order goes into the second
+  // copy only while that copy is out of view to the right; it then scrolls
+  // in as part of the crawl, and at the loop the first copy takes the same
+  // order, so the reset swaps identical content. A ticker that does not
+  // scroll re-sorts at once.
+  const ids = $derived(staged.map((entry) => entry.Id));
+  let shownOrder = $state<number[]>(untrack(() => ids));
+  let nextOrder = $state<number[]>(untrack(() => ids));
+  let viewport = $state<HTMLElement | null>(null);
+  let secondCopy = $state<HTMLElement | null>(null);
+  const same = (a: number[], b: number[]) =>
+    a.length === b.length && a.every((id, i) => id === b[i]);
+  // Athletes joining or leaving show up at once, in either copy.
+  const reconcile = (order: number[], wanted: number[]) => {
+    const kept = order.filter((id) => wanted.includes(id));
+    const added = wanted.filter((id) => !order.includes(id));
+    return kept.length === order.length && added.length === 0
+      ? order
+      : [...kept, ...added];
+  };
+  function queueHidden() {
+    const copy = secondCopy?.getBoundingClientRect();
+    const view = viewport?.getBoundingClientRect();
+    if (copy && view && copy.left >= view.right && !same(nextOrder, ids))
+      nextOrder = ids;
+  }
   $effect(() => {
-    const ids = staged.map((entry) => entry.Id);
+    const wanted = ids;
     if (!scrolls) {
-      order = ids;
+      shownOrder = wanted;
+      nextOrder = wanted;
       return;
     }
     untrack(() => {
-      const kept = order.filter((id) => ids.includes(id));
-      const added = ids.filter((id) => !order.includes(id));
-      if (kept.length !== order.length || added.length > 0)
-        order = [...kept, ...added];
+      shownOrder = reconcile(shownOrder, wanted);
+      nextOrder = reconcile(nextOrder, wanted);
+      queueHidden();
     });
   });
+  // The second copy can leave the view while nothing changes; look again
+  // until the new order has been placed.
+  $effect(() => {
+    if (!scrolls || same(nextOrder, ids)) return;
+    const timer = setInterval(queueHidden, 250);
+    return () => clearInterval(timer);
+  });
   // Only the track's own loop counts; the on-turn dots inside it animate too.
-  const applyOrder = (event: AnimationEvent) => {
-    if (event.target === event.currentTarget)
-      order = staged.map((entry) => entry.Id);
+  const restartLoop = (event: AnimationEvent) => {
+    if (event.target !== event.currentTarget) return;
+    // A list narrower than the view never leaves it; it re-sorts at the loop.
+    const copy = secondCopy?.getBoundingClientRect();
+    const view = viewport?.getBoundingClientRect();
+    if (copy && view && copy.width < view.width) nextOrder = ids;
+    shownOrder = nextOrder;
+    queueHidden();
   };
-  const crawl = $derived.by(() => {
+  const crawlOf = (order: number[]) => {
     const byId = new Map(staged.map((entry, index) => [entry.Id, index]));
     return order.flatMap((id) => {
       const index = byId.get(id);
       return index === undefined ? [] : [{ entry: staged[index]!, index }];
     });
-  });
+  };
 </script>
 
 <div
@@ -217,18 +252,26 @@
     </div>
 
     <div
+      bind:this={viewport}
       class="relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_2rem,#000_calc(100%-2rem),transparent)]"
     >
       <div
         class={cn("flex h-full w-max items-center", scrolls && "ticker-track")}
         style:--ticker-duration="{seconds}s"
-        onanimationiteration={applyOrder}
+        onanimationiteration={restartLoop}
       >
         <!-- The list is repeated once so the loop has no visible seam. -->
         {#each scrolls ? [0, 1] : [0] as copy (copy)}
+          {@const crawl = crawlOf(copy === 1 ? nextOrder : shownOrder)}
           <ol
             class="flex items-center pl-6"
             aria-hidden={copy === 1 || undefined}
+            bind:this={
+              () => (copy === 1 ? secondCopy : null),
+              (el) => {
+                if (copy === 1) secondCopy = el;
+              }
+            }
           >
             {#each crawl as { entry, index } (entry.Id)}
               {@const rank = rankOf(entry, index, inHeat)}

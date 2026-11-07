@@ -270,7 +270,7 @@ test.describe("Tikkeri", () => {
     await expect(page.getByText("−0,18")).toHaveCount(0);
   });
 
-  test("a scrolling crawl keeps its order for the pass and re-sorts when the loop restarts", async ({
+  test("a scrolling crawl keeps its order on screen and re-sorts out of view", async ({
     page,
   }) => {
     const five = () => [
@@ -305,6 +305,12 @@ test.describe("Tikkeri", () => {
     await expect(items.nth(1)).toContainText("Virtanen");
     await expect(items.nth(1).locator("span").first()).toHaveText("1");
     await expect(items.nth(0).locator("span").first()).toHaveText("2");
+    // The repeat still out of view to the right takes the new order first.
+    const repeat = page
+      .locator(".ticker-track ol")
+      .nth(1)
+      .locator(":scope > li");
+    await expect(repeat.nth(0)).toContainText("Virtanen");
 
     // The loop starts again: the new order takes over.
     await page
