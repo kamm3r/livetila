@@ -51,7 +51,7 @@
         ></span>
       </span>
       <span
-        class="font-semibold text-[11px] text-red-700 tracking-[0.08em] dark:text-red-300"
+        class="font-semibold text-2xs text-red-700 tracking-[0.08em] dark:text-red-300"
         >LIVE</span
       >
     </span>

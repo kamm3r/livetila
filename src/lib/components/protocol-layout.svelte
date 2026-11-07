@@ -24,7 +24,7 @@
 </script>
 
 {#snippet heatLabel(index: number, count: number)}
-  <span class="text-foreground">Erä {index}</span>
+  <span class="font-semibold text-foreground">Erä {index}</span>
   · {count} urheilijaa
 {/snippet}
 
@@ -50,9 +50,9 @@
       {#each heats as heat (heat.index)}
         <tbody>
           {#if showHeatRows}
-            <tr class="h-[34px] border-t bg-primary/5">
+            <tr class="h-[34px] border-t">
               <th
-                class="pl-3 text-left font-normal text-muted-foreground text-xs"
+                class="pl-3 text-left font-normal text-muted-foreground text-ui"
                 colspan={hasRecords ? 6 : 4}
                 scope="colgroup"
               >
@@ -78,17 +78,17 @@
                 </span>
               </td>
               <td
-                class="max-w-56 truncate px-2 pt-0.5 text-[13px] leading-5 text-muted-foreground"
+                class="max-w-56 truncate px-2 pt-0.5 text-ui leading-5 text-muted-foreground"
               >
                 {alloc.Organization?.Name ?? "-"}
               </td>
               {#if hasRecords}
                 <td
-                  class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
+                  class="pt-0.5 pr-5 text-right text-ui leading-5 tabular-nums"
                   >{alloc.PB || "–"}</td
                 >
                 <td
-                  class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
+                  class="pt-0.5 pr-4 text-right text-ui leading-5 text-muted-foreground tabular-nums"
                   >{alloc.SB || "–"}</td
                 >
               {/if}
@@ -102,9 +102,10 @@
   <ul class="data-frame overflow-clip lg:hidden">
     <li
       aria-hidden="true"
-      class="data-head sticky top-0 z-10 flex items-center justify-between border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3"
+      class="data-head sticky top-0 z-10 grid grid-cols-[24px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3"
     >
-      <span>{leadLabel}</span>
+      <span class="whitespace-nowrap">{leadLabel}</span>
+      <span class="col-start-3">Urheilija</span>
       {#if hasRecords}
         <span>PB / SB</span>
       {/if}
@@ -112,7 +113,7 @@
     {#each heats as heat (heat.index)}
       {#if showHeatRows}
         <li
-          class="border-t bg-primary/5 px-3 py-2 text-muted-foreground text-xs first:border-t-0"
+          class="border-t px-3 py-2 text-muted-foreground text-ui first:border-t-0"
         >
           {@render heatLabel(heat.index, heat.allocations.length)}
         </li>
@@ -130,7 +131,7 @@
             <p class="wrap-break-word text-sm leading-5">
               <span class="font-medium">{alloc.Name}</span>
               {#if alloc.Number}<span
-                  class="ml-0.5 text-[11px] text-muted-foreground tabular-nums"
+                  class="ml-0.5 text-2xs text-muted-foreground tabular-nums"
                   >#{alloc.Number}</span
                 >{/if}
             </p>

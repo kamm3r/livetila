@@ -93,8 +93,8 @@
             class={cn(
               "motion-tab-trigger h-full gap-1.5 rounded-none data-active:text-primary -mx-1.5 px-1.5 focus-visible:rounded-md focus-visible:border-transparent focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-primary focus-visible:ring-0",
               lone
-                ? "cursor-default font-semibold text-foreground text-sm data-active:text-foreground"
-                : "text-[13px]",
+                ? "cursor-default font-semibold text-foreground text-base data-active:text-foreground"
+                : "text-sm",
             )}
           >
             {tab.label}

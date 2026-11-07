@@ -177,7 +177,7 @@
 {#snippet rankMark(rank: number | undefined, muted: boolean)}
   <span
     class={cn(
-      "inline-flex size-6 items-center justify-center rounded-full font-semibold text-[13px] tabular-nums",
+      "inline-flex size-6 items-center justify-center rounded-full font-semibold text-ui tabular-nums",
       showMedals && rank && rank <= 3 && medals[rank - 1],
       muted && "text-muted-foreground",
     )}>{rank || "–"}</span
@@ -185,7 +185,7 @@
 {/snippet}
 
 {#snippet gainedPlaces(gained: number)}
-  <span class="font-semibold text-[10px] text-green-700 dark:text-green-400"
+  <span class="font-semibold text-2xs text-green-700 dark:text-green-400"
     ><span aria-hidden="true">▲{gained}</span><span class="sr-only"
       >Noussut {gained} sijaa</span
     ></span
@@ -199,12 +199,13 @@
     <span
       class={cn(
         "text-right font-semibold tabular-nums",
-        large ? "text-base leading-5" : "text-[15px]",
+        "text-base",
+        large && "leading-5",
       )}>{entry.Result ? typeset(entry.Result) : "–"}</span
     >
     <span
       class={cn(
-        "pt-[3px] pl-[3px] text-left font-semibold text-[10px] uppercase leading-none",
+        "pt-[3px] pl-[3px] text-left font-semibold text-2xs uppercase leading-none",
         tag === "PB" && "font-bold text-emerald-700 dark:text-emerald-400",
         tag === "SB" && "font-bold text-sky-700 dark:text-sky-400",
       )}
@@ -243,7 +244,7 @@
     >
       <span>{typeset(height ? attempt.Line2 || "–" : attempt.Line1)}</span>
       {#if !height && attempt.Line2}<span
-          class="font-normal text-[11px] text-muted-foreground"
+          class="font-normal text-2xs text-muted-foreground"
           >{typeset(attempt.Line2)}</span
         >{/if}
     </span>
@@ -348,12 +349,11 @@
             </td>
             <td class="px-1"><AthleteBadge {entry} /></td>
             <td class="px-2">
-              <span class="flex items-center gap-2 whitespace-nowrap">
-                <span class="truncate font-medium" title={entry.Name}
-                  >{entry.Name}</span
-                >
-                {#if entry.Number}<span
-                    class="shrink-0 text-muted-foreground text-xs tabular-nums"
+              <!-- Names wrap rather than truncate; the bib stays with the surname. -->
+              <span class="block py-1.5 leading-5">
+                <span class="font-medium">{entry.Name}</span
+                >{#if entry.Number}&nbsp;<span
+                    class="ml-0.5 whitespace-nowrap text-muted-foreground text-xs tabular-nums"
                     >#{entry.Number}</span
                   >{/if}
                 <span class="text-primary"
@@ -365,7 +365,7 @@
               </span>
             </td>
             <td
-              class="truncate pt-0.5 pr-4 pl-2 text-[13px] leading-5 text-muted-foreground"
+              class="truncate pt-0.5 pr-4 pl-2 text-ui leading-5 text-muted-foreground"
               title={entry.Organization?.Name}
             >
               {entry.Organization?.Name ?? "-"}
@@ -374,7 +374,7 @@
               {#if isOut && i >= 3}
                 <td class="hatch"><span class="sr-only">Karsiutui</span></td>
               {:else}
-                <td class="text-center text-[13px] tabular-nums">
+                <td class="text-center text-ui tabular-nums">
                   {@render attemptMark(
                     entry,
                     i,
@@ -387,7 +387,7 @@
             {/each}
             <td class="text-right">{@render result(entry, false)}</td>
             <td
-              class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
+              class="pt-0.5 pr-4 text-right text-ui leading-5 text-muted-foreground tabular-nums"
             >
               {shownGap(entry, leader)}
             </td>
@@ -466,9 +466,9 @@
         <div><AthleteBadge {entry} /></div>
         <div class="min-w-0">
           <p class="wrap-break-word text-sm leading-5">
-            <span class="font-medium">{entry.Name}</span>
-            {#if entry.Number}<span
-                class="ml-0.5 text-[11px] text-muted-foreground tabular-nums"
+            <span class="font-medium">{entry.Name}</span
+            >{#if entry.Number}&nbsp;<span
+                class="whitespace-nowrap text-2xs text-muted-foreground tabular-nums"
                 >#{entry.Number}</span
               >{/if}
             <span class="ml-0.5 text-primary"
@@ -500,7 +500,7 @@
                   class={cn(
                     sharedLabels
                       ? "sr-only"
-                      : "block text-[10px] text-muted-foreground",
+                      : "block text-2xs text-muted-foreground",
                     !sharedLabels && fitsRow && "md:sr-only",
                   )}>{layout.labels[i]}</span
                 >
@@ -558,7 +558,7 @@
         {#each [...ctx.heats].sort((a, b) => a.Index - b.Index) as heat (heat.Index)}
           <ToggleGroup.Item
             value={String(heat.Index)}
-            class="rounded-md px-3 text-[13px] text-muted-foreground hover:bg-transparent data-[state=on]:bg-card data-[state=on]:text-primary data-[state=on]:shadow-xs"
+            class="rounded-md px-3 text-ui text-muted-foreground hover:bg-transparent data-[state=on]:bg-card data-[state=on]:text-primary data-[state=on]:shadow-xs"
           >
             Erä {heat.Index}
           </ToggleGroup.Item>
@@ -572,10 +572,9 @@
     <!-- Wraps to two lines on narrow screens so long names never truncate. -->
     <div
       role="status"
-      class="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border bg-card px-3.5 py-2.5 text-[13px] shadow-xs"
+      class="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border bg-card px-3.5 py-2.5 text-ui shadow-xs"
     >
-      <span
-        class="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[4.5rem]"
+      <span class="font-medium text-xs text-muted-foreground max-sm:w-[4.5rem]"
         ><span class="sm:hidden">Viimeisin</span><span class="hidden sm:inline"
           >Viimeisin suoritus</span
         ></span
@@ -584,12 +583,12 @@
       <span class="hidden text-muted-foreground sm:inline"
         >{latest.attempt + 1}. suoritus</span
       >
-      <span class="font-semibold text-[15px] tabular-nums max-sm:ml-auto"
+      <span class="font-semibold text-base tabular-nums max-sm:ml-auto"
         >{latest.mark}</span
       >
       {#if latest.gained && latestRank}
         <span
-          class="rounded-full bg-green-100 px-2 py-0.5 font-bold text-[11px] text-green-700 dark:bg-green-400/15 dark:text-green-300"
+          class="rounded-full bg-green-100 px-2 py-0.5 font-bold text-2xs text-green-700 dark:bg-green-400/15 dark:text-green-300"
           >▲ sijalle {latestRank}</span
         >
       {/if}
@@ -598,7 +597,7 @@
           class="flex min-w-0 items-center gap-2.5 sm:gap-1.5 max-sm:basis-full sm:ml-auto sm:border-l sm:pl-3"
         >
           <span
-            class="shrink-0 font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[4.5rem]"
+            class="shrink-0 font-medium text-xs text-muted-foreground max-sm:w-[4.5rem]"
             >Vuorossa</span
           >
           <span class="truncate font-semibold">{next.Name}</span>

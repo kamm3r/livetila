@@ -6,7 +6,7 @@
 
 {#if active && labelled}
   <span
-    class="inline-flex items-center rounded-full bg-primary/12 px-1.5 align-[1px] font-semibold text-[11px] text-primary leading-4"
+    class="inline-flex items-center rounded-full bg-primary/12 px-1.5 align-[1px] font-semibold text-2xs text-primary leading-4"
     data-active-attempt>Vuorossa</span
   >
 {:else if active}

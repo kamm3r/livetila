@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy } from "svelte";
-  import { Cast, ExternalLink, X } from "@lucide/svelte";
+  import { ArrowUpRight, Cast, X } from "@lucide/svelte";
   import { getRoundContext } from "./round-provider.svelte";
   import Embed from "./embed.svelte";
   import OverlayExplainer from "./overlay-explainer.svelte";
@@ -154,12 +154,12 @@
   pick: (value: string) => void,
 )}
   <fieldset class="flex flex-col gap-1.5">
-    <legend class="mb-1.5 font-medium text-[13px]">{legend}</legend>
+    <legend class="mb-1.5 font-medium text-ui">{legend}</legend>
     <div class="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
       {#each options as option (option.value)}
         <label
           class={cn(
-            "flex-1 cursor-pointer whitespace-nowrap rounded-md px-2 py-1 text-center text-muted-foreground text-xs has-focus-visible:outline-2 has-focus-visible:outline-primary",
+            "flex-1 cursor-pointer whitespace-nowrap rounded-md px-2 py-1 text-center font-medium text-muted-foreground text-ui has-focus-visible:outline-2 has-focus-visible:outline-primary",
             selected === option.value && "bg-card text-foreground shadow-xs",
           )}
         >
@@ -204,7 +204,7 @@
           ></span>
           <span class="flex flex-col gap-0.5">
             <span class="font-medium text-sm">{feature.label}</span>
-            <span class="text-muted-foreground text-xs">
+            <span class="text-pretty text-muted-foreground text-ui">
               {feature.description(featureContext)}
             </span>
           </span>
@@ -237,8 +237,8 @@
         disabled={!linkable}
         class="gap-2 aria-disabled:pointer-events-none aria-disabled:opacity-50"
       >
-        <ExternalLink data-icon="inline-start" />
         Avaa grafiikka
+        <ArrowUpRight data-icon="inline-end" />
       </Button>
     </div>
     {#if !linkable}
@@ -252,7 +252,7 @@
 
 {#snippet preview(wide: boolean)}
   <div class="flex flex-col gap-1.5">
-    <p class="text-muted-foreground text-xs">Esimerkki</p>
+    <p class="font-medium text-ui">Esimerkki</p>
     <OverlayExplainer
       {features}
       context={featureContext}
@@ -282,7 +282,8 @@
           class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
           ><X class="size-4" aria-hidden="true" /></DrawerClose
         >
-        <DrawerTitle>Lähetysgrafiikka</DrawerTitle>
+        <DrawerTitle class="font-semibold text-lg">Lähetysgrafiikka</DrawerTitle
+        >
         <DrawerDescription>
           Tulokset lähetykseen OBS:n tai muun ohjelman selainlähteenä.
         </DrawerDescription>
@@ -313,7 +314,9 @@
           class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
           ><X class="size-4" aria-hidden="true" /></PopoverClose
         >
-        <PopoverTitle class="font-semibold">Lähetysgrafiikka</PopoverTitle>
+        <PopoverTitle class="font-semibold text-base"
+          >Lähetysgrafiikka</PopoverTitle
+        >
         <PopoverDescription>
           Tulokset lähetykseen OBS:n tai muun ohjelman selainlähteenä.
         </PopoverDescription>

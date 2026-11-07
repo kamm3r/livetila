@@ -13,7 +13,7 @@
       >
         Livetila
         <span
-          class="rounded-sm bg-primary/12 px-1 py-px font-semibold text-[10px] text-primary tracking-wide"
+          class="rounded-md bg-primary/12 px-1.5 font-semibold text-2xs text-primary tracking-wide"
           >BETA</span
         >
       </a>
@@ -22,7 +22,7 @@
           href="https://sfim-counter.vercel.app/"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex min-h-8 items-center gap-1 rounded-sm text-[13px] text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-4"
+          class="inline-flex min-h-8 items-center gap-1 rounded-sm text-ui text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-4"
         >
           SFIM-pisteet<span class="hidden sm:inline"> ja tulokset</span>
           <ArrowUpRight size={14} aria-hidden="true" />
