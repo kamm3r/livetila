@@ -487,12 +487,20 @@
           <ul
             class={cn(
               "col-span-full row-start-2 mt-1.5 grid text-center text-xs tabular-nums",
-              fitsRow
-                ? "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0 md:self-stretch md:items-center"
-                : "grid-cols-[repeat(auto-fill,44px)]",
+              fitsRow &&
+                "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0 md:self-stretch md:items-center",
+              // On a phone a height keeps one width however many there are:
+              // six to a line, and more continue in the same columns below.
+              layout.vertical
+                ? cn(
+                    "grid-cols-[repeat(auto-fill,3.25rem)]",
+                    fitsRow &&
+                      "md:grid-cols-[repeat(var(--heights),minmax(0,3.25rem))]",
+                  )
+                : !fitsRow && "grid-cols-[repeat(auto-fill,44px)]",
               sharedLabels ? "items-center" : "items-start",
             )}
-            style={attemptGrid}
+            style={layout.vertical ? `--heights: ${columns}` : attemptGrid}
           >
             {#each { length: isOut ? 3 : sharedLabels || !layout.vertical ? columns : layout.labels.findLastIndex( (label) => entry.Attempts?.some((attempt) => attempt.Line1 === label) ) + 1 }, i (i)}
               <li>
