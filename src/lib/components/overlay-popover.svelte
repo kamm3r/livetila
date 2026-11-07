@@ -310,9 +310,10 @@
     <PopoverContent
       align="end"
       alignOffset={10}
-      class="max-h-[calc(var(--bits-popover-content-available-height)-1rem)] w-[44rem] max-w-[calc(100vw-2rem)] overflow-y-auto p-0"
+      class="flex max-h-[calc(var(--bits-popover-content-available-height)-1rem)] w-[44rem] max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden p-0"
     >
-      <PopoverHeader class="relative border-b p-4 pr-12">
+      <!-- The header stays put; only the settings below it scroll. -->
+      <PopoverHeader class="relative shrink-0 border-b p-4 pr-12">
         <PopoverClose
           aria-label="Sulje"
           class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
@@ -326,10 +327,12 @@
         </PopoverDescription>
       </PopoverHeader>
       <!-- Every style stacks the same way, so switching moves nothing. -->
-      <div class="px-4 pt-4">{@render styleControl()}</div>
-      <div class="flex flex-col gap-5 p-4">
+      <div
+        class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+      >
+        {@render styleControl()}
         {@render preview(true)}
-        <div class="flex flex-col gap-5">{@render settings()}</div>
+        <div class="flex flex-col gap-4">{@render settings()}</div>
       </div>
     </PopoverContent>
   </Popover>

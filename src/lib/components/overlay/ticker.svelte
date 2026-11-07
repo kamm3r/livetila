@@ -144,7 +144,7 @@
               {@const q = qualification(entry)}
               <li
                 class={cn(
-                  "flex items-center gap-2 whitespace-nowrap px-3 py-1 transition-colors duration-700",
+                  "flex items-center gap-2 whitespace-nowrap px-5 py-1 transition-colors duration-700",
                   view.changes.get(entry.Id) && "bg-(--accent)/25 duration-0",
                 )}
               >
@@ -168,9 +168,6 @@
                 </span>
                 {#if q}<span class="text-xs">{q}</span>{/if}
               </li>
-              {#if scrolls || index < view.entries.length - 1}
-                <li aria-hidden="true" class="text-white/20">/</li>
-              {/if}
             {/each}
           </ol>
         {/each}

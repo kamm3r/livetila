@@ -151,7 +151,7 @@
                 >
                   <span class="w-12 shrink-0 tabular-nums">{time(start)}</span>
                   <span
-                    class="w-32 shrink-0 truncate text-neutral-400 text-sm uppercase"
+                    class="w-32 shrink-0 truncate font-medium text-neutral-400 text-sm"
                     >{event.Name}</span
                   >
                   <span class="min-w-0 flex-1 truncate uppercase"

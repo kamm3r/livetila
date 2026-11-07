@@ -395,7 +395,7 @@
     </div>
     <div class="flex items-stretch">
       <h2 class="min-w-0 flex-1 truncate bg-(--accent) px-2 py-0.5 text-black">
-        {view.eventName ?? ""}{view.heatLabel ? ` | ${view.heatLabel}` : ""}
+        {view.eventName ?? ""}{view.heatLabel ? ` · ${view.heatLabel}` : ""}
       </h2>
       <span
         class="flex w-20 items-center justify-end px-2 text-xs text-neutral-300"
