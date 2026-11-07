@@ -57,8 +57,8 @@
 
   // A new attempt is revealed as on the list: the callout opens with the mark
   // pending (three dots) while the standings stay as they were; then the mark
-  // appears and the athletes slide to their new places. Running events have
-  // no attempts to hold back.
+  // appears and each athlete's place, mark and gap update where they stand.
+  // Running events have no attempts to hold back.
   const revealDelay = $derived(
     prefersReducedMotion.current || isTimed(view.eventCategory) ? 0 : 1500,
   );
@@ -107,6 +107,37 @@
   const scrolls = $derived(
     !prefersReducedMotion.current && view.entries.length > 4,
   );
+
+  // A scrolling crawl keeps its order for the pass on screen, as broadcast
+  // tickers do: places update where the athletes stand, and the new order
+  // takes over when the loop starts again. Re-sorting mid-pass would jump
+  // the whole visible strip. A ticker that does not scroll re-sorts at once.
+  let order = $state<number[]>(untrack(() => view.entries.map((e) => e.Id)));
+  $effect(() => {
+    const ids = staged.map((entry) => entry.Id);
+    if (!scrolls) {
+      order = ids;
+      return;
+    }
+    untrack(() => {
+      const kept = order.filter((id) => ids.includes(id));
+      const added = ids.filter((id) => !order.includes(id));
+      if (kept.length !== order.length || added.length > 0)
+        order = [...kept, ...added];
+    });
+  });
+  // Only the track's own loop counts; the on-turn dots inside it animate too.
+  const applyOrder = (event: AnimationEvent) => {
+    if (event.target === event.currentTarget)
+      order = staged.map((entry) => entry.Id);
+  };
+  const crawl = $derived.by(() => {
+    const byId = new Map(staged.map((entry, index) => [entry.Id, index]));
+    return order.flatMap((id) => {
+      const index = byId.get(id);
+      return index === undefined ? [] : [{ entry: staged[index]!, index }];
+    });
+  });
 </script>
 
 <div
@@ -191,6 +222,7 @@
       <div
         class={cn("flex h-full w-max items-center", scrolls && "ticker-track")}
         style:--ticker-duration="{seconds}s"
+        onanimationiteration={applyOrder}
       >
         <!-- The list is repeated once so the loop has no visible seam. -->
         {#each scrolls ? [0, 1] : [0] as copy (copy)}
@@ -198,7 +230,7 @@
             class="flex items-center pl-6"
             aria-hidden={copy === 1 || undefined}
           >
-            {#each staged as entry, index (entry.Id)}
+            {#each crawl as { entry, index } (entry.Id)}
               {@const rank = rankOf(entry, index, inHeat)}
               {@const name = shortName(entry)}
               {@const q = qualification(entry)}

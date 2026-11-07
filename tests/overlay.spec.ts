@@ -270,6 +270,52 @@ test.describe("Tikkeri", () => {
     await expect(page.getByText("−0,18")).toHaveCount(0);
   });
 
+  test("a scrolling crawl keeps its order for the pass and re-sorts when the loop restarts", async ({
+    page,
+  }) => {
+    const five = () => [
+      ...field(),
+      jumper(4, "Iida", "Laine", "6,50", ["6,50"]),
+      jumper(5, "Oona", "Salo", "6,40", ["6,40"]),
+    ];
+    const server = await serve(page, five());
+    await page.clock.install();
+    await page.goto("/overlay/1-10?heat=1&style=ticker");
+    const items = page
+      .locator(".ticker-track ol")
+      .first()
+      .locator(":scope > li");
+    await expect(items.nth(0)).toContainText("Korhonen");
+    await expect(items.nth(1)).toContainText("Virtanen");
+
+    server.set(
+      five().map((entry) =>
+        entry.Id !== 2
+          ? entry
+          : {
+              ...entry,
+              Result: "7,20",
+              Attempts: [...entry.Attempts, { Line1: "7,20", Line2: "" }],
+            },
+      ),
+    );
+    await nextRefresh(page);
+    await page.clock.runFor(2_000);
+    // Virtanen leads, but stays where the crawl is showing her this pass.
+    await expect(items.nth(1)).toContainText("Virtanen");
+    await expect(items.nth(1).locator("span").first()).toHaveText("1");
+    await expect(items.nth(0).locator("span").first()).toHaveText("2");
+
+    // The loop starts again: the new order takes over.
+    await page
+      .locator(".ticker-track")
+      .evaluate((track) =>
+        track.dispatchEvent(new AnimationEvent("animationiteration")),
+      );
+    await expect(items.nth(0)).toContainText("Virtanen");
+    await expect(items.nth(1)).toContainText("Korhonen");
+  });
+
   test("holds a new mark back before revealing it, as the list does", async ({
     page,
   }) => {
