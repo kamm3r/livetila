@@ -402,6 +402,9 @@
   <!-- Heights are values to read, not a count, so each card names its own. -->
   {@const fitsRow = columns > 0 && columns <= 8}
   {@const sharedLabels = fitsRow && !layout.vertical}
+  <!-- Heights always keep their own labels and one width, so from tablet width
+       a jumper's row stays on one line and only wraps inside its strip. -->
+  {@const oneLine = columns > 0 && (layout.vertical || fitsRow)}
   <!-- Heights keep a fixed width, so a few never spread across the card. -->
   {@const attemptGrid = fitsRow
     ? `grid-template-columns: repeat(${columns}, minmax(0, ${layout.vertical ? "3.25rem" : "1fr"}))`
@@ -409,12 +412,11 @@
   <!-- From tablet width a row fits on one line: name, attempts, result. -->
   <ul
     class="data-frame overflow-clip xl:hidden"
-    style={`--attempts: ${columns * (layout.vertical ? 52 : 44)}px`}
+    style={`--attempts: ${layout.vertical ? Math.min(columns, 8) * 52 : columns * 44}px`}
   >
-    {#if fitsRow}
+    {#if sharedLabels}
       <li
         aria-hidden="true"
-        class:max-md:hidden={!sharedLabels}
         class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
       >
         <span class="hidden text-left md:col-span-2 md:block">Sija</span>
@@ -445,7 +447,7 @@
         data-changed={change ? "" : undefined}
         class={cn(
           "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
-          fitsRow &&
+          oneLine &&
             "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem] md:items-center",
           // With no attempts a row is two lines, laid out like the start list.
           columns === 0 && "items-center",
@@ -487,20 +489,16 @@
           <ul
             class={cn(
               "col-span-full row-start-2 mt-1.5 grid text-center text-xs tabular-nums",
-              fitsRow &&
+              oneLine &&
                 "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0 md:self-stretch md:items-center",
-              // On a phone a height keeps one width however many there are:
-              // six to a line, and more continue in the same columns below.
+              // A height keeps one width however many there are; more than
+              // fit continue in the same columns below.
               layout.vertical
-                ? cn(
-                    "grid-cols-[repeat(auto-fill,3.25rem)]",
-                    fitsRow &&
-                      "md:grid-cols-[repeat(var(--heights),minmax(0,3.25rem))]",
-                  )
+                ? "grid-cols-[repeat(auto-fill,3.25rem)] md:gap-y-1"
                 : !fitsRow && "grid-cols-[repeat(auto-fill,44px)]",
               sharedLabels ? "items-center" : "items-start",
             )}
-            style={layout.vertical ? `--heights: ${columns}` : attemptGrid}
+            style={layout.vertical ? undefined : attemptGrid}
           >
             {#each { length: isOut ? 3 : sharedLabels || !layout.vertical ? columns : layout.labels.findLastIndex( (label) => entry.Attempts?.some((attempt) => attempt.Line1 === label) ) + 1 }, i (i)}
               <li>
@@ -509,7 +507,6 @@
                     sharedLabels
                       ? "sr-only"
                       : "block text-[10px] text-muted-foreground",
-                    !sharedLabels && fitsRow && "md:sr-only",
                   )}>{layout.labels[i]}</span
                 >
                 {@render attemptMark(
@@ -534,7 +531,7 @@
         <div
           class={cn(
             "col-start-4 row-start-1 flex flex-col items-end self-start leading-tight",
-            fitsRow && "md:col-start-5",
+            oneLine && "md:col-start-5",
           )}
         >
           {@render result(entry, true)}
