@@ -180,7 +180,7 @@
     @apply bg-primary/8 text-primary h-9 border-b text-xs font-medium;
   }
   .toolbar-control {
-    @apply bg-card hover:bg-accent focus-visible:outline-primary inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border text-ui font-medium shadow-xs outline-none select-none focus-visible:outline-2;
+    @apply bg-card hover:bg-accent focus-visible:outline-primary text-ui inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border font-medium shadow-xs outline-none select-none focus-visible:outline-2;
   }
 }
 

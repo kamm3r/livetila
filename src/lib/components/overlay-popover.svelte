@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy } from "svelte";
-  import { Cast, ExternalLink, X } from "@lucide/svelte";
+  import { ArrowUpRight, Cast, X } from "@lucide/svelte";
   import { getRoundContext } from "./round-provider.svelte";
   import Embed from "./embed.svelte";
   import OverlayExplainer from "./overlay-explainer.svelte";
@@ -204,7 +204,7 @@
           ></span>
           <span class="flex flex-col gap-0.5">
             <span class="font-medium text-sm">{feature.label}</span>
-            <span class="text-muted-foreground text-xs">
+            <span class="text-muted-foreground text-ui">
               {feature.description(featureContext)}
             </span>
           </span>
@@ -237,8 +237,8 @@
         disabled={!linkable}
         class="gap-2 aria-disabled:pointer-events-none aria-disabled:opacity-50"
       >
-        <ExternalLink data-icon="inline-start" />
         Avaa grafiikka
+        <ArrowUpRight data-icon="inline-end" />
       </Button>
     </div>
     {#if !linkable}

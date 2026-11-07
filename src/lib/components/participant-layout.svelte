@@ -25,7 +25,7 @@
 {#snippet status(enrollment: Enrollment)}
   {#if enrollment.Confirmed}
     <Check
-      class="size-4 text-emerald-700 dark:text-emerald-400"
+      class="size-4 text-emerald-700 dark:text-emerald-300"
       aria-hidden="true"
     />
     <span class="sr-only">Vahvistettu</span>
@@ -87,8 +87,7 @@
               {enrollment.Organization?.Name ?? "-"}
             </td>
             {#if hasRecords}
-              <td
-                class="pt-0.5 pr-5 text-right text-ui leading-5 tabular-nums"
+              <td class="pt-0.5 pr-5 text-right text-ui leading-5 tabular-nums"
                 >{enrollment.PB || "–"}</td
               >
               <td
@@ -151,7 +150,7 @@
     >
       <li class="flex items-center gap-1">
         <Check
-          class="size-3.5 text-emerald-700 dark:text-emerald-400"
+          class="size-3.5 text-emerald-700 dark:text-emerald-300"
           aria-hidden="true"
         />
         = vahvistanut

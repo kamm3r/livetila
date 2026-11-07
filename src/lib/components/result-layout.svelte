@@ -199,7 +199,8 @@
     <span
       class={cn(
         "text-right font-semibold tabular-nums",
-        "text-base", large && "leading-5",
+        "text-base",
+        large && "leading-5",
       )}>{entry.Result ? typeset(entry.Result) : "–"}</span
     >
     <span
@@ -348,12 +349,11 @@
             </td>
             <td class="px-1"><AthleteBadge {entry} /></td>
             <td class="px-2">
-              <span class="flex items-center gap-2 whitespace-nowrap">
-                <span class="truncate font-medium" title={entry.Name}
-                  >{entry.Name}</span
-                >
+              <!-- Names wrap rather than truncate; the bib stays with the surname. -->
+              <span class="block py-1.5 leading-5">
+                <span class="font-medium">{entry.Name}</span>
                 {#if entry.Number}<span
-                    class="shrink-0 text-muted-foreground text-xs tabular-nums"
+                    class="ml-1 whitespace-nowrap text-muted-foreground text-xs tabular-nums"
                     >#{entry.Number}</span
                   >{/if}
                 <span class="text-primary"
@@ -574,8 +574,7 @@
       role="status"
       class="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border bg-card px-3.5 py-2.5 text-ui shadow-xs"
     >
-      <span
-        class="font-medium text-xs text-muted-foreground max-sm:w-[4.5rem]"
+      <span class="font-medium text-xs text-muted-foreground max-sm:w-[4.5rem]"
         ><span class="sm:hidden">Viimeisin</span><span class="hidden sm:inline"
           >Viimeisin suoritus</span
         ></span

@@ -233,9 +233,7 @@
   {:else if competition}
     <div class="flex flex-col gap-2.5 sm:gap-4">
       <div class="flex flex-col gap-1">
-        <h2
-          class="font-semibold text-2xl tracking-[-0.015em] sm:text-title"
-        >
+        <h2 class="font-semibold text-2xl tracking-[-0.015em] sm:text-title">
           {compDetails?.Competition.Name ?? ""}
         </h2>
         {#if subline}
@@ -277,8 +275,7 @@
               />
             </div>
             {#if eventMeta}
-              <span
-                class="order-6 text-muted-foreground text-ui"
+              <span class="order-6 text-muted-foreground text-ui"
                 >{eventMeta}</span
               >
             {/if}

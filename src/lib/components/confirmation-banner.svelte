@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ExternalLink } from "@lucide/svelte";
+  import { ArrowUpRight } from "@lucide/svelte";
   import { Button } from "$lib/components/ui/button";
   import type { OnlineConfirmation } from "$lib/online-confirmation";
 
@@ -46,7 +46,7 @@
   >
     <span class="max-sm:hidden">Varmista</span>
     <span class="sm:hidden">Varmista osallistuminen</span>
-    <ExternalLink class="size-3.5" aria-hidden="true" />
+    <ArrowUpRight class="size-3.5" aria-hidden="true" />
     <span class="sr-only">(avautuu uuteen välilehteen)</span>
   </Button>
 </div>
