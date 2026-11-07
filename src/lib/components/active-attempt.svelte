@@ -1,8 +1,15 @@
 <script lang="ts">
-  let { active }: { active: boolean } = $props();
+  // Results say it in words; broadcast graphics keep the compact dots.
+  let { active, labelled = false }: { active: boolean; labelled?: boolean } =
+    $props();
 </script>
 
-{#if active}
+{#if active && labelled}
+  <span
+    class="inline-flex items-center rounded-full bg-primary/12 px-1.5 align-[1px] font-semibold text-[11px] text-primary leading-4"
+    data-active-attempt>Vuorossa</span
+  >
+{:else if active}
   <span class="active-attempt" title="Vuorossa" data-active-attempt>
     <span class="sr-only">Vuorossa</span>
     <span class="dot" aria-hidden="true"></span>

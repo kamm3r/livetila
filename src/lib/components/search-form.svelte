@@ -18,6 +18,7 @@
     CommandList,
   } from "$lib/components/ui/command";
   import { cn } from "$lib/utils.js";
+  import { eventStatusDot, eventStatusLabel } from "$lib/event-status";
 
   // A page may own the workflow to drive the search from outside the field.
   let { search = new SearchWorkflow(goto) }: { search?: SearchWorkflow } =
@@ -61,35 +62,41 @@
     void search.selectedComp;
     if (listEl) listEl.scrollTop = 0;
   });
-  // The list fades at the bottom only while there is more to scroll to.
-  let moreBelow = $state(false);
-  function updateMoreBelow() {
+  // Every match is listed. The list ends on a whole row, so no row is ever cut
+  // through, and keeps a thin scrollbar and the count below it while it scrolls.
+  let fittedHeight = $state<number | null>(null);
+  let overflows = $state(false);
+  function fitList() {
     if (!listEl) return;
-    moreBelow =
-      listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight > 1;
+    const top = listEl.getBoundingClientRect().top - listEl.scrollTop;
+    const bottoms = [
+      ...listEl.querySelectorAll('[data-slot="command-item"]'),
+    ].map((row) => row.getBoundingClientRect().bottom - top);
+    const fits = bottoms.filter((bottom) => bottom <= listHeight + 0.5);
+    overflows = listEl.scrollHeight > listHeight + 0.5;
+    fittedHeight = overflows ? (fits.at(-1) ?? bottoms[0] ?? null) : null;
   }
   $effect(() => {
     void search.results.length;
-    void search.visibleCount;
     void search.isLoading;
+    void search.matchingRecent.length;
     void listHeight;
     if (!listEl) return;
-    const frame = requestAnimationFrame(updateMoreBelow);
+    const frame = requestAnimationFrame(fitList);
     return () => cancelAnimationFrame(frame);
   });
-  function handleScroll(event: Event) {
-    updateMoreBelow();
-    const list = event.currentTarget as HTMLElement;
-    if (
-      search.hasMore &&
-      list.scrollTop > 0 &&
-      list.scrollHeight - list.scrollTop - list.clientHeight < 80
-    )
-      search.loadMore();
-  }
+  // The chosen competition stays in the query but shows as a scope beside the
+  // field, so people only edit the part they typed.
+  const scope = $derived(
+    search.selectedComp ? `${search.selectedComp.Name} / ` : "",
+  );
   function handleInput(value: string) {
-    search.input(value);
+    search.input(value.startsWith(scope) ? value : scope + value);
     isOpen = true;
+  }
+  function handleInputKeydown(event: KeyboardEvent) {
+    if (event.key === "Backspace" && scope && search.query === scope)
+      search.input("");
   }
   const { trigger, destroy } = createWebHaptics();
   onDestroy(() => {
@@ -197,8 +204,25 @@
             <Search class="size-[18px]" />
           </span>
 
+          {#if search.selectedComp}
+            <button
+              type="button"
+              class="max-w-[45%] shrink-0 truncate rounded-sm font-medium text-base text-foreground hover:text-muted-foreground focus-visible:outline-2 focus-visible:outline-primary"
+              aria-label={`Vaihda kilpailu: ${search.selectedComp.Name}`}
+              onmousedown={(event) => event.preventDefault()}
+              onclick={() => {
+                search.input("");
+                inputEl?.focus();
+              }}>{search.selectedComp.Name}</button
+            >
+            <span
+              class="-mx-1 shrink-0 text-muted-foreground"
+              aria-hidden="true">/</span
+            >
+          {/if}
           <CommandPrimitive.Input
             bind:ref={inputEl}
+            onkeydown={handleInputKeydown}
             onclick={handleFocus}
             class="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none sm:text-base"
             aria-label="Hae kilpailuja tai lajeja"
@@ -206,7 +230,7 @@
               ? "Hae lajeja..."
               : "Hae kilpailuja nimellä..."}
             type="text"
-            bind:value={() => search.query, handleInput}
+            bind:value={() => search.query.slice(scope.length), handleInput}
           />
 
           {#if search.isLoading}
@@ -227,12 +251,10 @@
             <div class="p-2">
               <CommandList
                 bind:ref={listEl}
-                onscroll={handleScroll}
                 class={cn(
-                  "overflow-y-auto overscroll-contain",
-                  moreBelow && "fade-below",
+                  "scroll-visible snap-y overflow-y-auto overscroll-contain **:data-[slot=command-item]:snap-start",
                 )}
-                style={`max-height: ${listHeight}px`}
+                style={`max-height: ${fittedHeight ?? listHeight}px`}
               >
                 {#if search.matchingRecent.length}
                   {#each search.matchingRecent as item (item.id)}
@@ -248,10 +270,20 @@
                         <Clock
                           class="recent-icon size-4 shrink-0 text-muted-foreground"
                         />
-                        <span
-                          class="min-w-0 break-words font-medium text-foreground text-sm"
-                          >{item.label}</span
-                        >
+                        {@const parts = item.label.split(" / ")}
+                        <span class="flex min-w-0 flex-col gap-0.5">
+                          <span class="break-words text-sm"
+                            ><span class="font-medium text-foreground"
+                              >{parts.at(-2)}</span
+                            >
+                            <span class="text-muted-foreground"
+                              >{parts.at(-1)}</span
+                            ></span
+                          >
+                          <span class="truncate text-muted-foreground text-xs"
+                            >{parts.slice(0, -2).join(" / ")}</span
+                          >
+                        </span>
                       </CommandItem>
                       <button
                         type="button"
@@ -263,6 +295,9 @@
                       >
                     </div>
                   {/each}
+                  {#if search.hasResults && !search.isLoading}
+                    <div class="mx-2.5 my-1.5 h-px bg-border"></div>
+                  {/if}
                 {/if}
                 {#if search.isLoading}
                   <div class="flex flex-col items-center gap-3 py-8">
@@ -287,21 +322,16 @@
                   </div>
                 {:else if !search.hasResults}
                   <div>
-                    <CommandEmpty
-                      class="flex flex-col items-center gap-2 py-8 text-center"
-                    >
-                      <div class="rounded-full bg-muted p-3">
-                        <Search class="size-5 text-muted-foreground" />
-                      </div>
+                    <CommandEmpty class="py-8 text-center">
                       <p class="text-muted-foreground text-sm">
                         {search.step === "events"
-                          ? "Ei lajeja löytynyt"
-                          : "Ei kilpailuja löytynyt"}
+                          ? "Lajeja ei löytynyt"
+                          : "Kilpailuja ei löytynyt"}
                       </p>
                     </CommandEmpty>
                   </div>
                 {:else if search.step === "competitions" && search.hasResults}
-                  {#each search.filteredCompetitions.slice(0, search.visibleCount) as comp (comp.Id)}
+                  {#each search.filteredCompetitions as comp (comp.Id)}
                     <div>
                       <CommandItem
                         class="group cursor-pointer rounded-lg px-2.5 py-2 data-selected:bg-primary/10 active:bg-primary/15 [&>.cn-command-item-indicator]:hidden"
@@ -331,7 +361,7 @@
                             </span>
                           </div>
                           <ChevronRight
-                            class="size-4 shrink-0 text-primary opacity-0 group-data-selected:opacity-100"
+                            class="size-4 shrink-0 text-primary row-chevron opacity-0 group-data-selected:opacity-100"
                           />
                         </div>
                       </CommandItem>
@@ -339,7 +369,7 @@
                   {/each}
                 {:else if search.step === "events" && search.hasResults}
                   <CommandGroup class="p-0">
-                    {#each search.filteredEvents.slice(0, search.visibleCount) as evt (evt.Id)}
+                    {#each search.filteredEvents as evt (evt.Id)}
                       {@const isNavigating = search.navigatingTo === evt.Id}
                       {@const isDisabled =
                         search.navigatingTo !== null && !isNavigating}
@@ -356,36 +386,47 @@
                           value={`${evt.EventName}-${evt.Id}`}
                         >
                           <div
-                            class="grid w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center gap-2"
+                            class="grid w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-baseline gap-2"
                           >
                             <span
                               class="text-[13px] text-muted-foreground tabular-nums"
                               >{evt.Time}</span
                             >
-                            <div class="flex min-w-0 flex-col gap-0.5">
-                              <span
-                                class="truncate font-medium text-foreground text-sm"
+                            <span class="truncate text-sm"
+                              ><span class="font-medium text-foreground"
                                 >{evt.EventName}</span
                               >
-                              <span
-                                class="truncate text-muted-foreground text-xs"
-                              >
-                                {isNavigating ? "Siirrytään..." : evt.Name}
-                              </span>
-                            </div>
+                              <span class="text-muted-foreground"
+                                >{isNavigating
+                                  ? "Siirrytään..."
+                                  : evt.Name}</span
+                              ></span
+                            >
                             <div
-                              class="flex items-center gap-2 text-muted-foreground text-xs tabular-nums"
+                              class="flex items-center gap-2 self-center text-muted-foreground text-xs tabular-nums"
                             >
                               {#if multipleEventDates}<span
                                   class="max-sm:hidden">{evt.Date}</span
                                 >{/if}
+                              <span
+                                class="flex items-center gap-1.5 whitespace-nowrap sm:w-[8.25rem]"
+                                ><span
+                                  class={cn(
+                                    "size-1.5 rounded-full",
+                                    eventStatusDot[evt.Status] ??
+                                      "bg-muted-foreground/40",
+                                  )}
+                                  aria-hidden="true"
+                                ></span>{eventStatusLabel[evt.Status] ??
+                                  evt.Status}</span
+                              >
                               {#if isNavigating}
                                 <LoaderCircle
                                   class="size-4 animate-spin text-primary"
                                 />
                               {:else}
                                 <ChevronRight
-                                  class="size-4 text-primary opacity-0 group-data-selected:opacity-100"
+                                  class="size-4 text-primary row-chevron opacity-0 group-data-selected:opacity-100"
                                 />
                               {/if}
                             </div>
@@ -396,27 +437,14 @@
                   </CommandGroup>
                 {/if}
               </CommandList>
-              {#if !search.isLoading && !search.loadError && search.hasMore}
+              {#if !search.isLoading && !search.loadError && overflows}
                 <div
-                  class="-mx-2 -mb-2 flex items-center justify-between gap-3 border-t px-[1.125rem] py-2 text-xs text-muted-foreground"
+                  class="-mx-2 -mb-2 flex items-center border-t px-[1.125rem] py-2 text-xs text-muted-foreground"
                 >
                   <span aria-live="polite"
-                    >Näytetään {Math.min(
-                      search.visibleCount,
-                      search.results.length,
-                    )} / {search.results.length}</span
+                    >{search.results.length}
+                    {search.step === "events" ? "lajia" : "kilpailua"}</span
                   >
-                  <button
-                    type="button"
-                    class="rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                    onkeydown={(event) => event.stopPropagation()}
-                    onclick={() => {
-                      search.loadMore();
-                      if (!search.hasMore) inputEl?.focus();
-                    }}
-                  >
-                    Näytä lisää
-                  </button>
                 </div>
               {/if}
             </div>
@@ -428,7 +456,9 @@
 </div>
 
 <style>
-  .recent-row:has(:global([data-selected])),
+  :global(html[data-input="keyboard"])
+    .recent-row:has(:global([data-selected])),
+  .recent-row:hover,
   .recent-row:focus-within {
     background: color-mix(in oklch, var(--primary) 10%, transparent);
   }

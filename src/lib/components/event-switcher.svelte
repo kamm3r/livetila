@@ -5,6 +5,7 @@
   import { onDestroy } from "svelte";
   import { goto } from "$app/navigation";
   import { cn } from "$lib/utils";
+  import { eventStatusDot, eventStatusLabel } from "$lib/event-status";
   import type { EventWithDate } from "$lib/events";
 
   import {
@@ -26,20 +27,6 @@
     // A round control beside the trigger already names the round.
     roundShownElsewhere?: boolean;
   } = $props();
-
-  const statusDots: Record<string, string> = {
-    Unallocated: "bg-muted-foreground/40",
-    Allocated: "bg-sky-500",
-    Progress: "bg-red-500",
-    Official: "bg-emerald-500",
-  };
-
-  const eventStatusLabel: Record<string, string> = {
-    Unallocated: "Eräjaot puuttuvat",
-    Allocated: "Eräjaot tehty",
-    Progress: "LIVE",
-    Official: "Tulokset valmiit",
-  };
 
   const timeFormatter = new Intl.DateTimeFormat("fi-FI", {
     hour: "2-digit",
@@ -72,17 +59,37 @@
 
   let open = $state(false);
 
-  // The list fades at the bottom only while there is more to scroll to.
+  // Opens on the current event and ends on a whole row. The count below says
+  // there are more rows than fit.
+  // Phones give the list the rest of the screen below the trigger, measured
+  // once the popover has its place; elsewhere it stays compact.
+  let maxListHeight = $state(400);
   let listEl = $state<HTMLElement | null>(null);
-  let moreBelow = $state(false);
-  function updateMoreBelow() {
-    if (!listEl) return;
-    moreBelow =
-      listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight > 1;
-  }
+  let fittedHeight = $state<number | null>(null);
   $effect(() => {
     if (!listEl) return;
-    const frame = requestAnimationFrame(updateMoreBelow);
+    const list = listEl;
+    const frame = requestAnimationFrame(() => {
+      if (window.matchMedia("(max-width: 639px)").matches) {
+        const top = list.getBoundingClientRect().top;
+        maxListHeight = Math.max(240, window.innerHeight - top - 64);
+      }
+      const rows = [...list.children] as HTMLElement[];
+      const fits = rows.filter(
+        (row) => row.offsetTop + row.offsetHeight <= maxListHeight,
+      );
+      const last = fits.at(-1);
+      fittedHeight =
+        fits.length < rows.length && last
+          ? last.offsetTop + last.offsetHeight
+          : null;
+      const current = list.querySelector<HTMLElement>("[aria-current]");
+      if (
+        current &&
+        current.offsetTop + current.offsetHeight > list.clientHeight
+      )
+        list.scrollTop = current.offsetTop - 6;
+    });
     return () => cancelAnimationFrame(frame);
   });
 
@@ -118,11 +125,17 @@
       aria-hidden="true"
     />
   </Popover.Trigger>
+  {#if open}
+    <div
+      class="fixed inset-0 z-40 bg-black/10 backdrop-blur-xs sm:hidden"
+      aria-hidden="true"
+    ></div>
+  {/if}
   <Popover.Content class="w-[min(420px,calc(100vw-2rem))] p-0" align="start">
     <div
       bind:this={listEl}
-      onscroll={updateMoreBelow}
-      class={cn("max-h-96 overflow-auto p-1.5", moreBelow && "fade-below")}
+      class="scroll-visible relative snap-y overflow-auto p-1.5 scroll-pt-1.5"
+      style={`max-height: ${fittedHeight ?? maxListHeight}px`}
     >
       {#each sortedEvents as event, i (`${event.Id}-${event.BeginDateTimeWithTZ}`)}
         {@const selected =
@@ -131,8 +144,8 @@
         <button
           aria-current={selected ? "true" : undefined}
           class={cn(
-            "grid w-full cursor-pointer grid-cols-[3rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary sm:grid-cols-[3rem_minmax(0,1fr)_8.25rem] sm:items-center",
-            selected && "bg-accent",
+            "grid w-full cursor-pointer snap-start grid-cols-[3rem_minmax(0,1fr)] gap-x-2 gap-y-0.5 rounded-md px-2 py-2 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-primary items-baseline sm:grid-cols-[3rem_minmax(0,1fr)_8.25rem]",
+            selected && "bg-primary/10",
           )}
           onclick={() => handleSelect(i.toString())}
         >
@@ -146,12 +159,12 @@
             <span class="text-muted-foreground">{event.Name}</span></span
           >
           <span
-            class="flex items-center gap-1.5 whitespace-nowrap text-muted-foreground text-xs max-sm:col-start-2"
+            class="flex items-baseline gap-1.5 whitespace-nowrap text-muted-foreground text-xs max-sm:col-start-2"
           >
             <span
               class={cn(
-                "size-1.5 rounded-full",
-                statusDots[event.Status] ?? "bg-muted-foreground/40",
+                "size-1.5 self-center rounded-full",
+                eventStatusDot[event.Status] ?? "bg-muted-foreground/40",
               )}
               aria-hidden="true"
             ></span>
@@ -160,5 +173,10 @@
         </button>
       {/each}
     </div>
+    {#if fittedHeight !== null}
+      <p class="border-t px-3.5 py-2 text-muted-foreground text-xs">
+        {sortedEvents.length} lajia
+      </p>
+    {/if}
   </Popover.Content>
 </Popover.Root>

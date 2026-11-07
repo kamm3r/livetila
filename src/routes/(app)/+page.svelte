@@ -10,7 +10,7 @@
   const search = new SearchWorkflow(goto);
   let form = $state<SearchForm>();
 
-  const recent = $derived(search.recentSearches.slice(0, 4));
+  const recent = $derived(search.recentSearches.slice(0, 2));
   const newest = $derived(
     [...search.competitions]
       .sort((a, b) => b.Date.localeCompare(a.Date))
@@ -27,10 +27,11 @@
     form?.focus();
   }
 
-  // "Kilpailu / M Moukari / Alkuerät" → "M Moukari, Alkuerät"
-  const shortLabel = (label: string) =>
-    label.split(" / ").slice(1).join(", ") || label;
-  const competitionLabel = (label: string) => label.split(" / ")[0];
+  // "Kilpailu / M Moukari / Alkuerät" → "M Moukari" and "Alkuerät"
+  const eventLabel = (label: string) => label.split(" / ").at(-2) ?? label;
+  const roundLabel = (label: string) => label.split(" / ").at(-1);
+  const competitionLabel = (label: string) =>
+    label.split(" / ").slice(0, -2).join(" / ");
 
   const competitionMeta = (comp: CompetitionList) =>
     [new Date(comp.Date).toLocaleDateString("fi-FI"), comp.Stadion?.Name]
@@ -51,7 +52,8 @@
     <section class="home-search" aria-labelledby="home-title">
       <h1 id="home-title">Kilpailun jokainen <span>hetki.</span></h1>
       <p class="introduction">
-        Yleisurheilun tulokset. Kentän laidalta kotikatsomoon.
+        <span class="inline-block">Yleisurheilun tulokset.</span>
+        <span class="inline-block">Kentän laidalta kotikatsomoon.</span>
       </p>
       <div class="search-field"><SearchForm bind:this={form} {search} /></div>
       <div class="below-search">
@@ -69,7 +71,11 @@
                 <li>
                   <a href={item.url} title={item.label}>
                     <span class="row-text">
-                      <span class="row-title">{shortLabel(item.label)}</span>
+                      <span class="row-title"
+                        >{eventLabel(item.label)}
+                        <span class="row-round">{roundLabel(item.label)}</span
+                        ></span
+                      >
                       <span class="row-meta"
                         >{competitionLabel(item.label)}</span
                       >
@@ -80,9 +86,10 @@
               {/each}
             </ul>
           </section>
-        {:else if newest.length > 0}
-          <section class="quick" aria-labelledby="quick-title">
-            <h2 id="quick-title">Uusimmat kilpailut</h2>
+        {/if}
+        {#if !search.selectedComp && newest.length > 0}
+          <section class="quick" aria-labelledby="newest-title">
+            <h2 id="newest-title">Uusimmat kilpailut</h2>
             <ul class="data-frame">
               {#each newest as comp (comp.Id)}
                 <li>
@@ -113,7 +120,7 @@
     position: relative;
     isolation: isolate;
     flex: 1;
-    padding: clamp(2.5rem, 9vh, 5.5rem) 1rem 3rem;
+    padding: clamp(2rem, 6vh, 4.5rem) 1rem 2.5rem;
   }
   .search-field {
     margin-top: 1.75rem;
@@ -186,6 +193,9 @@
   .quick {
     margin-top: 2rem;
   }
+  .quick + .quick {
+    margin-top: 1.5rem;
+  }
   .quick h2 {
     margin: 0 0 0.625rem;
     font-size: 0.8125rem;
@@ -228,6 +238,10 @@
   .row-title {
     font-size: 0.875rem;
     font-weight: 500;
+  }
+  .row-round {
+    font-weight: 400;
+    color: var(--muted-foreground);
   }
   .row-meta {
     font-size: 0.75rem;

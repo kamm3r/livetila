@@ -214,11 +214,11 @@ test("theme toggles without reacting to typing in search", async ({ page }) => {
   await page.goto("/");
   const input = page.getByRole("combobox");
   await expect(input).toBeVisible();
-  await page.getByRole("button", { name: "Toggle theme" }).click();
+  await page.getByRole("button", { name: "Vaihda teema" }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
   await input.fill("d");
   await expect(page.locator("html")).toHaveClass(/dark/);
-  await page.getByRole("button", { name: "Toggle theme" }).click();
+  await page.getByRole("button", { name: "Vaihda teema" }).click();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
 });
 
@@ -235,7 +235,7 @@ test("tab indicator follows pointer selection but keyboard navigation stays imme
     .poll(async () => {
       const tab = await results.boundingBox();
       const highlight = await indicator.boundingBox();
-      return Math.abs(tab!.x - highlight!.x);
+      return Math.abs(tab!.x + 6 - highlight!.x);
     })
     .toBeLessThan(2);
   // Panel content is available immediately, without outgoing/incoming panel animations.
@@ -257,7 +257,7 @@ test("tab indicator follows pointer selection but keyboard navigation stays imme
         .getByRole("tab", { name: "Ilmoittautuneet" })
         .boundingBox();
       const highlight = await indicator.boundingBox();
-      return Math.abs(tab!.x - highlight!.x);
+      return Math.abs(tab!.x + 6 - highlight!.x);
     })
     .toBeLessThan(2);
 });
@@ -316,7 +316,7 @@ test("search options appear together with no stagger or focus zoom", async ({
   );
 });
 
-test("search reveals more competitions on scroll and resets after filtering", async ({
+test("search lists every competition and resets scroll after filtering", async ({
   page,
 }) => {
   await page.route("**/api/v1/competition", (route) =>
@@ -331,31 +331,25 @@ test("search reveals more competitions on scroll and resets after filtering", as
   await page.goto("/");
   const input = page.getByRole("combobox");
   await input.click();
-  await expect(page.getByRole("option")).toHaveCount(10);
+  await expect(page.getByRole("option")).toHaveCount(26);
+  await expect(page.getByText("26 kilpailua", { exact: true })).toBeVisible();
+  // Scrolling moves through the list; it never changes what is in it.
   await page.getByRole("listbox").evaluate((el) => {
     el.scrollTop = el.scrollHeight;
   });
-  await expect(page.getByRole("option")).toHaveCount(20);
-  // The explicit control also works with keyboard focus without closing the panel.
-  await page.getByRole("button", { name: "Näytä lisää" }).focus();
-  await page.keyboard.press("Enter");
   await expect(page.getByRole("option")).toHaveCount(26);
-  await expect(page.getByRole("button", { name: "Näytä lisää" })).toHaveCount(
-    0,
-  );
+  await expect(page.getByText("26 kilpailua", { exact: true })).toBeVisible();
   await input.fill("Games 26");
   await expect(page.getByRole("option")).toHaveCount(1);
   await expect(page.getByRole("option")).toContainText("Games 26");
   await input.fill("Games");
-  await expect(page.getByRole("option")).toHaveCount(10);
+  await expect(page.getByRole("option")).toHaveCount(26);
   await expect
     .poll(() => page.getByRole("listbox").evaluate((el) => el.scrollTop))
     .toBe(0);
 });
 
-test("event search can reach events beyond the first batch", async ({
-  page,
-}) => {
+test("event search lists every event", async ({ page }) => {
   await page.route("**/api/v1/competition/1", (route) =>
     route.fulfill({
       json: {
@@ -371,10 +365,6 @@ test("event search can reach events beyond the first batch", async ({
   await page.goto("/");
   await page.getByRole("combobox").fill("Test Games");
   await page.getByRole("option", { name: /Test Games/ }).click();
-  await expect(page.getByRole("option")).toHaveCount(15);
-  await page.getByRole("button", { name: "Näytä lisää" }).click();
-  await expect(page.getByRole("option")).toHaveCount(30);
-  await page.getByRole("button", { name: "Näytä lisää" }).click();
   await expect(page.getByRole("option")).toHaveCount(32);
   await page.getByRole("option", { name: /Event 32/ }).click();
   await expect(page).toHaveURL(/competition\/1-131\?round=Qualify/);
@@ -430,8 +420,9 @@ test("recent searches persist, stay capped at four, and can be removed with keyb
     page.getByRole("button", { name: /Poista viimeisimmistä/ }),
   ).toHaveCount(4);
   await expect(page.getByRole("option").first()).toContainText(
-    "Test Games / 100 m / Alkuerät",
+    "100 m Alkuerät",
   );
+  await expect(page.getByRole("option").first()).toContainText("Test Games");
   const remove = page.getByRole("button", {
     name: /Poista viimeisimmistä.*Test Games/,
   });
@@ -646,8 +637,10 @@ test("search remains usable with unavailable history storage and competition nam
   await page.getByRole("option", { name: /Test \/ Games/ }).click();
   await input.fill("Test / Games / 100");
   await expect(page.getByRole("option")).toHaveCount(2);
-  await input.fill("Test / Games");
+  await input.fill("");
+  await input.press("Backspace");
   await expect(input).toHaveValue("");
+  await expect(input).toHaveAttribute("placeholder", /kilpailuja/);
   await page.getByRole("option", { name: /Test \/ Games/ }).click();
   await page.getByRole("option", { name: /Alkuerät/ }).click();
   await expect(page).toHaveURL(/competition\/1-10\?round=Qualify/);
@@ -740,9 +733,7 @@ for (const heatCount of [0, 1]) {
     await expect(
       page.getByRole("cell", { name: "10,20", exact: true }),
     ).toBeVisible();
-    await expect(
-      page.getByText("Tuloksia ei ole saatavilla vielä..."),
-    ).toHaveCount(0);
+    await expect(page.getByText("Tuloksia ei ole vielä.")).toHaveCount(0);
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(page.getByText("10,20", { exact: true }).last()).toBeVisible();
   });
@@ -1034,12 +1025,12 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
   const first = table.locator("tbody tr").first();
   const second = table.locator("tbody tr").nth(1);
   await expect(first.locator("td").nth(-2)).toHaveText("7,40");
-  await expect(first.locator("td").last()).toHaveText("—");
+  await expect(first.locator("td").last()).toHaveText("");
   await expect(second.locator("td").last()).toHaveText("−0,20");
   await expect(first).not.toHaveAttribute("data-changed");
   // Round 2 is complete, so the first athlete in order starts round 3.
   await expect(latest).toContainText("Second Jumper");
-  await expect(latest).toContainText("Seuraavana");
+  await expect(latest).toContainText("Vuorossa");
   await expect(latest).toContainText("First Jumper");
 
   athletes = [
@@ -1048,7 +1039,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
   ];
   await page.clock.runFor(30_000);
   await expect(latest).toContainText(/Viimeisin.*First Jumper.*x/);
-  await expect(latest).toContainText(/Seuraavana.*Second Jumper/);
+  await expect(latest).toContainText(/Vuorossa.*Second Jumper/);
 
   athletes = [
     jumper(2, "Second Jumper", ["7,20", "x", "7,55"], "7,55", 1),
@@ -1063,7 +1054,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
   await expect(second.locator("td").last()).toHaveText("−0,15");
   await expect(latest).toContainText("▲ sijalle 1");
   // After the third round the order may change, so no next athlete is shown.
-  await expect(latest).not.toContainText("Seuraavana");
+  await expect(latest).not.toContainText("Vuorossa");
   await page.clock.runFor(5000);
   await expect(first).not.toHaveAttribute("data-changed");
 });
@@ -1112,7 +1103,7 @@ test("latest attempt bar is hidden when the event is not live", async ({
   const panel = page.getByRole("tabpanel", { name: "Tulokset" });
   await expect(panel.getByRole("table")).toContainText("Jumper 1");
   await expect(panel.getByText("Viimeisin suoritus")).toHaveCount(0);
-  await expect(panel.getByText("Seuraavana")).toHaveCount(0);
+  await expect(panel.getByRole("status").getByText("Vuorossa")).toHaveCount(0);
 });
 
 test("track results show gaps for hand and long times without attempt columns", async ({
@@ -1159,7 +1150,7 @@ test("track results show gaps for hand and long times without attempt columns", 
     "Ero",
   ]);
   const gaps = table.locator("tbody tr td:last-child");
-  await expect(gaps).toHaveText(["—", "+15,22", "+1.01,41"]);
+  await expect(gaps).toHaveText(["", "+15,22", "+1.01,41"]);
   await expect(page.getByText("h = käsiajanotto")).toBeVisible();
 });
 
@@ -1245,7 +1236,7 @@ test("cross-country results are timed and show gaps to the leader", async ({
     /Winner/,
     /Second/,
   ]);
-  await expect(rows.locator("td:last-child")).toHaveText(["—", "+9,20"]);
+  await expect(rows.locator("td:last-child")).toHaveText(["", "+9,20"]);
 });
 
 test("vertical results align attempts by height without six-slot padding or gap centimetre marks", async ({
@@ -1279,20 +1270,17 @@ test("vertical results align attempts by height without six-slot padding or gap 
     }),
   );
   await page.goto("/competition/1-10?round=Final");
-  const table = page
-    .getByRole("tabpanel", { name: "Tulokset" })
-    .getByRole("table");
-  await expect(table.getByRole("columnheader")).toHaveText([
-    "Sija",
-    "Seuran logo",
-    "Urheilija",
-    "Seura",
-    "130",
-    "135",
-    "Tulos",
-    "Ero",
-  ]);
-  await expect(table.locator("tbody tr td:last-child")).toHaveText(["—", "−5"]);
+  const panel = page.getByRole("tabpanel", { name: "Tulokset" });
+  // A column per height would run off the page, so every width labels marks.
+  await expect(panel.getByRole("table")).toBeHidden();
+  const rows = panel.locator("ul.data-frame > li");
+  await expect(rows).toHaveCount(2);
+  // Each strip lists only the heights that athlete took part in: "Higher"
+  // entered at 135, so the 130 others jumped is not an empty label there.
+  await expect(rows.nth(0).locator("ul > li")).toHaveText([/^135\s*o/]);
+  await expect(rows.nth(1).locator("ul > li")).toHaveText([/^130\s*o/]);
+  await expect(rows.nth(1)).toContainText("−5");
+  await expect(rows.nth(1)).not.toContainText("−0,05");
 });
 
 test("protocol lists every heat in one table with heat rows", async ({
@@ -1473,12 +1461,16 @@ for (const variant of [
       await expect(indicator).toHaveCount(1);
     }
 
-    expect(
-      await indicator
-        .locator(".dot")
-        .first()
-        .evaluate((el) => getComputedStyle(el).animationName),
-    ).toBe("none");
+    // Results name the athlete in words; graphics keep the dots, which stay
+    // still under reduced motion.
+    if (competition) await expect(indicator).toHaveText("Vuorossa");
+    else
+      expect(
+        await indicator
+          .locator(".dot")
+          .first()
+          .evaluate((el) => getComputedStyle(el).animationName),
+      ).toBe("none");
     active = 102;
     await page.clock.runFor(30_000);
     await expect(row("Fast Runner")).toHaveCount(1);
@@ -1563,4 +1555,67 @@ test("the switcher leaves the round to the round control beside it", async ({
   await expect(
     page.getByRole("button", { name: "Loppukilpailu", exact: true }),
   ).toBeVisible();
+});
+
+test("the chosen competition can be cleared by tapping it or with Backspace", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const input = page.getByRole("combobox");
+  await input.click();
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await expect(input).toHaveAttribute("placeholder", /lajeja/);
+  await page
+    .getByRole("button", { name: "Vaihda kilpailu: Test Games" })
+    .click();
+  await expect(input).toHaveAttribute("placeholder", /kilpailuja/);
+  await expect(input).toBeFocused();
+
+  await page.getByRole("option", { name: /Test Games/ }).click();
+  await expect(input).toHaveAttribute("placeholder", /lajeja/);
+  await input.press("Backspace");
+  await expect(input).toHaveAttribute("placeholder", /kilpailuja/);
+});
+
+test("the search list ends on a whole row and keeps its footer while scrolling", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1510, height: 966 });
+  await page.route("**/api/v1/competition", (route) =>
+    route.fulfill({
+      json: Array.from({ length: 12 }, (_, i) => ({
+        Id: i + 1,
+        Name: `Games ${i + 1}`,
+        Date: "2026-09-09",
+        Stadion: { Name: "Stadion" },
+      })),
+    }),
+  );
+  await page.goto("/");
+  await page.getByRole("combobox").click();
+  const list = page.getByRole("listbox");
+  const cutRows = () =>
+    list.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      return [...el.querySelectorAll('[role="option"]')].filter((row) => {
+        const { top, bottom } = row.getBoundingClientRect();
+        return top < box.bottom - 0.5 && bottom > box.bottom + 0.5;
+      }).length;
+    });
+  await expect(page.getByRole("option")).toHaveCount(12);
+  await expect.poll(cutRows).toBe(0);
+  const footer = page.getByText("12 kilpailua", { exact: true });
+  await expect(footer).toBeVisible();
+  const panelHeight = async () => (await list.boundingBox())!.height;
+  const before = await panelHeight();
+  await list.evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+  });
+  await expect
+    .poll(() => list.evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(0);
+  await expect(page.getByRole("option")).toHaveCount(12);
+  await expect(footer).toBeVisible();
+  await expect.poll(cutRows).toBe(0);
+  expect(await panelHeight()).toBe(before);
 });

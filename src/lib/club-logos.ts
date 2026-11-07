@@ -21,6 +21,9 @@ const byAbbreviation = new Map(
 // Confirmed Tuloslista aliases which also differ after normalization.
 byAbbreviation.set(normalize("IFÅsar"), "IFÅsarna");
 byAbbreviation.set(normalize("KUNPIR"), "KuntoP");
+// Kaarinan Uran yleisurheilujaosto became Kaarinan Yleisurheilu in autumn
+// 2026; until Tilastopaja has its own file, it keeps the Kaarinan Ura logo.
+byAbbreviation.set(normalize("KaarYU"), "KaarUra");
 
 export function clubLogoFilename(
   organization?: Partial<Organization> | null,

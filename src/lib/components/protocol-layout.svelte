@@ -13,6 +13,12 @@
   const ctx = getRoundContext();
   // Every heat in one table; a heat row only separates them when there are several.
   const heats = $derived(protocolOrder(ctx.heats));
+  // Without a single PB or SB the columns would only repeat dashes.
+  const hasRecords = $derived(
+    heats
+      .flatMap((heat) => heat.allocations)
+      .some((entry) => entry.PB || entry.SB),
+  );
   const showHeatRows = $derived(heats.length > 1);
   const leadLabel = $derived(isTrack ? "Rata" : "Järj.");
 </script>
@@ -27,7 +33,7 @@
     <table class="w-full min-w-[42rem] table-fixed text-sm">
       <thead>
         <tr class="data-head">
-          <th class="w-16 pl-4 text-left font-medium" scope="col"
+          <th class="w-16 pl-3 text-left font-medium" scope="col"
             >{leadLabel}</th
           >
           <th class="w-11" scope="col"
@@ -35,17 +41,19 @@
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
           <th class="px-2 text-left font-medium" scope="col">Seura</th>
-          <th class="w-20 px-2 text-right font-medium" scope="col">PB</th>
-          <th class="w-24 pr-4 text-right font-medium" scope="col">SB</th>
+          {#if hasRecords}
+            <th class="w-24 pr-5 text-right font-medium" scope="col">PB</th>
+            <th class="w-20 pr-4 text-right font-medium" scope="col">SB</th>
+          {/if}
         </tr>
       </thead>
       {#each heats as heat (heat.index)}
         <tbody>
           {#if showHeatRows}
-            <tr class="h-[34px] border-t bg-muted/45">
+            <tr class="h-[34px] border-t bg-primary/5">
               <th
-                class="pl-4 text-left font-normal text-muted-foreground text-xs"
-                colspan="6"
+                class="pl-3 text-left font-normal text-muted-foreground text-xs"
+                colspan={hasRecords ? 6 : 4}
                 scope="colgroup"
               >
                 {@render heatLabel(heat.index, heat.allocations.length)}
@@ -54,9 +62,11 @@
           {/if}
           {#each heat.allocations as alloc (alloc.Id)}
             <tr class="h-12 border-t first:border-t-0">
-              <td class="pl-4 font-semibold text-sm tabular-nums"
-                >{alloc.Position || ""}</td
-              >
+              <td class="pl-3 font-semibold text-sm tabular-nums">
+                <span class="inline-block w-6 text-center"
+                  >{alloc.Position || ""}</span
+                >
+              </td>
               <td class="px-1"><AthleteBadge entry={alloc} /></td>
               <td class="px-2">
                 <span class="flex items-center gap-2 whitespace-nowrap">
@@ -68,17 +78,20 @@
                 </span>
               </td>
               <td
-                class="max-w-56 truncate px-2 text-[13px] text-muted-foreground"
+                class="max-w-56 truncate px-2 pt-0.5 text-[13px] leading-5 text-muted-foreground"
               >
                 {alloc.Organization?.Name ?? "-"}
               </td>
-              <td class="px-2 text-right text-[13px] tabular-nums"
-                >{alloc.PB || "–"}</td
-              >
-              <td
-                class="pr-4 text-right text-[13px] text-muted-foreground tabular-nums"
-                >{alloc.SB || "–"}</td
-              >
+              {#if hasRecords}
+                <td
+                  class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
+                  >{alloc.PB || "–"}</td
+                >
+                <td
+                  class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
+                  >{alloc.SB || "–"}</td
+                >
+              {/if}
             </tr>
           {/each}
         </tbody>
@@ -86,18 +99,20 @@
     </table>
   </div>
 
-  <ul class="data-frame lg:hidden">
+  <ul class="data-frame overflow-clip lg:hidden">
     <li
       aria-hidden="true"
-      class="data-head flex items-center justify-between border-b-0 px-3"
+      class="data-head sticky top-0 z-10 flex items-center justify-between border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3"
     >
       <span>{leadLabel}</span>
-      <span>PB / SB</span>
+      {#if hasRecords}
+        <span>PB / SB</span>
+      {/if}
     </li>
     {#each heats as heat (heat.index)}
       {#if showHeatRows}
         <li
-          class="border-t bg-muted/60 px-3 py-2 text-muted-foreground text-xs first:border-t-0"
+          class="border-t bg-primary/5 px-3 py-2 text-muted-foreground text-xs first:border-t-0"
         >
           {@render heatLabel(heat.index, heat.allocations.length)}
         </li>
@@ -106,7 +121,7 @@
         <li
           class="grid grid-cols-[24px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2 first:border-t-0"
         >
-          <span class="text-center font-semibold text-sm tabular-nums"
+          <span class="text-left font-semibold text-sm tabular-nums"
             >{alloc.Position || "-"}</span
           >
           <!-- The cell stays when there is no logo, so the columns hold. -->
@@ -123,18 +138,20 @@
               {alloc.Organization?.Name ?? "-"}
             </p>
           </div>
-          <dl class="text-right text-xs leading-tight tabular-nums">
-            <dt class="sr-only">PB</dt>
-            <dd>{alloc.PB || "–"}</dd>
-            <dt class="sr-only">SB</dt>
-            <dd class="text-muted-foreground">{alloc.SB || "–"}</dd>
-          </dl>
+          {#if hasRecords}
+            <dl class="text-right text-xs leading-tight tabular-nums">
+              <dt class="sr-only">PB</dt>
+              <dd>{alloc.PB || "–"}</dd>
+              <dt class="sr-only">SB</dt>
+              <dd class="text-muted-foreground">{alloc.SB || "–"}</dd>
+            </dl>
+          {/if}
         </li>
       {/each}
     {/each}
   </ul>
 {:else}
-  <Empty.Root>
-    <Empty.Description>Eräjakoja ei ole saatavilla vielä...</Empty.Description>
+  <Empty.Root class="data-frame py-12">
+    <Empty.Description>Eräjakoja ei ole vielä.</Empty.Description>
   </Empty.Root>
 {/if}

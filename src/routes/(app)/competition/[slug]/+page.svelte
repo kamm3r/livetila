@@ -99,7 +99,7 @@
     replaceState(url, page.state);
   }
   const statusLabel: Record<string, string> = {
-    Unallocated: "Eräjaot puuttuvat",
+    Unallocated: "Eräjako tulossa",
     Allocated: "Eräjaot tehty",
     Official: "Tulokset valmiit",
   };
@@ -115,7 +115,8 @@
   const eventMeta = $derived(
     [
       !isLive && selectedEvent ? statusLabel[selectedEvent.Status] : null,
-      eventTime,
+      eventTime &&
+        `${selectedEvent?.Status === "Progress" || selectedEvent?.Status === "Official" ? "alkoi" : "alkaa"} ${eventTime}`,
       eventDate,
     ]
       .filter(Boolean)
@@ -185,7 +186,7 @@
   <title>{compDetails?.Competition.Name ?? "Kilpailu"} - Livetila</title>
 </svelte:head>
 
-<main class="page-width relative flex grow flex-col py-4 sm:py-8">
+<main class="page-width relative flex grow flex-col pt-3 pb-4 sm:py-8">
   {#if !data.identity}
     <div
       class="flex flex-1 flex-col items-center justify-center gap-2 pb-14 text-center"
@@ -204,7 +205,18 @@
       </div>
       <Skeleton class="h-9 w-56 max-w-full" />
       <Skeleton class="mb-1 h-5 w-72 max-w-full" />
-      <Skeleton class="h-96 w-full rounded-xl" />
+      <div class="data-frame">
+        <div class="data-head h-9"></div>
+        {#each { length: 8 }, i (i)}
+          <div
+            class="flex h-12 items-center gap-3 border-t px-3 [.data-head+&]:border-t-0"
+          >
+            <Skeleton class="size-6 shrink-0 rounded-full" />
+            <Skeleton class="h-4 w-40 max-w-1/2" />
+            <Skeleton class="ml-auto h-4 w-12" />
+          </div>
+        {/each}
+      </div>
     </div>
   {:else if error}
     <div
@@ -219,7 +231,7 @@
       </div>
     </div>
   {:else if competition}
-    <div class="flex flex-col gap-3 sm:gap-4">
+    <div class="flex flex-col gap-2.5 sm:gap-4">
       <div class="flex flex-col gap-0.5 sm:gap-1">
         <h2
           class="font-semibold text-xl tracking-tight text-balance sm:text-2xl"
@@ -237,7 +249,7 @@
         <RoundProvider rounds={competition.Rounds} roundCategory={roundFromUrl}>
           <!-- Event, then round, then status. On a phone the event and the
                overlay button share the first line. -->
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:gap-y-2">
             <div class="order-1 min-w-0 max-sm:flex-1 sm:shrink-0">
               <EventSwitcher
                 competitionId={compId}
@@ -286,7 +298,7 @@
                 label: "Ilmoittautuneet",
                 count: confirmedCount
                   ? `${confirmedCount}/${competition.Enrollments.length}`
-                  : competition.Enrollments.length,
+                  : competition.Enrollments.length || undefined,
                 countLabel: confirmedCount
                   ? `${confirmedCount}/${competition.Enrollments.length} vahvistanut`
                   : undefined,
@@ -324,5 +336,6 @@
     eventSubCategory={competition!.EventSubCategory}
     isCombinedEvent={competition!.IsCombinedEvent}
     live={isLive}
+    fresh={data.refreshFailingSince === null}
   />
 {/snippet}

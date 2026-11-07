@@ -13,7 +13,7 @@
       >
         Livetila
         <span
-          class="rounded-sm bg-muted px-1 py-px font-medium text-[10px] text-muted-foreground tracking-wide"
+          class="rounded-sm bg-primary/12 px-1 py-px font-semibold text-[10px] text-primary tracking-wide"
           >BETA</span
         >
       </a>

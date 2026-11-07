@@ -12,6 +12,8 @@
     resultCodeLegend,
     sortByResult,
     turnOrder,
+    didNotStart,
+    withStatusAsResult,
   } from "$lib/results";
   import { createResultChanges } from "$lib/result-changes.svelte";
   import { cn } from "$lib/utils";
@@ -29,18 +31,23 @@
     eventSubCategory,
     isCombinedEvent = false,
     live = false,
+    fresh = true,
   }: {
     eventCategory: EventCategory;
     eventSubCategory?: string;
     isCombinedEvent?: boolean;
     live?: boolean;
+    // False while refreshes fail: the turn may have moved on since.
+    fresh?: boolean;
   } = $props();
 
-  const activeIds = $derived(activeAllocationIds(ctx.currentRound));
+  const activeIds = $derived(
+    fresh ? activeAllocationIds(ctx.currentRound) : new Set<number>(),
+  );
 
   const sortedAllocs = $derived(
     ctx.currentHeat && ctx.heats.length > 0
-      ? [...ctx.currentHeat.Allocations].sort((a, b) =>
+      ? ctx.currentHeat.Allocations.map(withStatusAsResult).sort((a, b) =>
           sortByResult(a, b, eventCategory, "HeatRank"),
         )
       : [],
@@ -48,7 +55,7 @@
 
   const sortedTotal = $derived(
     ctx.currentRound?.TotalResults
-      ? [...ctx.currentRound.TotalResults].sort((a, b) =>
+      ? ctx.currentRound.TotalResults.map(withStatusAsResult).sort((a, b) =>
           sortByResult(a, b, eventCategory),
         )
       : [],
@@ -89,15 +96,15 @@
     if (!mark) return null;
     return { entry, attempt, mark, gained: seen?.gained ?? 0 };
   });
-  const next = $derived(latest ? order.next : null);
+  const next = $derived(latest && fresh ? order.next : null);
 
   // Gold, silver and bronze mark the podium on the rank itself; placing in a
   // heat wins no medal.
   const showMedals = $derived(ctx.currentRound?.RoundTypeCategory === "Final");
   const medals = [
-    "bg-amber-400/25 text-amber-900 dark:bg-amber-300/25 dark:text-amber-200",
-    "bg-slate-400/25 text-slate-800 dark:bg-slate-300/20 dark:text-slate-200",
-    "bg-orange-700/15 text-orange-900 dark:bg-orange-500/25 dark:text-orange-300",
+    "bg-amber-300 text-amber-950 dark:bg-amber-400 dark:text-amber-950",
+    "bg-slate-300 text-slate-900 dark:bg-slate-300 dark:text-slate-900",
+    "bg-[oklch(0.74_0.07_55)] text-orange-950",
   ];
   const moveDuration = $derived(prefersReducedMotion.current ? 0 : 250);
 
@@ -110,7 +117,27 @@
 
   const isFoul = (mark: string) => /^[xr]$/i.test(mark.trim());
 
-  // Below table width the gap has no column header to name it.
+  // The API writes a pass and negative wind with a hyphen.
+  const typeset = (mark: string) =>
+    mark === "-" ? "–" : mark.replace(/^-/, "−");
+
+  // The leader has no gap to show.
+  function shownGap(entry: Entry, leader: ReturnType<typeof leadingResult>) {
+    const gap = gapToLeader(entry.Result, leader, eventCategory);
+    return gap && gap !== "—" ? gap : "";
+  }
+
+  // Rows with attempts have a header naming the gap from tablet width; other
+  // lists have none until the table.
+  const gapHeaderAtTablet = $derived.by(() => {
+    const columns = attemptLayout(
+      primary,
+      eventCategory,
+      eventSubCategory,
+      isCombinedEvent,
+    ).labels.length;
+    return columns > 0 && columns <= 8;
+  });
   const showsGap = $derived(
     [sortedAllocs, showTotal ? sortedTotal : []].some((list) => {
       const leader = leadingResult(list, eventCategory);
@@ -139,11 +166,10 @@
       vertical && marks.some((mark) => /o/i.test(mark)) && "o = onnistunut",
       marks.some((mark) => /x/i.test(mark)) && "x = hylätty",
       marks.some((mark) => /[–-]/.test(mark)) && "– = ei suoritusta",
-      eliminated && "viivoitus = karsiutui kolmen kierroksen jälkeen",
+      eliminated && "viivoitus = karsiutui 3. kierroksen jälkeen",
       ...resultCodeLegend(entries),
       tags.includes("PB") && "PB = ennätys",
       tags.includes("SB") && "SB = kauden paras",
-      entries.some((entry) => activeIds.has(entry.AllocId)) && "••• = vuorossa",
     ].filter((item) => typeof item === "string");
   });
 </script>
@@ -174,13 +200,13 @@
       class={cn(
         "text-right font-semibold tabular-nums",
         large ? "text-base leading-5" : "text-[15px]",
-      )}>{entry.Result || "-"}</span
+      )}>{entry.Result ? typeset(entry.Result) : "–"}</span
     >
     <span
       class={cn(
         "pt-[3px] pl-[3px] text-left font-semibold text-[10px] uppercase leading-none",
-        tag === "PB" && "text-emerald-700 dark:text-emerald-300",
-        tag === "SB" && "text-sky-700 dark:text-sky-300",
+        tag === "PB" && "font-bold text-emerald-700 dark:text-emerald-400",
+        tag === "SB" && "font-bold text-sky-700 dark:text-sky-400",
       )}
       >{#if tag}<span aria-hidden="true">{tag}</span><span class="sr-only"
           >{tag === "PB" ? "Ennätys" : "Kauden paras"}</span
@@ -204,9 +230,10 @@
   {@const attempt = entry.Attempts?.[index]}
   {#if attempt?.Line1}
     <span
+      data-best={index === best ? "" : undefined}
       class={cn(
         "inline-flex flex-col items-center rounded-md px-1.5 py-0.5",
-        !height && index === best && "font-semibold text-primary",
+        index === best && "font-semibold text-primary",
         isFoul(attempt.Line1) && "text-muted-foreground",
         attempt.Line1 === "–" || attempt.Line1 === "-"
           ? "text-muted-foreground"
@@ -214,10 +241,10 @@
         index === newAttempt && "ring-1 ring-yellow-400",
       )}
     >
-      <span>{height ? attempt.Line2 || "–" : attempt.Line1}</span>
+      <span>{typeset(height ? attempt.Line2 || "–" : attempt.Line1)}</span>
       {#if !height && attempt.Line2}<span
-          class="font-normal text-[10px] text-muted-foreground"
-          >{attempt.Line2}</span
+          class="font-normal text-[11px] text-muted-foreground"
+          >{typeset(attempt.Line2)}</span
         >{/if}
     </span>
   {:else}
@@ -259,11 +286,18 @@
               ),
         )
       : 0}
-  <div class="data-frame hidden overflow-x-auto lg:block">
+  <!-- A column per height runs off the page once a vertical jump has many,
+       so heights keep the labelled, wrapping rows below at every width. -->
+  <div
+    class={cn(
+      "data-frame hidden overflow-x-auto",
+      !layout.vertical && "xl:block",
+    )}
+  >
     <!-- Fixed columns line up stacked tables; names and clubs share the rest. -->
     <table
       class="w-full table-fixed text-sm"
-      style={`min-width: ${columns > 0 ? 562 + columns * 58 : 708}px`}
+      style={`min-width: ${columns > 0 ? 688 + columns * 58 : 724}px`}
     >
       <thead>
         <tr class="data-head">
@@ -273,10 +307,7 @@
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
           <th
-            class={cn(
-              "px-2 text-left font-medium",
-              columns > 0 && "w-36 xl:w-56",
-            )}
+            class={cn("px-2 text-left font-medium", columns > 0 && "w-56")}
             scope="col">Seura</th
           >
           {#each { length: columns }, i (i)}
@@ -284,7 +315,7 @@
               class={cn(
                 "w-[58px] text-center font-medium",
                 i + 1 === currentRound &&
-                  "font-semibold text-primary shadow-[inset_0_-2px_0_var(--primary)]",
+                  "font-bold text-primary underline decoration-primary/60 decoration-2 underline-offset-4",
               )}
               scope="col"
               >{layout.labels[i]}{#if i + 1 === currentRound}<span
@@ -295,7 +326,7 @@
             >
           {/each}
           <th class="w-24 pr-5 text-right font-medium" scope="col">Tulos</th>
-          <th class="w-16 pr-4 text-right font-medium" scope="col">Ero</th>
+          <th class="w-20 pr-4 text-right font-medium" scope="col">Ero</th>
         </tr>
       </thead>
       <tbody>
@@ -303,17 +334,18 @@
           {@const change = changes.get(entry.Id)}
           {@const best = bestAttempt(entry)}
           {@const rank = entry[rankKey]}
-          {@const isOut = out.has(entry.Id)}
+          {@const isOut = !didNotStart(entry) && out.has(entry.Id)}
           <tr
             animate:flip={{ duration: moveDuration }}
             data-changed={change ? "" : undefined}
             class={cn(
               "h-12 border-t transition-colors duration-1000 first:border-t-0",
-              isOut && "text-muted-foreground [&_img]:opacity-80",
+              isOut &&
+                "text-muted-foreground [&_[data-best]]:text-inherit [&_img]:opacity-80",
               change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
             )}
           >
-            <td class="pl-3">
+            <td class="pt-0.5 pl-3">
               <span class="grid grid-cols-[24px_22px] items-center gap-1">
                 {@render rankMark(rank, isOut)}
                 <span>
@@ -332,12 +364,15 @@
                     >#{entry.Number}</span
                   >{/if}
                 <span class="text-primary"
-                  ><ActiveAttempt active={activeIds.has(entry.AllocId)} /></span
+                  ><ActiveAttempt
+                    active={activeIds.has(entry.AllocId)}
+                    labelled
+                  /></span
                 >
               </span>
             </td>
             <td
-              class="truncate pr-4 pl-2 text-[13px] text-muted-foreground"
+              class="truncate pt-0.5 pr-4 pl-2 text-[13px] leading-5 text-muted-foreground"
               title={entry.Organization?.Name}
             >
               {entry.Organization?.Name ?? "-"}
@@ -359,9 +394,9 @@
             {/each}
             <td class="text-right">{@render result(entry, false)}</td>
             <td
-              class="pr-4 text-right text-[13px] text-muted-foreground tabular-nums"
+              class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
             >
-              {gapToLeader(entry.Result, leader, eventCategory) ?? ""}
+              {shownGap(entry, leader)}
             </td>
           </tr>
         {/each}
@@ -371,26 +406,35 @@
 
   <!-- One sticky label row while the attempts fit a card's width; more heights
        than that wrap, so each mark keeps its own label. -->
-  {@const sharedLabels = columns > 0 && columns <= 8}
-  {@const attemptGrid = sharedLabels
-    ? `grid-template-columns: repeat(${columns}, minmax(0, 1fr))`
+  <!-- Heights are values to read, not a count, so each card names its own. -->
+  {@const fitsRow = columns > 0 && columns <= 8}
+  {@const sharedLabels = fitsRow && !layout.vertical}
+  <!-- Heights always keep their own labels and one width, so from tablet width
+       a jumper's row stays on one line and only wraps inside its strip. -->
+  {@const oneLine = columns > 0 && (layout.vertical || fitsRow)}
+  <!-- Heights keep a fixed width, so a few never spread across the card. -->
+  {@const attemptGrid = fitsRow
+    ? `grid-template-columns: repeat(${columns}, minmax(0, ${layout.vertical ? "3.25rem" : "1fr"}))`
     : undefined}
   <!-- From tablet width a row fits on one line: name, attempts, result. -->
   <ul
-    class="data-frame overflow-clip lg:hidden"
-    style={`--attempts: ${columns * 44}px`}
+    class={cn("data-frame overflow-clip", !layout.vertical && "xl:hidden")}
+    style={`--attempts: ${layout.vertical ? 8 * 52 : columns * 44}px`}
   >
     {#if sharedLabels}
       <li
         aria-hidden="true"
-        class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_oklch,var(--muted)_45%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
+        class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
       >
+        <span class="hidden text-left md:col-span-2 md:block">Sija</span>
         <span class="hidden text-left md:col-start-3 md:block">Urheilija</span>
         <span class="grid md:col-start-4" style={attemptGrid}>
           {#each layout.labels as label, i (label)}
             <span
-              class={cn(i + 1 === currentRound && "font-semibold text-primary")}
-              >{label}</span
+              class={cn(
+                i + 1 === currentRound &&
+                  "font-bold text-primary underline decoration-primary/60 decoration-2 underline-offset-4",
+              )}>{label}</span
             >
           {/each}
         </span>
@@ -404,19 +448,27 @@
       {@const best = bestAttempt(entry)}
       {@const rank = entry[rankKey]}
       {@const gap = gapToLeader(entry.Result, leader, eventCategory)}
-      {@const isOut = out.has(entry.Id)}
+      {@const isOut = !didNotStart(entry) && out.has(entry.Id)}
       <li
         animate:flip={{ duration: moveDuration }}
         data-changed={change ? "" : undefined}
         class={cn(
           "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
-          sharedLabels &&
+          oneLine &&
             "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem] md:items-center",
-          isOut && "text-muted-foreground [&_img]:opacity-80",
+          // With no attempts a row is two lines, laid out like the start list.
+          columns === 0 && "items-center",
+          isOut &&
+            "text-muted-foreground [&_[data-best]]:text-inherit [&_img]:opacity-80",
           change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
         )}
       >
-        <div class="-mt-0.5 flex flex-col items-center leading-tight md:mt-0">
+        <div
+          class={cn(
+            "flex flex-col items-center leading-tight",
+            columns > 0 && "-mt-0.5 md:mt-0",
+          )}
+        >
           {@render rankMark(rank, isOut)}
           {#if change?.gained}{@render gainedPlaces(change.gained)}{/if}
         </div>
@@ -429,25 +481,48 @@
                 >#{entry.Number}</span
               >{/if}
             <span class="ml-0.5 text-primary"
-              ><ActiveAttempt active={activeIds.has(entry.AllocId)} /></span
+              ><ActiveAttempt
+                active={activeIds.has(entry.AllocId)}
+                labelled
+              /></span
             >
           </p>
           <p class="truncate text-muted-foreground text-xs leading-4">
             {entry.Organization?.Name ?? "-"}
           </p>
         </div>
-        {#if columns > 0}
+        {#if columns > 0 && !didNotStart(entry)}
+          <!-- A jumper's strip lists only the heights they took part in. Each
+               mark names its height, so a height others took before this
+               athlete entered would only be an empty label. -->
+          {@const slots = layout.vertical
+            ? layout.labels.flatMap((label, i) =>
+                entry.Attempts?.some((attempt) => attempt.Line1 === label)
+                  ? [i]
+                  : [],
+              )
+            : Array.from({ length: isOut ? 3 : columns }, (_, i) => i)}
           <!-- Fixed columns keep attempt N aligned across rows. -->
           <ul
             class={cn(
-              "col-span-full row-start-2 mt-1.5 grid items-center text-center text-xs tabular-nums",
-              sharedLabels
-                ? "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0"
-                : "grid-cols-[repeat(auto-fill,44px)]",
+              "col-span-full row-start-2 mt-1.5 grid text-center text-xs tabular-nums",
+              oneLine && "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0",
+              // Heights an athlete never jumped have a label and no mark, so
+              // cells sit at the top and every label shares one line.
+              oneLine &&
+                (layout.vertical
+                  ? "md:self-center md:items-start"
+                  : "md:self-stretch md:items-center"),
+              // A height keeps one width however many there are; more than
+              // fit continue in the same columns below.
+              layout.vertical
+                ? "grid-cols-[repeat(auto-fill,3.25rem)] md:gap-y-1"
+                : !fitsRow && "grid-cols-[repeat(auto-fill,44px)]",
+              sharedLabels ? "items-center" : "items-start",
             )}
-            style={attemptGrid}
+            style={layout.vertical ? undefined : attemptGrid}
           >
-            {#each { length: isOut ? 3 : columns }, i (i)}
+            {#each slots as i (i)}
               <li>
                 <span
                   class={cn(
@@ -467,7 +542,7 @@
             {/each}
             {#if isOut && columns > 3}
               <li
-                class="hatch h-5 rounded-[3px]"
+                class="hatch h-5 rounded-[3px] md:-my-2 md:h-auto md:self-stretch md:rounded-none"
                 style={`grid-column: span ${columns - 3}`}
               >
                 <span class="sr-only">Karsiutui</span>
@@ -477,8 +552,8 @@
         {/if}
         <div
           class={cn(
-            "col-start-4 row-start-1 flex flex-col items-end leading-tight",
-            sharedLabels && "md:col-start-5",
+            "col-start-4 row-start-1 flex flex-col items-end self-start leading-tight",
+            oneLine && "md:col-start-5",
           )}
         >
           {@render result(entry, true)}
@@ -510,7 +585,7 @@
         {#each [...ctx.heats].sort((a, b) => a.Index - b.Index) as heat (heat.Index)}
           <ToggleGroup.Item
             value={String(heat.Index)}
-            class="rounded-md px-3 text-[13px] text-muted-foreground hover:bg-transparent data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs"
+            class="rounded-md px-3 text-[13px] text-muted-foreground hover:bg-transparent data-[state=on]:bg-card data-[state=on]:text-primary data-[state=on]:shadow-xs"
           >
             Erä {heat.Index}
           </ToggleGroup.Item>
@@ -526,10 +601,8 @@
       role="status"
       class="flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-xl border bg-card px-3.5 py-2.5 text-[13px] shadow-xs"
     >
-      <span class="size-2 shrink-0 rounded-full bg-amber-400" aria-hidden="true"
-      ></span>
       <span
-        class="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[5.5rem]"
+        class="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[4.5rem]"
         ><span class="sm:hidden">Viimeisin</span><span class="hidden sm:inline"
           >Viimeisin suoritus</span
         ></span
@@ -538,7 +611,9 @@
       <span class="hidden text-muted-foreground sm:inline"
         >{latest.attempt + 1}. suoritus</span
       >
-      <span class="font-semibold text-[15px] tabular-nums">{latest.mark}</span>
+      <span class="font-semibold text-[15px] tabular-nums max-sm:ml-auto"
+        >{latest.mark}</span
+      >
       {#if latest.gained && latestRank}
         <span
           class="rounded-full bg-green-100 px-2 py-0.5 font-bold text-[11px] text-green-700 dark:bg-green-400/15 dark:text-green-300"
@@ -547,17 +622,13 @@
       {/if}
       {#if next}
         <span
-          class="flex min-w-0 items-center gap-2.5 sm:gap-1.5 max-sm:basis-full max-sm:pl-4.5 sm:ml-auto sm:border-l sm:pl-3"
+          class="flex min-w-0 items-center gap-2.5 sm:gap-1.5 max-sm:basis-full sm:ml-auto sm:border-l sm:pl-3"
         >
           <span
-            class="shrink-0 font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[5.5rem]"
-            >Seuraavana</span
+            class="shrink-0 font-medium text-[11px] text-muted-foreground uppercase tracking-[0.05em] max-sm:w-[4.5rem]"
+            >Vuorossa</span
           >
           <span class="truncate font-semibold">{next.Name}</span>
-          {#if next.Number}<span
-              class="text-muted-foreground text-xs tabular-nums"
-              >#{next.Number}</span
-            >{/if}
         </span>
       {/if}
     </div>
@@ -566,8 +637,8 @@
   {#if sortedAllocs.length > 0}
     <div>{@render resultList(sortedAllocs, "HeatRank", heatChanges)}</div>
   {:else if !showTotal}
-    <Empty.Root>
-      <Empty.Description>Tuloksia ei ole saatavilla vielä...</Empty.Description>
+    <Empty.Root class="data-frame py-12">
+      <Empty.Description>Tuloksia ei ole vielä.</Empty.Description>
     </Empty.Root>
   {/if}
 
@@ -587,7 +658,7 @@
         </li>
       {/each}
       {#if showsGap}
-        <li class="lg:hidden">
+        <li class={gapHeaderAtTablet ? "md:hidden" : "xl:hidden"}>
           <span class="font-medium text-foreground/75">Ero</span> = ero kärkeen
         </li>
       {/if}
