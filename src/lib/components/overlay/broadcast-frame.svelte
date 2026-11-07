@@ -600,7 +600,7 @@
   </ol>
 
   <footer class="mt-0.5 flex items-center gap-2">
-    <span class="bg-neutral-950 px-2 py-0.5 text-(--accent)">
+    <span class="bg-neutral-950 px-2 py-0.5 text-(--accent) text-sm">
       {view.competitionName ?? ""}
     </span>
     {#if view.isRefreshError}

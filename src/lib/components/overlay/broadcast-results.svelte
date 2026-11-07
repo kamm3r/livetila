@@ -173,9 +173,13 @@
               </span>
             {/if}
             <span class="flex min-w-0 flex-1 items-center gap-2 pl-2">
-              <span class="truncate">
+              <!-- The club gives way first; a long given name shortens to its
+                   initial before the surname would be cut. -->
+              <span class="min-w-0 truncate">
                 {#if entry.Surname}
-                  {entry.Firstname}
+                  {`${entry.Firstname} ${entry.Surname}`.length > 24
+                    ? `${entry.Firstname?.[0] ?? ""}.`
+                    : entry.Firstname}
                   <span class="uppercase">{entry.Surname}</span>
                 {:else}
                   {entry.Name}
@@ -186,7 +190,7 @@
               </span>
               {#if from.club}
                 <span
-                  class={cn("truncate font-normal text-neutral-400 text-xs")}
+                  class="min-w-0 shrink-[999] truncate font-normal text-neutral-400 text-xs"
                   >{from.club}</span
                 >
               {/if}
