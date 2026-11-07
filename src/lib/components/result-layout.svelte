@@ -492,6 +492,16 @@
           </p>
         </div>
         {#if columns > 0 && !didNotStart(entry)}
+          <!-- A jumper's strip lists only the heights they took part in. Each
+               mark names its height, so a height others took before this
+               athlete entered would only be an empty label. -->
+          {@const slots = layout.vertical
+            ? layout.labels.flatMap((label, i) =>
+                entry.Attempts?.some((attempt) => attempt.Line1 === label)
+                  ? [i]
+                  : [],
+              )
+            : Array.from({ length: isOut ? 3 : columns }, (_, i) => i)}
           <!-- Fixed columns keep attempt N aligned across rows. -->
           <ul
             class={cn(
@@ -512,7 +522,7 @@
             )}
             style={layout.vertical ? undefined : attemptGrid}
           >
-            {#each { length: isOut ? 3 : sharedLabels || !layout.vertical ? columns : layout.labels.findLastIndex( (label) => entry.Attempts?.some((attempt) => attempt.Line1 === label) ) + 1 }, i (i)}
+            {#each slots as i (i)}
               <li>
                 <span
                   class={cn(

@@ -1275,8 +1275,9 @@ test("vertical results align attempts by height without six-slot padding or gap 
   await expect(panel.getByRole("table")).toBeHidden();
   const rows = panel.locator("ul.data-frame > li");
   await expect(rows).toHaveCount(2);
-  // Each athlete's strip ends at their own last height, with no padding.
-  await expect(rows.nth(0).locator("ul > li")).toHaveText([/^130/, /^135\s*o/]);
+  // Each strip lists only the heights that athlete took part in: "Higher"
+  // entered at 135, so the 130 others jumped is not an empty label there.
+  await expect(rows.nth(0).locator("ul > li")).toHaveText([/^135\s*o/]);
   await expect(rows.nth(1).locator("ul > li")).toHaveText([/^130\s*o/]);
   await expect(rows.nth(1)).toContainText("−5");
   await expect(rows.nth(1)).not.toContainText("−0,05");
