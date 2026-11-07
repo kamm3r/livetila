@@ -1,9 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-
-// Waits out one 30-second refresh on the frozen test clock. Each query starts
-// a moment after the clock is installed, so its refresh lands just past the
-// 30-second mark; a second of slack keeps the clock from stopping short.
-const nextPoll = 31_000;
+import { nextRefresh } from "./refresh";
 
 // The four overlay styles offered in the broadcast graphics popover:
 // Lista (broadcast-trail-plain), Tikkeri (ticker), Lopputulokset
@@ -195,7 +191,7 @@ test.describe("Lista", () => {
     await expect(rows.nth(0)).toContainText("Korhonen");
 
     server.set(virtanenJumps("7,20"));
-    await page.clock.runFor(nextPoll);
+    await nextRefresh(page);
     const series = page.locator("[data-attempt-details]");
     // Virtanen's series opens on three dots; the standings have not moved.
     await expect(series.locator(".waiting")).toHaveCount(1);
@@ -224,7 +220,7 @@ test.describe("Lista", () => {
     await expect(rows.nth(0)).toContainText("4");
 
     server.set([slow, { ...fast, Result: "10,20", HeatRank: 1 }]);
-    await page.clock.runFor(nextPoll);
+    await nextRefresh(page);
     await expect(visibleText(page, "Loppukilpailu – Tulokset")).toBeVisible();
     // Runners without a time wait off the board while times still arrive.
     await expect(rows).toHaveCount(1);
@@ -251,7 +247,7 @@ test.describe("Tikkeri", () => {
     await expect(callout).toHaveCount(0);
 
     server.set(virtanenJumps("7,20"));
-    await page.clock.runFor(nextPoll);
+    await nextRefresh(page);
     await expect(callout).toContainText("Yritys 3");
     await expect(callout).toContainText("Virtanen");
     await expect(callout).toContainText("7,20");
@@ -330,7 +326,8 @@ test.describe("Aikataulu", () => {
     await expect(rows.nth(1)).toContainText("Live");
     await expect(page.getByLabel("Sivu 1/2")).toBeVisible();
 
-    await page.clock.runFor(10_000);
+    // Half a second of slack: the page timer starts once the rows render.
+    await page.clock.runFor(10_500);
     await expect(page.getByLabel("Sivu 2/2")).toBeVisible();
     await expect(rows).toHaveCount(2);
     await expect(rows.nth(0)).toContainText("Laji 11");
@@ -351,19 +348,21 @@ test.describe("attempt details", () => {
     await expect.poll(() => details.count()).toBe(1);
     await page.clock.runFor(14_000);
     await expect(details).toHaveCount(1);
-    await page.clock.runFor(1001);
+    // The timer starts once the series renders; half a second of slack.
+    await page.clock.runFor(1_500);
     await expect(details).toHaveCount(0);
     // The mark stays on the bar once the series is gone.
     await expect(visibleText(page, "7,10m")).toBeVisible();
-    // An identical poll keeps it closed.
-    await page.clock.runFor(15_000);
+    // An identical poll keeps it closed. Run past the 30-second refresh, so
+    // the next change arrives with the following one.
+    await page.clock.runFor(16_000);
     await expect(details).toHaveCount(0);
 
     server.set([jumper(1, "Idle", "Jumper", "7,10", ["7,10", "x"])]);
-    await page.clock.runFor(nextPoll);
+    await nextRefresh(page);
     await expect(details).toHaveCount(1);
     await expect(details.locator("li").nth(1)).toContainText("x");
-    await page.clock.runFor(15_001);
+    await page.clock.runFor(15_500);
     await expect(details).toHaveCount(0);
   });
 
@@ -376,11 +375,11 @@ test.describe("attempt details", () => {
     await page.goto("/overlay/1-10?heat=1&style=ticker");
     await expect(visibleText(page, "Korhonen")).toBeVisible();
     // Fifteen quiet seconds, then a poll that changes nothing.
-    await page.clock.runFor(nextPoll);
+    await nextRefresh(page);
     await expect(page.getByRole("status")).toHaveCount(0);
 
     server.set(virtanenJumps("x"));
-    await page.clock.runFor(nextPoll);
+    await nextRefresh(page);
     await expect(page.getByRole("status")).toContainText("Yritys 3");
   });
 });
