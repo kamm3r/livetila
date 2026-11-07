@@ -178,7 +178,8 @@
   </fieldset>
 {/snippet}
 
-{#snippet settings()}
+<!-- The style comes first and stays put whichever style is picked. -->
+{#snippet styleControl()}
   {@render segmented(
     "graphic-style",
     "Tyyli",
@@ -186,7 +187,9 @@
     style,
     (value) => (style = value as LinkStyle),
   )}
+{/snippet}
 
+{#snippet settings()}
   {#if available.length > 0}
     <fieldset class="flex flex-col gap-3">
       <legend class="sr-only">Asetukset</legend>
@@ -289,6 +292,7 @@
         </DrawerDescription>
       </DrawerHeader>
       <div class="flex flex-col gap-5 overflow-y-auto px-4 pt-2 pb-8">
+        {@render styleControl()}
         {@render preview(false)}
         {@render settings()}
       </div>
@@ -323,6 +327,7 @@
       </PopoverHeader>
       <!-- The list's preview column matches the graphic's width at full size;
            the wider styles take the full width above the settings. -->
+      <div class="px-4 pt-4">{@render styleControl()}</div>
       <div
         class={cn(
           "grid items-start gap-5 p-4",

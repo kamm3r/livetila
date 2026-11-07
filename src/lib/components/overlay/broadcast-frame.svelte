@@ -373,7 +373,7 @@
 {/snippet}
 
 <div class="w-80 font-semibold text-white uppercase" style:--accent={accent}>
-  <header class="border-(--accent) border-t-2 bg-neutral-950/90">
+  <header class="border-(--accent) border-t-2 bg-neutral-950">
     <div class="flex h-6 items-center justify-between px-2">
       <span class="truncate text-(--accent)">
         {#if timed}
@@ -403,7 +403,7 @@
   </header>
 
   <ol
-    class="flex flex-col gap-0.5 border-(--accent) border-b-2 bg-neutral-950/90 py-0.5"
+    class="flex flex-col gap-0.5 border-(--accent) border-b-2 bg-neutral-950 py-0.5"
   >
     {#each visible as { entry, index } (entry.Id)}
       {@const change = view.changes.get(entry.Id)}
@@ -423,7 +423,7 @@
       <li animate:swap in:enter class={cn("relative", focused && "z-20")}>
         <div
           class={cn(
-            "relative flex h-7 items-stretch bg-neutral-800/90 transition-colors duration-700",
+            "relative flex h-7 items-stretch bg-neutral-800 transition-colors duration-700",
             // Text switches at once so it never fades through the background.
             focused &&
               "bg-(--accent) text-black transition-[background-color] duration-300",
@@ -543,7 +543,7 @@
           <ol
             data-attempt-details
             transition:collapse
-            class="ml-5 grid grid-cols-6 text-black normal-case tabular-nums"
+            class="ml-5 grid grid-cols-6 gap-px bg-neutral-950 text-black normal-case tabular-nums"
           >
             {#each attemptSlots(entry.Attempts) as attempt, i (i)}
               {@const best = !!attempt.Line1 && attempt.Line1 === entry.Result}
@@ -555,10 +555,10 @@
                 vertical && !waiting && attempt.Line1 && attempt.Line2}
               <li
                 class={cn(
-                  "flex h-10 flex-col items-center justify-center bg-neutral-200/95 odd:bg-neutral-100/95",
+                  "flex h-10 flex-col items-center justify-center bg-neutral-100",
                   !attempt.Line1 &&
                     !waiting &&
-                    "bg-neutral-400/90! odd:bg-neutral-300/90!",
+                    "bg-neutral-400!",
                   best && "bg-(--accent)! text-black",
                   popping?.id === entry.Id &&
                     popping.attempt === i &&
@@ -600,13 +600,13 @@
   </ol>
 
   <footer class="mt-0.5 flex items-center gap-2">
-    <span class="bg-neutral-950/90 px-2 py-0.5 text-(--accent)">
+    <span class="bg-neutral-950 px-2 py-0.5 text-(--accent)">
       {view.competitionName ?? ""}
     </span>
     {#if view.isRefreshError}
       <span
         role="status"
-        class="bg-neutral-950/90 px-2 py-0.5 text-neutral-300 text-xs normal-case"
+        class="bg-neutral-950 px-2 py-0.5 text-neutral-300 text-xs normal-case"
       >
         Päivitys viivästyy
       </span>

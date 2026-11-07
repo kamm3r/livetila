@@ -43,6 +43,9 @@
     eventCategory: EventCategory;
   } = $props();
 
+  // Measured before the ticker draws, so its first height is already scaled.
+  let width = $state(0);
+
   const tracked = createResultChanges(() => entries);
   // The athlete who competed last before the rewind. Forgetting them lets
   // the overlay focus the athlete who starts the next run.
@@ -80,8 +83,17 @@
   {#if style === "ticker"}
     <!-- The ticker pins itself to the bottom of the screen; the transform makes
          this box its screen. -->
-    <div class="relative h-36 w-full transform-[translateZ(0)]">
-      <Ticker {view} inHeat={false} {records} />
+    <!-- On a fixed 800px screen scaled to fit, so a narrow preview shows the
+         whole composition instead of reflowing it. -->
+    <div class="w-full" bind:clientWidth={width}>
+      {#if width}
+        <div
+          class="relative h-36 w-[800px] transform-[translateZ(0)]"
+          style:zoom={Math.min(1, width / 800)}
+        >
+          <Ticker {view} inHeat={false} {records} />
+        </div>
+      {/if}
     </div>
   {:else if style === "timetable"}
     <div style:zoom class="w-[44rem]">

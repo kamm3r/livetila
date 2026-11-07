@@ -68,7 +68,7 @@
         y: 24,
         duration: prefersReducedMotion.current ? 0 : 250,
       }}
-      class="mb-0.5 ml-auto flex w-fit items-stretch border-(--accent) border-t-2 bg-neutral-950/90"
+      class="mb-0.5 ml-auto flex w-fit items-stretch whitespace-nowrap border-(--accent) border-t-2 bg-neutral-950"
       role="status"
     >
       <span
@@ -77,11 +77,12 @@
         Yritys {latest.change.attempt + 1}
       </span>
       <span class="flex items-center gap-2 px-3 py-2">
-        <AthleteBadge entry={latest.entry} /><ActiveAttempt
-          active={view.activeAllocationIds.has(latest.entry.AllocId)}
-        />
+        <AthleteBadge entry={latest.entry} />
         <span class="uppercase">{name.surname}</span>
         <span class="text-neutral-400">{name.initial}</span>
+        <ActiveAttempt
+          active={view.activeAllocationIds.has(latest.entry.AllocId)}
+        />
       </span>
       <span
         class="flex items-center bg-white/5 px-3 font-bold text-2xl tabular-nums"
@@ -94,7 +95,7 @@
         </span>
       {/if}
       {#if latest.rank}
-        <span class="flex items-center bg-white/10 px-3 text-sm">
+        <span class="flex items-center bg-white/10 px-3 text-sm uppercase">
           Sija {latest.rank}
           {#if latest.change.gained}
             <span class="ml-1 text-(--accent)">▲{latest.change.gained}</span>
@@ -105,7 +106,7 @@
   {/if}
 
   <div
-    class="flex h-12 items-stretch border-(--accent) border-t-2 bg-neutral-950/90"
+    class="flex h-12 items-stretch border-(--accent) border-t-2 bg-neutral-950"
   >
     <div
       class="flex shrink-0 flex-col justify-center bg-(--accent) px-4 text-black"
@@ -151,11 +152,14 @@
                 >
                   {rank ?? "–"}
                 </span>
-                <AthleteBadge {entry} /><ActiveAttempt
+                <AthleteBadge {entry} />
+                <span class="uppercase">{name.surname}</span>
+                <ActiveAttempt
                   active={view.activeAllocationIds.has(entry.AllocId)}
                 />
-                <span class="uppercase">{name.surname}</span>
-                <span class="text-(--accent) tabular-nums">
+                <!-- Results stay white; the accent is kept for the leader and
+                     for changes. -->
+                <span class="tabular-nums">
                   {entry.Result || "–"}
                 </span>
                 {#if q}<span class="text-xs">{q}</span>{/if}

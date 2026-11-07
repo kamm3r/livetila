@@ -272,8 +272,8 @@ test.describe("Lopputulokset", () => {
     await expect(rows.nth(0)).toContainText("Aino");
     await expect(rows.nth(0)).toContainText("Club");
     await expect(rows.nth(0)).toContainText("7,10m");
-    await expect(rows.nth(1)).toContainText("−0,18m");
-    await expect(rows.nth(2)).toContainText("−0,35m");
+    await expect(rows.nth(1)).toContainText("−0,18");
+    await expect(rows.nth(2)).toContainText("−0,35");
     await expect(visibleText(page, "Ero")).toBeVisible();
     await expect(visibleText(page, "Kalevan kisat")).toBeVisible();
   });

@@ -90,7 +90,9 @@
 </script>
 
 {#snippet mark(value: string | null | undefined)}
-  {value ?? ""}{#if unit(value)}<span class="normal-case">{unit(value)}</span
+  <!-- The unit as on the list: smaller and quieter than the figure. -->
+  {value ?? ""}{#if unit(value)}<span
+      class="ml-px text-[0.8em] normal-case opacity-70">{unit(value)}</span
     >{/if}
 {/snippet}
 
@@ -99,7 +101,7 @@
     <div class="w-[40rem] font-semibold text-white" style:--accent={accent}>
       <header in:fly|global={{ y: -12, duration: motion ? 300 : 0 }}>
         <div
-          class="w-fit border-(--accent) border-t-2 bg-neutral-950/90 px-3 py-0.5 text-(--accent) text-sm uppercase"
+          class="w-fit border-(--accent) border-t-2 bg-neutral-950 px-3 py-0.5 text-(--accent) text-sm uppercase"
         >
           Tulokset{view.roundName ? ` – ${view.roundName}` : ""}{view.heatLabel
             ? ` · ${view.heatLabel}`
@@ -112,13 +114,13 @@
             {view.eventName ?? ""}
           </h2>
           <span
-            class="flex w-24 items-center justify-end bg-neutral-950/90 px-3 text-xs text-neutral-300 uppercase"
+            class="flex w-24 items-center justify-end bg-neutral-950 px-3 text-xs text-neutral-300 uppercase"
           >
             {timed ? "Aika" : "Tulos"}
           </span>
           {#if showGaps}
             <span
-              class="flex w-20 items-center justify-end bg-neutral-950/90 px-3 text-xs text-neutral-300 uppercase"
+              class="flex w-20 items-center justify-end bg-neutral-950 px-3 text-xs text-neutral-300 uppercase"
             >
               Ero
             </span>
@@ -143,7 +145,7 @@
               delay: motion ? 150 + index * 50 : 0,
             }}
             class={cn(
-              "flex h-8.5 items-stretch border-neutral-950/90 border-b-2 bg-neutral-800/90",
+              "flex h-8.5 items-stretch border-neutral-950 border-b-2 bg-neutral-800",
             )}
           >
             <!-- The podium wears its medal on the place, so the rows stay calm. -->
@@ -210,7 +212,7 @@
                   "flex w-20 shrink-0 items-center justify-end px-3 text-neutral-400 text-sm tabular-nums",
                 )}
               >
-                {#if behind}{@render mark(behind)}{/if}
+                {#if behind}{behind}{/if}
               </span>
             {/if}
           </li>
@@ -226,14 +228,14 @@
         class="border-(--accent) border-t-2"
       >
         <span
-          class="inline-block bg-neutral-950/90 px-3 py-0.5 text-(--accent) text-sm uppercase"
+          class="inline-block bg-neutral-950 px-3 py-0.5 text-(--accent) text-sm uppercase"
         >
           {view.competitionName ?? ""}
         </span>
         {#if view.isRefreshError}
           <span
             role="status"
-            class="ml-2 bg-neutral-950/90 px-2 py-0.5 text-neutral-300 text-xs"
+            class="ml-2 bg-neutral-950 px-2 py-0.5 text-neutral-300 text-xs"
           >
             Päivitys viivästyy
           </span>
