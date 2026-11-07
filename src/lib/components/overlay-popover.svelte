@@ -159,7 +159,7 @@
       {#each options as option (option.value)}
         <label
           class={cn(
-            "flex-1 cursor-pointer whitespace-nowrap rounded-md px-2 py-1 text-center font-medium text-muted-foreground text-ui has-focus-visible:outline-2 has-focus-visible:outline-primary",
+            "flex-auto cursor-pointer whitespace-nowrap rounded-md px-2 py-1 text-center sm:flex-1 font-medium text-muted-foreground text-ui has-focus-visible:outline-2 has-focus-visible:outline-primary",
             selected === option.value && "bg-card text-foreground shadow-xs",
           )}
         >
