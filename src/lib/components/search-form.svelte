@@ -185,7 +185,7 @@
   >
     <div
       class={cn(
-        "relative overflow-hidden rounded-2xl border bg-card motion-search-surface",
+        "relative overflow-hidden rounded-xl border bg-card motion-search-surface",
         showDropdown && "shadow-lg shadow-black/8 dark:shadow-black/30",
         isFocused
           ? "border-primary/60 ring-2 ring-primary/12"
@@ -260,7 +260,7 @@
                   {#each search.matchingRecent as item (item.id)}
                     <div class="recent-row flex items-center rounded-lg pr-1">
                       <CommandItem
-                        class="group min-w-0 flex-1 cursor-pointer rounded-lg bg-transparent px-2.5 py-2 data-selected:bg-transparent [&>.cn-command-item-indicator]:hidden"
+                        class="group min-w-0 flex-1 cursor-pointer rounded-lg bg-transparent px-2.5 py-2 data-selected:bg-transparent data-selected:*:[svg]:text-muted-foreground [&>.cn-command-item-indicator]:hidden"
                         value={`recent-${item.id}`}
                         onSelect={() => {
                           void search.selectRecent(item);
@@ -350,7 +350,7 @@
                               >{comp.Name}</span
                             >
                             <span
-                              class="truncate text-muted-foreground text-xs tabular-nums"
+                              class="truncate text-muted-foreground text-xs"
                             >
                               {[
                                 new Date(comp.Date).toLocaleDateString("fi-FI"),
@@ -389,7 +389,7 @@
                             class="grid w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-baseline gap-2"
                           >
                             <span
-                              class="text-[13px] text-muted-foreground tabular-nums"
+                              class="text-ui text-muted-foreground tabular-nums"
                               >{evt.Time}</span
                             >
                             <span class="truncate text-sm"
@@ -403,7 +403,7 @@
                               ></span
                             >
                             <div
-                              class="flex items-center gap-2 self-center text-muted-foreground text-xs tabular-nums"
+                              class="flex items-center gap-2 self-center text-muted-foreground text-xs"
                             >
                               {#if multipleEventDates}<span
                                   class="max-sm:hidden">{evt.Date}</span

@@ -1,5 +1,6 @@
 <script lang="ts" module>
-  import { tv, type VariantProps } from "tailwind-variants";
+  import { tv } from "$lib/utils.js";
+  import type { VariantProps } from "tailwind-variants";
 
   export const itemVariants = tv({
     base: "[a]:hover:bg-muted rounded-lg border text-sm group/item focus-visible:border-ring focus-visible:ring-ring/50 flex w-full flex-wrap items-center transition-colors duration-100 outline-none focus-visible:ring-[3px] [a]:transition-colors",

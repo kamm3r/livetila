@@ -165,7 +165,7 @@
     text-align: center;
     font-size: clamp(2.25rem, 5vw, 3.25rem);
     font-weight: 600;
-    letter-spacing: -0.035em;
+    letter-spacing: -0.022em;
     line-height: 1.08;
     text-wrap: balance;
   }
@@ -246,7 +246,6 @@
   .row-meta {
     font-size: 0.75rem;
     color: var(--muted-foreground);
-    font-variant-numeric: tabular-nums;
   }
   .quick :global(.row-arrow) {
     width: 1rem;

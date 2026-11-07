@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ExternalLink } from "@lucide/svelte";
+  import { ArrowUpRight } from "@lucide/svelte";
   import { Button } from "$lib/components/ui/button";
   import type { OnlineConfirmation } from "$lib/online-confirmation";
 
@@ -29,10 +29,10 @@
 </script>
 
 <div
-  class="flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-lg border border-primary/25 bg-primary/8 px-3.5 py-2.5"
+  class="flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-xl border border-primary/25 bg-primary/8 px-3.5 py-2.5"
 >
   <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-    <p class="font-semibold text-[13px]">Verkkovarmistus on auki</p>
+    <p class="font-semibold text-ui">Verkkovarmistus on auki</p>
     <p class="text-muted-foreground text-xs tabular-nums">
       <span class="max-sm:hidden">Varmista osallistuminen viimeistään</span>
       klo {deadline} <span class="sm:hidden">asti</span> · {remaining} jäljellä
@@ -46,7 +46,7 @@
   >
     <span class="max-sm:hidden">Varmista</span>
     <span class="sm:hidden">Varmista osallistuminen</span>
-    <ExternalLink class="size-3.5" aria-hidden="true" />
+    <ArrowUpRight class="size-3.5" aria-hidden="true" />
     <span class="sr-only">(avautuu uuteen välilehteen)</span>
   </Button>
 </div>

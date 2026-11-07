@@ -1,14 +1,39 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn-svelte/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/inter/opsz.css";
+
+/* rsms's own Latin subset keeps Inter's character variants (cv05), which the
+   Fontsource files strip. Fontsource stays as the fallback for other scripts. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("inter-ui/variable-latin/InterVariable-subset.woff2") format("woff2");
+}
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans:
-    "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    sans-serif;
+    "Inter", "Inter Variable", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  /* One type scale. 11px is the floor, kept for tags beside larger figures. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-ui: 0.8125rem;
+  --text-ui--line-height: 1.25rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.5rem;
+  --text-title: 1.75rem;
+  --text-title--line-height: 2.125rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -73,7 +98,7 @@
   --chart-3: oklch(0.71 0.13 215);
   --chart-4: oklch(0.61 0.11 222);
   --chart-5: oklch(0.52 0.09 223);
-  --radius: 0.625rem;
+  --radius: 0.5rem;
   --sidebar: oklch(0.97 0.008 240);
   --sidebar-foreground: oklch(0.235 0.03 250);
   --sidebar-primary: oklch(0.5 0.15 245);
@@ -127,6 +152,19 @@
   }
   html {
     @apply font-sans;
+    /* Inter switches to its display cut at large sizes on its own; the tailed
+       l keeps names such as "Iida" from reading as "lida". */
+    font-optical-sizing: auto;
+    font-feature-settings: "cv05";
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  /* One icon weight everywhere, lighter than Lucide's default to sit with text. */
+  svg.lucide {
+    stroke-width: 1.75;
   }
 }
 
@@ -148,14 +186,17 @@
   .data-frame :is(tr, li) {
     border-color: color-mix(in oklch, var(--border) 72%, transparent);
   }
-  .dark .data-frame :is(tr, li) {
-    border-color: var(--border);
-  }
   .data-head {
-    @apply bg-primary/8 text-primary h-9 border-b text-[11px] font-medium tracking-[0.05em] uppercase;
+    @apply bg-primary/8 h-9 border-b text-xs font-medium;
+    /* Tinted, but quieter than the blue that marks best attempts. */
+    color: color-mix(in oklch, var(--primary) 55%, var(--foreground));
+  }
+  /* Dark primary is bright, so less of it keeps the headers navy-grey. */
+  .dark .data-head {
+    color: color-mix(in oklch, var(--primary) 30%, var(--foreground));
   }
   .toolbar-control {
-    @apply bg-card hover:bg-accent focus-visible:outline-primary inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border text-[13px] font-medium shadow-xs outline-none select-none focus-visible:outline-2;
+    @apply bg-card hover:bg-accent focus-visible:outline-primary text-ui inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border font-medium shadow-xs outline-none select-none focus-visible:outline-2;
   }
 }
 

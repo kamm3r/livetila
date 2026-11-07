@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Check } from "@lucide/svelte";
+  import { Check, CircleDashed } from "@lucide/svelte";
   import * as Empty from "$lib/components/ui/empty";
   import { cn } from "$lib/utils";
   import type { Enrollment } from "~/types/comp";
@@ -25,15 +25,12 @@
 {#snippet status(enrollment: Enrollment)}
   {#if enrollment.Confirmed}
     <Check
-      class="size-4 text-emerald-700 dark:text-emerald-400"
+      class="size-4 text-emerald-700 dark:text-emerald-300"
       aria-hidden="true"
     />
     <span class="sr-only">Vahvistettu</span>
   {:else}
-    <span
-      class="inline-block size-3.5 rounded-full border border-muted-foreground border-dashed align-middle"
-      aria-hidden="true"
-    ></span>
+    <CircleDashed class="size-4 text-muted-foreground" aria-hidden="true" />
     <span class="sr-only">Ei vahvistettu</span>
   {/if}
 {/snippet}
@@ -82,17 +79,16 @@
               </span>
             </td>
             <td
-              class="max-w-56 truncate px-2 pt-0.5 text-[13px] leading-5 text-muted-foreground"
+              class="max-w-56 truncate px-2 pt-0.5 text-ui leading-5 text-muted-foreground"
             >
               {enrollment.Organization?.Name ?? "-"}
             </td>
             {#if hasRecords}
-              <td
-                class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
+              <td class="pt-0.5 pr-5 text-right text-ui leading-5 tabular-nums"
                 >{enrollment.PB || "–"}</td
               >
               <td
-                class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
+                class="pt-0.5 pr-4 text-right text-ui leading-5 text-muted-foreground tabular-nums"
                 >{enrollment.SB || "–"}</td
               >
             {/if}
@@ -105,9 +101,9 @@
   <ul class="data-frame overflow-clip lg:hidden">
     <li
       aria-hidden="true"
-      class="data-head sticky top-0 z-10 flex items-center justify-between border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3"
+      class="data-head sticky top-0 z-10 grid grid-cols-[20px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3"
     >
-      <span></span>
+      <span class="col-start-3">Urheilija</span>
       {#if hasRecords}
         <span>PB / SB</span>
       {/if}
@@ -126,7 +122,7 @@
           <p class="wrap-break-word text-sm leading-5">
             <span class="font-medium">{enrollment.Name}</span>
             {#if enrollment.Number}<span
-                class="ml-0.5 text-[11px] text-muted-foreground tabular-nums"
+                class="ml-0.5 text-2xs text-muted-foreground tabular-nums"
                 >#{enrollment.Number}</span
               >{/if}
           </p>
@@ -151,22 +147,19 @@
     >
       <li class="flex items-center gap-1">
         <Check
-          class="size-3.5 text-emerald-700 dark:text-emerald-400"
+          class="size-3.5 text-emerald-700 dark:text-emerald-300"
           aria-hidden="true"
         />
         = vahvistanut
       </li>
       <li class="flex items-center gap-1">
-        <span
-          class="size-3 rounded-full border border-muted-foreground border-dashed"
-          aria-hidden="true"
-        ></span>
+        <CircleDashed class="size-3.5" aria-hidden="true" />
         = ei vielä vahvistanut
       </li>
     </ul>
   {/if}
 {:else}
-  <Empty.Root class="data-frame py-12">
+  <Empty.Root class="data-frame border-solid py-12">
     <Empty.Description>Ei ilmoittautuneita</Empty.Description>
   </Empty.Root>
 {/if}
