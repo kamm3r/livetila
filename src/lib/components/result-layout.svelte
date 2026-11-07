@@ -496,8 +496,13 @@
           <ul
             class={cn(
               "col-span-full row-start-2 mt-1.5 grid text-center text-xs tabular-nums",
+              oneLine && "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0",
+              // Heights an athlete never jumped have a label and no mark, so
+              // cells sit at the top and every label shares one line.
               oneLine &&
-                "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0 md:self-stretch md:items-center",
+                (layout.vertical
+                  ? "md:self-center md:items-start"
+                  : "md:self-stretch md:items-center"),
               // A height keeps one width however many there are; more than
               // fit continue in the same columns below.
               layout.vertical
