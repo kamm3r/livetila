@@ -3,12 +3,22 @@
 @import "shadcn-svelte/tailwind.css";
 @import "@fontsource-variable/inter/opsz.css";
 
+/* rsms's own Latin subset keeps Inter's character variants (cv05), which the
+   Fontsource files strip. Fontsource stays as the fallback for other scripts. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("inter-ui/variable-latin/InterVariable-subset.woff2") format("woff2");
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans:
-    "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    sans-serif;
+    "Inter", "Inter Variable", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
   /* One type scale. 11px is the floor, kept for tags beside larger figures. */
   --text-2xs: 0.6875rem;
   --text-2xs--line-height: 1rem;
@@ -180,6 +190,10 @@
     @apply bg-primary/8 h-9 border-b text-xs font-medium;
     /* Tinted, but quieter than the blue that marks best attempts. */
     color: color-mix(in oklch, var(--primary) 55%, var(--foreground));
+  }
+  /* Dark primary is bright, so less of it keeps the headers navy-grey. */
+  .dark .data-head {
+    color: color-mix(in oklch, var(--primary) 30%, var(--foreground));
   }
   .toolbar-control {
     @apply bg-card hover:bg-accent focus-visible:outline-primary text-ui inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border font-medium shadow-xs outline-none select-none focus-visible:outline-2;

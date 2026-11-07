@@ -131,7 +131,10 @@
       aria-hidden="true"
     ></div>
   {/if}
-  <Popover.Content class="w-[min(420px,calc(100vw-2rem))] p-0" align="start">
+  <Popover.Content
+    class="w-[min(420px,calc(100vw-2rem))] overflow-hidden p-0"
+    align="start"
+  >
     <div
       bind:this={listEl}
       class="scroll-visible relative snap-y overflow-auto p-1.5 scroll-pt-1.5"

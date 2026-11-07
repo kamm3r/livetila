@@ -260,7 +260,7 @@
                   {#each search.matchingRecent as item (item.id)}
                     <div class="recent-row flex items-center rounded-lg pr-1">
                       <CommandItem
-                        class="group min-w-0 flex-1 cursor-pointer rounded-lg bg-transparent px-2.5 py-2 data-selected:bg-transparent [&>.cn-command-item-indicator]:hidden"
+                        class="group min-w-0 flex-1 cursor-pointer rounded-lg bg-transparent px-2.5 py-2 data-selected:bg-transparent data-selected:*:[svg]:text-muted-foreground [&>.cn-command-item-indicator]:hidden"
                         value={`recent-${item.id}`}
                         onSelect={() => {
                           void search.selectRecent(item);

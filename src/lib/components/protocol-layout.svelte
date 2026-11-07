@@ -102,9 +102,10 @@
   <ul class="data-frame overflow-clip lg:hidden">
     <li
       aria-hidden="true"
-      class="data-head sticky top-0 z-10 flex items-center justify-between border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3"
+      class="data-head sticky top-0 z-10 grid grid-cols-[24px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-b-0 bg-[color-mix(in_srgb,var(--primary)_8%,var(--card))] px-3"
     >
-      <span>{leadLabel}</span>
+      <span class="whitespace-nowrap">{leadLabel}</span>
+      <span class="col-start-3">Urheilija</span>
       {#if hasRecords}
         <span>PB / SB</span>
       {/if}
