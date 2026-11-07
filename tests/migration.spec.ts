@@ -207,7 +207,10 @@ test("results respect the 30-second interval before live status arrives", async 
   await page.clock.runFor(1000);
   await expect.poll(() => resultRequests).toBe(2);
   live = true;
-  await page.clock.runFor(30_000);
+  // The status query starts a moment after the results query, so its next
+  // refresh can fall just past the 30-second mark; a second of slack keeps
+  // the frozen clock from stopping short of it.
+  await page.clock.runFor(31_000);
   await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
   await page.clock.runFor(2000);
   await expect.poll(() => resultRequests).toBeGreaterThan(1);
