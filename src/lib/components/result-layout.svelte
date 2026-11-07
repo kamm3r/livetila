@@ -286,7 +286,14 @@
               ),
         )
       : 0}
-  <div class="data-frame hidden overflow-x-auto xl:block">
+  <!-- A column per height runs off the page once a vertical jump has many,
+       so heights keep the labelled, wrapping rows below at every width. -->
+  <div
+    class={cn(
+      "data-frame hidden overflow-x-auto",
+      !layout.vertical && "xl:block",
+    )}
+  >
     <!-- Fixed columns line up stacked tables; names and clubs share the rest. -->
     <table
       class="w-full table-fixed text-sm"
@@ -411,8 +418,8 @@
     : undefined}
   <!-- From tablet width a row fits on one line: name, attempts, result. -->
   <ul
-    class="data-frame overflow-clip xl:hidden"
-    style={`--attempts: ${layout.vertical ? Math.min(columns, 8) * 52 : columns * 44}px`}
+    class={cn("data-frame overflow-clip", !layout.vertical && "xl:hidden")}
+    style={`--attempts: ${layout.vertical ? 8 * 52 : columns * 44}px`}
   >
     {#if sharedLabels}
       <li

@@ -1270,20 +1270,16 @@ test("vertical results align attempts by height without six-slot padding or gap 
     }),
   );
   await page.goto("/competition/1-10?round=Final");
-  const table = page
-    .getByRole("tabpanel", { name: "Tulokset" })
-    .getByRole("table");
-  await expect(table.getByRole("columnheader")).toHaveText([
-    "Sija",
-    "Seuran logo",
-    "Urheilija",
-    "Seura",
-    "130",
-    "135",
-    "Tulos",
-    "Ero",
-  ]);
-  await expect(table.locator("tbody tr td:last-child")).toHaveText(["", "−5"]);
+  const panel = page.getByRole("tabpanel", { name: "Tulokset" });
+  // A column per height would run off the page, so every width labels marks.
+  await expect(panel.getByRole("table")).toBeHidden();
+  const rows = panel.locator("ul.data-frame > li");
+  await expect(rows).toHaveCount(2);
+  // Each athlete's strip ends at their own last height, with no padding.
+  await expect(rows.nth(0).locator("ul > li")).toHaveText([/^130/, /^135\s*o/]);
+  await expect(rows.nth(1).locator("ul > li")).toHaveText([/^130\s*o/]);
+  await expect(rows.nth(1)).toContainText("−5");
+  await expect(rows.nth(1)).not.toContainText("−0,05");
 });
 
 test("protocol lists every heat in one table with heat rows", async ({
