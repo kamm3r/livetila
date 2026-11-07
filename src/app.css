@@ -168,11 +168,14 @@
   }
 }
 
-/* Broadcast graphics are laid out to fixed widths: keep their type stack. */
+/* Broadcast graphics use the app's bundled Inter, so every streaming machine
+   renders them alike instead of falling back to its own system font. Capitals
+   get a little air instead of being packed. */
 .broadcast-type {
-  font-family:
-    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
+  font-family: var(--font-sans);
+}
+.broadcast-type .uppercase {
+  letter-spacing: 0.02em;
 }
 
 /* Shared surfaces for the result, protocol and participant lists. */

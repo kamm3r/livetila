@@ -103,11 +103,14 @@ test("round navigation, desktop results, and overlay clipboard link stay in sync
     "href",
     "http://127.0.0.1:4173/overlay/1-10?round=1&style=broadcast-trail-plain&gap=0",
   );
+  // The ticker offers the gap too, and keeps the choice made on the list.
   await page.getByText("Tikkeri").click();
-  await expect(page.getByRole("switch", { name: "Näytä erot" })).toHaveCount(0);
+  await expect(
+    page.getByRole("switch", { name: "Näytä erot" }),
+  ).not.toBeChecked();
   await expect(overlay).toHaveAttribute(
     "href",
-    "http://127.0.0.1:4173/overlay/1-10?round=1&style=ticker",
+    "http://127.0.0.1:4173/overlay/1-10?round=1&style=ticker&gap=0",
   );
 });
 

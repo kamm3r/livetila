@@ -257,6 +257,88 @@ test.describe("Tikkeri", () => {
     await page.clock.runFor(4_001);
     await expect(callout).toHaveCount(0);
   });
+
+  test("shows each athlete's gap to the leader unless ?gap=0", async ({
+    page,
+  }) => {
+    await serve(page, field());
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/overlay/1-10?heat=1&style=ticker");
+    await expect(visibleText(page, "−0,18")).toBeVisible();
+    await page.goto("/overlay/1-10?heat=1&style=ticker&gap=0");
+    await expect(visibleText(page, "Virtanen")).toBeVisible();
+    await expect(page.getByText("−0,18")).toHaveCount(0);
+  });
+
+  test("a scrolling crawl keeps its order on screen and re-sorts out of view", async ({
+    page,
+  }) => {
+    const five = () => [
+      ...field(),
+      jumper(4, "Iida", "Laine", "6,50", ["6,50"]),
+      jumper(5, "Oona", "Salo", "6,40", ["6,40"]),
+    ];
+    const server = await serve(page, five());
+    await page.clock.install();
+    await page.goto("/overlay/1-10?heat=1&style=ticker");
+    const items = page
+      .locator(".ticker-track ol")
+      .first()
+      .locator(":scope > li");
+    await expect(items.nth(0)).toContainText("Korhonen");
+    await expect(items.nth(1)).toContainText("Virtanen");
+
+    server.set(
+      five().map((entry) =>
+        entry.Id !== 2
+          ? entry
+          : {
+              ...entry,
+              Result: "7,20",
+              Attempts: [...entry.Attempts, { Line1: "7,20", Line2: "" }],
+            },
+      ),
+    );
+    await nextRefresh(page);
+    await page.clock.runFor(2_000);
+    // Virtanen leads, but stays where the crawl is showing her this pass.
+    await expect(items.nth(1)).toContainText("Virtanen");
+    await expect(items.nth(1).locator("span").first()).toHaveText("1");
+    await expect(items.nth(0).locator("span").first()).toHaveText("2");
+    // The repeat still out of view to the right takes the new order first.
+    const repeat = page
+      .locator(".ticker-track ol")
+      .nth(1)
+      .locator(":scope > li");
+    await expect(repeat.nth(0)).toContainText("Virtanen");
+
+    // The loop starts again: the new order takes over.
+    await page
+      .locator(".ticker-track")
+      .evaluate((track) =>
+        track.dispatchEvent(new AnimationEvent("animationiteration")),
+      );
+    await expect(items.nth(0)).toContainText("Virtanen");
+    await expect(items.nth(1)).toContainText("Korhonen");
+  });
+
+  test("holds a new mark back before revealing it, as the list does", async ({
+    page,
+  }) => {
+    const server = await serve(page, field());
+    await page.clock.install();
+    await page.goto("/overlay/1-10?heat=1&style=ticker");
+    await expect(visibleText(page, "Virtanen")).toBeVisible();
+    const callout = page.getByRole("status");
+
+    server.set(virtanenJumps("7,20"));
+    await nextRefresh(page);
+    await expect(callout).toContainText("Virtanen");
+    await expect(callout).not.toContainText("7,20");
+    await page.clock.runFor(1_600);
+    await expect(callout).toContainText("7,20");
+    await expect(callout).toContainText("Sija 1");
+  });
 });
 
 test.describe("Lopputulokset", () => {
@@ -266,15 +348,15 @@ test.describe("Lopputulokset", () => {
     await serve(page, field());
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/overlay/1-10?heat=1&style=broadcast-results");
-    await expect(visibleText(page, "Tulokset – Loppukilpailu")).toBeVisible();
+    await expect(visibleText(page, "Loppukilpailu – Tulokset")).toBeVisible();
     const rows = page.locator("ol > li");
     await expect(rows).toHaveCount(3);
     await expect(rows.nth(0)).toContainText("1");
     await expect(rows.nth(0)).toContainText("Aino");
     await expect(rows.nth(0)).toContainText("Club");
     await expect(rows.nth(0)).toContainText("7,10m");
-    await expect(rows.nth(1)).toContainText("−0,18m");
-    await expect(rows.nth(2)).toContainText("−0,35m");
+    await expect(rows.nth(1)).toContainText("−0,18");
+    await expect(rows.nth(2)).toContainText("−0,35");
     await expect(visibleText(page, "Ero")).toBeVisible();
     await expect(visibleText(page, "Kalevan kisat")).toBeVisible();
   });

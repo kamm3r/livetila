@@ -39,7 +39,8 @@
   const board = $derived(
     style === "broadcast-results" || style === "timetable",
   );
-  const zoom = $derived(board ? (wide ? 0.85 : 0.5) : wide ? 1 : 0.85);
+  // The list is 20rem wide; at 0.8 it sits with the settings without dominating.
+  const zoom = $derived(board ? (wide ? 0.7 : 0.5) : 0.8);
   // The loop: the first change, then the second, held so it can be read.
   const steps = 3;
   const stepFor = 4000;
