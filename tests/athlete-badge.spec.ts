@@ -14,6 +14,7 @@ test("Tuloslista abbreviation exceptions resolve to verified Tilastopaja filenam
     ["Seinäjoen Seudun Urheilijat", "SeinäjSU", "SeinäjsU"],
     ["Kunto-Pirkat", "KUNPIR", "KuntoP"],
     ["SpoVe", "SPOVE", "Spove"],
+    ["Kaarinan Yleisurheilu", "KaarYU", "KaarUra"],
   ]) {
     const club = { Name, NameShort };
     expect(clubLogoFilename(club)).toBe(filename);
