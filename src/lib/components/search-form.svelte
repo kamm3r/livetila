@@ -35,9 +35,6 @@
     inputEl?.focus();
   }
 
-  const groupHeadingClassName =
-    "p-0 **:data-[command-group-heading]:px-2.5 **:data-[command-group-heading]:pb-2 **:data-[command-group-heading]:font-medium **:data-[command-group-heading]:text-muted-foreground **:data-[command-group-heading]:text-[11px] **:data-[command-group-heading]:uppercase **:data-[command-group-heading]:tracking-[0.05em]";
-
   const multipleEventDates = $derived(
     new Set(search.filteredEvents.map((event) => event.Date)).size > 1,
   );
@@ -132,6 +129,13 @@
     };
   });
 
+  // Opening can move the field on a phone, so measure once it has settled.
+  $effect(() => {
+    if (!showDropdown) return;
+    const frame = requestAnimationFrame(measureSpace);
+    return () => cancelAnimationFrame(frame);
+  });
+
   function handleFocus() {
     measureSpace();
     if (blurTimeout) clearTimeout(blurTimeout);
@@ -153,7 +157,10 @@
   }
 </script>
 
-<div class="relative mx-auto h-14 w-full max-w-2xl">
+<div
+  class="relative mx-auto h-14 w-full max-w-2xl"
+  data-search-open={showDropdown ? "" : undefined}
+>
   <Command
     class="absolute inset-x-0 top-0 z-30 h-auto overflow-visible bg-transparent p-0 text-left"
     onkeydown={(event) => {
@@ -223,7 +230,7 @@
                 onscroll={handleScroll}
                 class={cn(
                   "overflow-y-auto overscroll-contain",
-                  moreBelow && "search-fade",
+                  moreBelow && "fade-below",
                 )}
                 style={`max-height: ${listHeight}px`}
               >
@@ -331,7 +338,7 @@
                     </div>
                   {/each}
                 {:else if search.step === "events" && search.hasResults}
-                  <CommandGroup class={groupHeadingClassName} heading="Lajit">
+                  <CommandGroup class="p-0">
                     {#each search.filteredEvents.slice(0, search.visibleCount) as evt (evt.Id)}
                       {@const isNavigating = search.navigatingTo === evt.Id}
                       {@const isDisabled =
@@ -389,7 +396,7 @@
                   </CommandGroup>
                 {/if}
               </CommandList>
-              {#if !search.isLoading && !search.loadError && search.hasResults}
+              {#if !search.isLoading && !search.loadError && search.hasMore}
                 <div
                   class="-mx-2 -mb-2 flex items-center justify-between gap-3 border-t px-[1.125rem] py-2 text-xs text-muted-foreground"
                 >
@@ -399,19 +406,17 @@
                       search.results.length,
                     )} / {search.results.length}</span
                   >
-                  {#if search.hasMore}
-                    <button
-                      type="button"
-                      class="rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                      onkeydown={(event) => event.stopPropagation()}
-                      onclick={() => {
-                        search.loadMore();
-                        if (!search.hasMore) inputEl?.focus();
-                      }}
-                    >
-                      Näytä lisää
-                    </button>
-                  {/if}
+                  <button
+                    type="button"
+                    class="rounded-md px-2 py-1.5 font-medium text-primary hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    onkeydown={(event) => event.stopPropagation()}
+                    onclick={() => {
+                      search.loadMore();
+                      if (!search.hasMore) inputEl?.focus();
+                    }}
+                  >
+                    Näytä lisää
+                  </button>
                 </div>
               {/if}
             </div>
@@ -423,14 +428,6 @@
 </div>
 
 <style>
-  /* Rows fade out at the bottom edge: a hint there is more to scroll to. */
-  :global(.search-fade) {
-    mask-image: linear-gradient(
-      to bottom,
-      black calc(100% - 2.5rem),
-      transparent
-    );
-  }
   .recent-row:has(:global([data-selected])),
   .recent-row:focus-within {
     background: color-mix(in oklch, var(--primary) 10%, transparent);

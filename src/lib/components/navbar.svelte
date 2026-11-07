@@ -28,7 +28,7 @@
           <ArrowUpRight size={14} aria-hidden="true" />
           <span class="sr-only">(avautuu uuteen välilehteen)</span>
         </a>
-        <ModeSwitcher />
+        <ModeSwitcher class="-mr-[7px]" />
       </div>
     </Tooltip.Provider>
   </div>

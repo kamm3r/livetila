@@ -91,7 +91,9 @@
   });
   const next = $derived(latest ? order.next : null);
 
-  // Gold, silver and bronze mark the podium on the rank itself.
+  // Gold, silver and bronze mark the podium on the rank itself; placing in a
+  // heat wins no medal.
+  const showMedals = $derived(ctx.currentRound?.RoundTypeCategory === "Final");
   const medals = [
     "bg-amber-400/25 text-amber-900 dark:bg-amber-300/25 dark:text-amber-200",
     "bg-slate-400/25 text-slate-800 dark:bg-slate-300/20 dark:text-slate-200",
@@ -107,13 +109,50 @@
   }
 
   const isFoul = (mark: string) => /^[xr]$/i.test(mark.trim());
+
+  // Below table width the gap has no column header to name it.
+  const showsGap = $derived(
+    [sortedAllocs, showTotal ? sortedTotal : []].some((list) => {
+      const leader = leadingResult(list, eventCategory);
+      return list.some((entry) => {
+        const gap = gapToLeader(entry.Result, leader, eventCategory);
+        return gap && gap !== "—";
+      });
+    }),
+  );
+
+  // Once under everything on the page, explaining only what is on the page.
+  const legend = $derived.by(() => {
+    const entries = [...sortedAllocs, ...(showTotal ? sortedTotal : [])];
+    const marks = entries.flatMap((entry) =>
+      (entry.Attempts ?? []).map((attempt) =>
+        vertical ? attempt.Line2 : attempt.Line1,
+      ),
+    );
+    const tags = entries.map((entry) => recordTag(entry, eventCategory));
+    const eliminated =
+      !vertical &&
+      eliminatedAfterThree(sortedAllocs).size +
+        eliminatedAfterThree(sortedTotal).size >
+        0;
+    return [
+      vertical && marks.some((mark) => /o/i.test(mark)) && "o = onnistunut",
+      marks.some((mark) => /x/i.test(mark)) && "x = hylätty",
+      marks.some((mark) => /[–-]/.test(mark)) && "– = ei suoritusta",
+      eliminated && "viivoitus = karsiutui kolmen kierroksen jälkeen",
+      ...resultCodeLegend(entries),
+      tags.includes("PB") && "PB = ennätys",
+      tags.includes("SB") && "SB = kauden paras",
+      entries.some((entry) => activeIds.has(entry.AllocId)) && "••• = vuorossa",
+    ].filter((item) => typeof item === "string");
+  });
 </script>
 
 {#snippet rankMark(rank: number | undefined, muted: boolean)}
   <span
     class={cn(
       "inline-flex size-6 items-center justify-center rounded-full font-semibold text-[13px] tabular-nums",
-      rank && rank <= 3 && medals[rank - 1],
+      showMedals && rank && rank <= 3 && medals[rank - 1],
       muted && "text-muted-foreground",
     )}>{rank || "–"}</span
   >
@@ -134,7 +173,7 @@
     <span
       class={cn(
         "text-right font-semibold tabular-nums",
-        large ? "text-base" : "text-[15px]",
+        large ? "text-base leading-5" : "text-[15px]",
       )}>{entry.Result || "-"}</span
     >
     <span
@@ -167,9 +206,7 @@
     <span
       class={cn(
         "inline-flex flex-col items-center rounded-md px-1.5 py-0.5",
-        !height &&
-          index === best &&
-          "bg-primary/10 font-semibold text-primary dark:bg-primary/15",
+        !height && index === best && "font-semibold text-primary",
         isFoul(attempt.Line1) && "text-muted-foreground",
         attempt.Line1 === "–" || attempt.Line1 === "-"
           ? "text-muted-foreground"
@@ -179,13 +216,12 @@
     >
       <span>{height ? attempt.Line2 || "–" : attempt.Line1}</span>
       {#if !height && attempt.Line2}<span
-          class="text-[10px] text-muted-foreground">{attempt.Line2}</span
+          class="font-normal text-[10px] text-muted-foreground"
+          >{attempt.Line2}</span
         >{/if}
     </span>
   {:else}
-    <span class="text-muted-foreground/70" aria-hidden="true">·</span><span
-      class="sr-only">Ei suoritusta</span
-    >
+    <span class="sr-only">Ei suoritusta</span>
   {/if}
 {/snippet}
 
@@ -227,7 +263,7 @@
     <!-- Fixed columns line up stacked tables; names and clubs share the rest. -->
     <table
       class="w-full table-fixed text-sm"
-      style={`min-width: ${708 + columns * 58}px`}
+      style={`min-width: ${columns > 0 ? 562 + columns * 58 : 708}px`}
     >
       <thead>
         <tr class="data-head">
@@ -236,7 +272,13 @@
             ><span class="sr-only">Seuran logo</span></th
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
-          <th class="px-2 text-left font-medium" scope="col">Seura</th>
+          <th
+            class={cn(
+              "px-2 text-left font-medium",
+              columns > 0 && "w-36 xl:w-56",
+            )}
+            scope="col">Seura</th
+          >
           {#each { length: columns }, i (i)}
             <th
               class={cn(
@@ -282,7 +324,9 @@
             <td class="px-1"><AthleteBadge {entry} /></td>
             <td class="px-2">
               <span class="flex items-center gap-2 whitespace-nowrap">
-                <span class="truncate font-medium">{entry.Name}</span>
+                <span class="truncate font-medium" title={entry.Name}
+                  >{entry.Name}</span
+                >
                 {#if entry.Number}<span
                     class="shrink-0 text-muted-foreground text-xs tabular-nums"
                     >#{entry.Number}</span
@@ -293,7 +337,8 @@
               </span>
             </td>
             <td
-              class="max-w-56 truncate px-2 text-[13px] text-muted-foreground"
+              class="truncate pr-4 pl-2 text-[13px] text-muted-foreground"
+              title={entry.Organization?.Name}
             >
               {entry.Organization?.Name ?? "-"}
             </td>
@@ -324,7 +369,36 @@
     </table>
   </div>
 
-  <ul class="data-frame lg:hidden">
+  <!-- One sticky label row while the attempts fit a card's width; more heights
+       than that wrap, so each mark keeps its own label. -->
+  {@const sharedLabels = columns > 0 && columns <= 8}
+  {@const attemptGrid = sharedLabels
+    ? `grid-template-columns: repeat(${columns}, minmax(0, 1fr))`
+    : undefined}
+  <!-- From tablet width a row fits on one line: name, attempts, result. -->
+  <ul
+    class="data-frame overflow-clip lg:hidden"
+    style={`--attempts: ${columns * 44}px`}
+  >
+    {#if sharedLabels}
+      <li
+        aria-hidden="true"
+        class="data-head sticky top-0 z-10 grid items-center gap-x-2.5 border-b-0 bg-[color-mix(in_oklch,var(--muted)_45%,var(--card))] px-3 text-center md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem]"
+      >
+        <span class="hidden text-left md:col-start-3 md:block">Urheilija</span>
+        <span class="grid md:col-start-4" style={attemptGrid}>
+          {#each layout.labels as label, i (label)}
+            <span
+              class={cn(i + 1 === currentRound && "font-semibold text-primary")}
+              >{label}</span
+            >
+          {/each}
+        </span>
+        <span class="hidden whitespace-nowrap pr-5 text-right md:block"
+          >Tulos / Ero</span
+        >
+      </li>
+    {/if}
     {#each entries as entry (entry.Id)}
       {@const change = changes.get(entry.Id)}
       {@const best = bestAttempt(entry)}
@@ -335,62 +409,65 @@
         animate:flip={{ duration: moveDuration }}
         data-changed={change ? "" : undefined}
         class={cn(
-          "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2.5 transition-colors duration-1000 first:border-t-0",
+          "grid grid-cols-[24px_24px_minmax(0,1fr)_auto] gap-x-2.5 border-t px-3 py-2 transition-colors duration-1000 first:border-t-0",
+          sharedLabels &&
+            "md:grid-cols-[24px_24px_minmax(0,1fr)_var(--attempts)_6rem] md:items-center",
           isOut && "text-muted-foreground [&_img]:opacity-80",
           change && "bg-yellow-100 duration-0 dark:bg-yellow-400/10",
         )}
       >
-        <div class="flex flex-col items-center leading-tight">
+        <div class="-mt-0.5 flex flex-col items-center leading-tight md:mt-0">
           {@render rankMark(rank, isOut)}
           {#if change?.gained}{@render gainedPlaces(change.gained)}{/if}
         </div>
-        <div class="pt-0.5"><AthleteBadge {entry} /></div>
+        <div><AthleteBadge {entry} /></div>
         <div class="min-w-0">
-          <div class="flex min-w-0 items-center gap-1.5">
-            <span class="truncate font-medium text-sm">{entry.Name}</span>
+          <p class="wrap-break-word text-sm leading-5">
+            <span class="font-medium">{entry.Name}</span>
             {#if entry.Number}<span
-                class="shrink-0 text-[11px] text-muted-foreground tabular-nums"
+                class="ml-0.5 text-[11px] text-muted-foreground tabular-nums"
                 >#{entry.Number}</span
               >{/if}
-            <span class="text-primary"
+            <span class="ml-0.5 text-primary"
               ><ActiveAttempt active={activeIds.has(entry.AllocId)} /></span
             >
-          </div>
-          <p class="truncate text-muted-foreground text-xs">
+          </p>
+          <p class="truncate text-muted-foreground text-xs leading-4">
             {entry.Organization?.Name ?? "-"}
           </p>
         </div>
         {#if columns > 0}
           <!-- Fixed columns keep attempt N aligned across rows. -->
           <ul
-            class="col-span-2 col-start-3 row-start-2 mt-1.5 -ml-2.5 grid grid-cols-[repeat(auto-fill,44px)] text-center text-xs tabular-nums"
+            class={cn(
+              "col-span-full row-start-2 mt-1.5 grid items-center text-center text-xs tabular-nums",
+              sharedLabels
+                ? "md:col-span-1 md:col-start-4 md:row-start-1 md:mt-0"
+                : "grid-cols-[repeat(auto-fill,44px)]",
+            )}
+            style={attemptGrid}
           >
             {#each { length: isOut ? 3 : columns }, i (i)}
               <li>
                 <span
                   class={cn(
-                    "block text-[10px] text-muted-foreground",
-                    i + 1 === currentRound && "font-semibold text-primary",
+                    sharedLabels
+                      ? "sr-only"
+                      : "block text-[10px] text-muted-foreground",
                   )}>{layout.labels[i]}</span
                 >
-                {#if layout.vertical || entry.Attempts?.[i]?.Line1}
-                  {@render attemptMark(
-                    entry,
-                    i,
-                    best,
-                    change?.newAttempt,
-                    layout.vertical ? layout.labels[i] : undefined,
-                  )}
-                {:else}
-                  <span class="text-muted-foreground/70" aria-hidden="true"
-                    >·</span
-                  ><span class="sr-only">Ei suoritusta</span>
-                {/if}
+                {@render attemptMark(
+                  entry,
+                  i,
+                  best,
+                  change?.newAttempt,
+                  layout.vertical ? layout.labels[i] : undefined,
+                )}
               </li>
             {/each}
             {#if isOut && columns > 3}
               <li
-                class="hatch mb-0.5 h-5 self-end rounded-[3px]"
+                class="hatch h-5 rounded-[3px]"
                 style={`grid-column: span ${columns - 3}`}
               >
                 <span class="sr-only">Karsiutui</span>
@@ -399,28 +476,19 @@
           </ul>
         {/if}
         <div
-          class="col-start-4 row-start-1 flex flex-col items-end leading-tight"
+          class={cn(
+            "col-start-4 row-start-1 flex flex-col items-end leading-tight",
+            sharedLabels && "md:col-start-5",
+          )}
         >
           {@render result(entry, true)}
           {#if gap && gap !== "—"}
             <span
-              class="mt-0.5 pr-5 text-[11px] text-muted-foreground tabular-nums"
+              class="pr-5 text-muted-foreground text-xs leading-4 tabular-nums"
               >{gap}</span
             >
           {/if}
         </div>
-      </li>
-    {/each}
-  </ul>
-  <ul
-    class="mt-3 flex flex-wrap gap-x-3.5 gap-y-1 text-muted-foreground text-xs"
-  >
-    {#each [columns > 0 ? (layout.vertical ? "o = onnistunut · x = hylätty · – = ei suoritusta" : "x = hylätty · – = ei suoritusta") : null, out.size > 0 ? "viivoitus = karsiutui kolmen kierroksen jälkeen" : null, ...resultCodeLegend(entries), "PB = ennätys · SB = kauden paras · Ero = ero kärkeen"]
-      .filter(Boolean)
-      .flatMap((group) => group!.split(" · ")) as item (item)}
-      {@const [key, meaning] = item.split(" = ")}
-      <li>
-        <span class="font-medium text-foreground/75">{key}</span> = {meaning}
       </li>
     {/each}
   </ul>
@@ -508,5 +576,21 @@
       Kokonaistulokset
     </h3>
     <div>{@render resultList(sortedTotal, "ResultRank", totalChanges)}</div>
+  {/if}
+
+  {#if legend.length > 0}
+    <ul class="flex flex-wrap gap-x-3.5 gap-y-1 text-muted-foreground text-xs">
+      {#each legend as item (item)}
+        {@const [key, meaning] = item.split(" = ")}
+        <li>
+          <span class="font-medium text-foreground/75">{key}</span> = {meaning}
+        </li>
+      {/each}
+      {#if showsGap}
+        <li class="lg:hidden">
+          <span class="font-medium text-foreground/75">Ero</span> = ero kärkeen
+        </li>
+      {/if}
+    </ul>
   {/if}
 </div>

@@ -104,9 +104,7 @@
 </main>
 <footer class="home-footer">
   <div class="page-width">
-    <span>Livetila</span><a href="https://live.tuloslista.com"
-      >Tulostiedot: Tuloslista</a
-    >
+    <a href="https://live.tuloslista.com">Tulostiedot: Tuloslista</a>
   </div>
 </footer>
 
@@ -119,6 +117,20 @@
   }
   .search-field {
     margin-top: 1.75rem;
+  }
+  /* The open search panel replaces the list; its height stays reserved. */
+  .home-search:has(:global([data-search-open])) .below-search {
+    visibility: hidden;
+  }
+  /* On a phone an active search also takes the headline's space. */
+  @media (max-width: 639px) {
+    .home-search:has(:global([data-search-open]))
+      :is(h1, .introduction, .below-search) {
+      display: none;
+    }
+    .home-search:has(:global([data-search-open])) .search-field {
+      margin-top: 0;
+    }
   }
   .home-content {
     width: 100%;
@@ -235,8 +247,7 @@
   }
   .home-footer > div {
     display: flex;
-    justify-content: space-between;
-    gap: 1rem;
+    justify-content: flex-end;
   }
   @media (max-width: 480px) {
     .home-page {

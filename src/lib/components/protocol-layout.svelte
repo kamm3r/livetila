@@ -18,7 +18,7 @@
 </script>
 
 {#snippet heatLabel(index: number, count: number)}
-  <span class="font-semibold text-foreground">Erä {index}</span>
+  <span class="text-foreground">Erä {index}</span>
   · {count} urheilijaa
 {/snippet}
 
@@ -42,7 +42,7 @@
       {#each heats as heat (heat.index)}
         <tbody>
           {#if showHeatRows}
-            <tr class="h-[34px] border-t bg-muted/45 first:border-t-0">
+            <tr class="h-[34px] border-t bg-muted/45">
               <th
                 class="pl-4 text-left font-normal text-muted-foreground text-xs"
                 colspan="6"
@@ -87,6 +87,13 @@
   </div>
 
   <ul class="data-frame lg:hidden">
+    <li
+      aria-hidden="true"
+      class="data-head flex items-center justify-between border-b-0 px-3"
+    >
+      <span>{leadLabel}</span>
+      <span>PB / SB</span>
+    </li>
     {#each heats as heat (heat.index)}
       {#if showHeatRows}
         <li
@@ -97,7 +104,7 @@
       {/if}
       {#each heat.allocations as alloc (alloc.Id)}
         <li
-          class="grid grid-cols-[24px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2.5 first:border-t-0"
+          class="grid grid-cols-[24px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2 first:border-t-0"
         >
           <span class="text-center font-semibold text-sm tabular-nums"
             >{alloc.Position || "-"}</span
@@ -105,31 +112,23 @@
           <!-- The cell stays when there is no logo, so the columns hold. -->
           <span class="flex"><AthleteBadge entry={alloc} /></span>
           <div class="min-w-0">
-            <div class="flex min-w-0 items-center gap-1.5">
-              <span class="truncate font-medium text-sm">{alloc.Name}</span>
+            <p class="wrap-break-word text-sm leading-5">
+              <span class="font-medium">{alloc.Name}</span>
               {#if alloc.Number}<span
-                  class="shrink-0 text-[11px] text-muted-foreground tabular-nums"
+                  class="ml-0.5 text-[11px] text-muted-foreground tabular-nums"
                   >#{alloc.Number}</span
                 >{/if}
-            </div>
-            <p class="truncate text-muted-foreground text-xs">
+            </p>
+            <p class="truncate text-muted-foreground text-xs leading-4">
               {alloc.Organization?.Name ?? "-"}
             </p>
           </div>
-          <div
-            class="text-right text-muted-foreground text-xs leading-tight tabular-nums"
-          >
-            <div>
-              PB <span class="font-semibold text-foreground"
-                >{alloc.PB || "–"}</span
-              >
-            </div>
-            <div>
-              SB <span class="font-semibold text-foreground"
-                >{alloc.SB || "–"}</span
-              >
-            </div>
-          </div>
+          <dl class="text-right text-xs leading-tight tabular-nums">
+            <dt class="sr-only">PB</dt>
+            <dd>{alloc.PB || "–"}</dd>
+            <dt class="sr-only">SB</dt>
+            <dd class="text-muted-foreground">{alloc.SB || "–"}</dd>
+          </dl>
         </li>
       {/each}
     {/each}

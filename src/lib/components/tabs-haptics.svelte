@@ -2,16 +2,15 @@
   import { createWebHaptics } from "web-haptics/svelte";
   import { onDestroy, untrack } from "svelte";
   import * as Tabs from "$lib/components/ui/tabs";
+  import { cn } from "$lib/utils";
   import type { Snippet } from "svelte";
 
   type Tab = {
     value: string;
     label: string;
-    shortLabel?: string;
     count?: number | string;
     // Spoken in place of the count, for counts that need words ("7/9").
     countLabel?: string;
-    icon: Snippet;
     content: Snippet;
   };
 
@@ -40,6 +39,27 @@
     ),
   );
 
+  // With nothing to switch to, the tab reads as the list's heading.
+  const lone = $derived(tabs.length === 1);
+
+  // Tabs hug their labels, so the indicator takes its size from the active one.
+  let listEl = $state<HTMLElement | null>(null);
+  let indicator = $state<{ left: number; width: number } | null>(null);
+  function measure() {
+    const tab =
+      listEl?.querySelectorAll<HTMLElement>('[role="tab"]')[activeIndex];
+    if (tab) indicator = { left: tab.offsetLeft, width: tab.offsetWidth };
+  }
+  $effect(() => {
+    void activeIndex;
+    void tabs.length;
+    if (!listEl) return;
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(listEl);
+    return () => observer.disconnect();
+  });
+
   function handleTabChange(value: string) {
     activeTab = value;
     trigger("selection");
@@ -49,28 +69,32 @@
 
 <div class="w-full {className}">
   <Tabs.Root value={activeTab} onValueChange={handleTabChange}>
-    <div class="border-b">
+    <div class={lone ? "" : "border-b"}>
       <Tabs.List
-        class="motion-tabs motion-tabs-underline h-10 w-full rounded-none bg-transparent p-0 sm:w-fit"
-        style={`--tab-count: ${Math.max(1, tabs.length)}; --tab-index: ${activeIndex}`}
+        bind:ref={listEl}
+        class={cn(
+          "motion-tabs w-fit gap-4 rounded-none bg-transparent p-0 sm:gap-6",
+          lone ? "h-6" : "h-10",
+        )}
       >
-        <span class="motion-tab-indicator" aria-hidden="true"></span>
+        {#if indicator && !lone}
+          <span
+            class="motion-tab-indicator"
+            aria-hidden="true"
+            style={`--tab-left: ${indicator.left}px; --tab-width: ${indicator.width}px`}
+          ></span>
+        {/if}
         {#each tabs as tab (tab.value)}
           <Tabs.Trigger
             value={tab.value}
-            class="motion-tab-trigger h-full gap-1.5 rounded-none px-3 text-xs sm:px-4 sm:text-[13px]"
+            class={cn(
+              "motion-tab-trigger h-full gap-1.5 rounded-none px-0",
+              lone ? "cursor-default font-semibold text-sm" : "text-[13px]",
+            )}
           >
-            <span class="max-sm:hidden">{@render tab.icon()}</span>
-            <span class="sm:hidden" aria-hidden="true"
-              >{tab.shortLabel ?? tab.label}</span
-            >
-            <span class="sr-only sm:not-sr-only">{tab.label}</span>
+            {tab.label}
             {#if tab.count !== undefined}
-              <span
-                class="rounded-full px-1.5 text-[10px] leading-4 tabular-nums {tab.value ===
-                activeTab
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-muted text-muted-foreground'}"
+              <span class="font-normal text-muted-foreground tabular-nums"
                 ><span aria-hidden={tab.countLabel ? true : undefined}
                   ><span class="sr-only">(</span>{tab.count}<span
                     class="sr-only">)</span
@@ -85,7 +109,7 @@
       </Tabs.List>
     </div>
     {#each tabs as tab (tab.value)}
-      <Tabs.Content value={tab.value} class="mt-2">
+      <Tabs.Content value={tab.value} class="mt-3 sm:mt-4">
         {@render tab.content()}
       </Tabs.Content>
     {/each}
