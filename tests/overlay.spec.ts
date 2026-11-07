@@ -256,6 +256,36 @@ test.describe("Tikkeri", () => {
     await page.clock.runFor(4_001);
     await expect(callout).toHaveCount(0);
   });
+
+  test("shows each athlete's gap to the leader unless ?gap=0", async ({
+    page,
+  }) => {
+    await serve(page, field());
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/overlay/1-10?heat=1&style=ticker");
+    await expect(visibleText(page, "−0,18")).toBeVisible();
+    await page.goto("/overlay/1-10?heat=1&style=ticker&gap=0");
+    await expect(visibleText(page, "Virtanen")).toBeVisible();
+    await expect(page.getByText("−0,18")).toHaveCount(0);
+  });
+
+  test("holds a new mark back before revealing it, as the list does", async ({
+    page,
+  }) => {
+    const server = await serve(page, field());
+    await page.clock.install();
+    await page.goto("/overlay/1-10?heat=1&style=ticker");
+    await expect(visibleText(page, "Virtanen")).toBeVisible();
+    const callout = page.getByRole("status");
+
+    server.set(virtanenJumps("7,20"));
+    await page.clock.runFor(30_000);
+    await expect(callout).toContainText("Virtanen");
+    await expect(callout).not.toContainText("7,20");
+    await page.clock.runFor(1_600);
+    await expect(callout).toContainText("7,20");
+    await expect(callout).toContainText("Sija 1");
+  });
 });
 
 test.describe("Lopputulokset", () => {

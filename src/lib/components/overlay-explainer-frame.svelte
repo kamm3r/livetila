@@ -91,7 +91,7 @@
           class="relative h-36 w-[800px] transform-[translateZ(0)]"
           style:zoom={Math.min(1, width / 800)}
         >
-          <Ticker {view} inHeat={false} {records} />
+          <Ticker {view} inHeat={false} {gaps} {records} />
         </div>
       {/if}
     </div>
