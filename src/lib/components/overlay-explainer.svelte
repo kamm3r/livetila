@@ -40,7 +40,7 @@
     style === "broadcast-results" || style === "timetable",
   );
   // The list is 20rem wide; at 0.9 it keeps the 18rem it had in the popover.
-  const zoom = $derived(board ? (wide ? 0.6 : 0.5) : wide ? 0.9 : 0.8);
+  const zoom = $derived(board ? (wide ? 0.7 : 0.5) : wide ? 0.9 : 0.8);
   // The loop: the first change, then the second, held so it can be read.
   const steps = 3;
   const stepFor = 4000;

@@ -78,8 +78,8 @@
       </span>
       <span class="flex items-center gap-2 px-3 py-2">
         <AthleteBadge entry={latest.entry} />
-        <span class="uppercase">{name.surname}</span>
         <span class="text-neutral-400">{name.initial}</span>
+        <span class="uppercase">{name.surname}</span>
         <ActiveAttempt
           active={view.activeAllocationIds.has(latest.entry.AllocId)}
         />

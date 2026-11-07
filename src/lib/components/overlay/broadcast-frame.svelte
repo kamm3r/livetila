@@ -367,9 +367,12 @@
 </script>
 
 {#snippet mark(result?: string | null)}
-  {result ?? ""}{#if unit(result)}<span
-      class="ml-px text-[0.8em] normal-case opacity-70">{unit(result)}</span
-    >{/if}
+  <!-- One inline run, so the unit sits on the figure's baseline. -->
+  <span
+    >{result ?? ""}{#if unit(result)}<span
+        class="ml-px text-[0.8em] normal-case opacity-70">{unit(result)}</span
+      >{/if}</span
+  >
 {/snippet}
 
 <div class="w-80 font-semibold text-white uppercase" style:--accent={accent}>
@@ -543,7 +546,7 @@
           <ol
             data-attempt-details
             transition:collapse
-            class="ml-5 grid grid-cols-6 gap-px bg-neutral-950 text-black normal-case tabular-nums"
+            class="grid grid-cols-6 gap-px bg-neutral-950 text-black normal-case tabular-nums"
           >
             {#each attemptSlots(entry.Attempts) as attempt, i (i)}
               {@const best = !!attempt.Line1 && attempt.Line1 === entry.Result}
@@ -558,14 +561,14 @@
                   "flex h-10 flex-col items-center justify-center bg-neutral-100",
                   !attempt.Line1 &&
                     !waiting &&
-                    "bg-neutral-400!",
+                    "bg-neutral-800! text-neutral-500",
                   best && "bg-(--accent)! text-black",
                   popping?.id === entry.Id &&
                     popping.attempt === i &&
                     "new-attempt",
                 )}
               >
-                <span class="text-neutral-600 text-xs leading-none"
+                <span class="text-xs leading-none opacity-70"
                   >{tries ? attempt.Line1 : i + 1}</span
                 >
                 {#if waiting}

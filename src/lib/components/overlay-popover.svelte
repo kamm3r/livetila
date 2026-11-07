@@ -325,15 +325,9 @@
           Tulokset lähetykseen OBS:n tai muun ohjelman selainlähteenä.
         </PopoverDescription>
       </PopoverHeader>
-      <!-- The list's preview column matches the graphic's width at full size;
-           the wider styles take the full width above the settings. -->
+      <!-- Every style stacks the same way, so switching moves nothing. -->
       <div class="px-4 pt-4">{@render styleControl()}</div>
-      <div
-        class={cn(
-          "grid items-start gap-5 p-4",
-          style === "broadcast-trail-plain" && "grid-cols-[19.5rem_1fr]",
-        )}
-      >
+      <div class="flex flex-col gap-5 p-4">
         {@render preview(true)}
         <div class="flex flex-col gap-5">{@render settings()}</div>
       </div>

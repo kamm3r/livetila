@@ -112,7 +112,7 @@
 {:else if rounds && selectedHeat && !heatExists}
   {@render notice(
     `Erä ${selectedHeat} ei ole olemassa`,
-    `Tämä tapahtuma sisältää ${heats.length} erää.`,
+    `Tämä tapahtuma sisältää ${heats.length} ${heats.length === 1 ? "erän" : "erää"}.`,
   )}
 {:else if isError || (!isLoading && !rounds)}
   {@render notice(

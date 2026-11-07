@@ -91,9 +91,11 @@
 
 {#snippet mark(value: string | null | undefined)}
   <!-- The unit as on the list: smaller and quieter than the figure. -->
-  {value ?? ""}{#if unit(value)}<span
-      class="ml-px text-[0.8em] normal-case opacity-70">{unit(value)}</span
-    >{/if}
+  <span
+    >{value ?? ""}{#if unit(value)}<span
+        class="ml-px text-[0.8em] normal-case opacity-70">{unit(value)}</span
+      >{/if}</span
+  >
 {/snippet}
 
 <div class="flex min-h-full items-center justify-center p-8">
