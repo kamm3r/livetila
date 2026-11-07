@@ -378,7 +378,7 @@
 <div class="w-80 font-semibold text-white uppercase" style:--accent={accent}>
   <header class="border-(--accent) border-t-2 bg-neutral-950">
     <div class="flex h-6 items-center justify-between px-2">
-      <span class="truncate text-(--accent)">
+      <span class="truncate text-(--accent) text-sm">
         {#if timed}
           {view.roundName ? `${view.roundName} – ` : ""}{resultsIn
             ? "Tulokset"
@@ -398,7 +398,7 @@
         {view.eventName ?? ""}{view.heatLabel ? ` | ${view.heatLabel}` : ""}
       </h2>
       <span
-        class="flex w-20 items-center justify-center text-xs text-neutral-300"
+        class="flex w-20 items-center justify-end px-2 text-xs text-neutral-300"
       >
         {timed ? "Aika" : "Tulos"}
       </span>

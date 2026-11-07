@@ -9,6 +9,7 @@
   import ActiveAttempt from "$lib/components/active-attempt.svelte";
   import AthleteBadge from "$lib/components/athlete-badge.svelte";
   import {
+    isFoul,
     qualification,
     rankOf,
     shortName,
@@ -85,7 +86,10 @@
         />
       </span>
       <span
-        class="flex items-center bg-white/5 px-3 font-bold text-2xl tabular-nums"
+        class={cn(
+          "flex items-center bg-white/5 px-3 font-bold text-2xl tabular-nums",
+          isFoul(latest.attempt) && "text-red-400",
+        )}
       >
         {latest.attempt || latest.entry.Result}
       </span>

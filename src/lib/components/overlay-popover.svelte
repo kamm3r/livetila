@@ -310,7 +310,7 @@
     <PopoverContent
       align="end"
       alignOffset={10}
-      class="max-h-[calc(100dvh-6rem)] w-[44rem] max-w-[calc(100vw-2rem)] overflow-y-auto p-0"
+      class="max-h-[calc(var(--bits-popover-content-available-height)-1rem)] w-[44rem] max-w-[calc(100vw-2rem)] overflow-y-auto p-0"
     >
       <PopoverHeader class="relative border-b p-4 pr-12">
         <PopoverClose

@@ -96,7 +96,7 @@
 
 <div class="flex min-h-full items-center justify-center p-8">
   {#if shown && rows.length > 0}
-    <div class="w-[40rem] font-semibold text-white" style:--accent={accent}>
+    <div class="w-[32rem] font-semibold text-white" style:--accent={accent}>
       <header in:fly|global={{ y: -12, duration: motion ? 300 : 0 }}>
         <div
           class="w-fit border-(--accent) border-t-2 bg-neutral-950 px-3 py-0.5 text-(--accent) text-sm uppercase"
