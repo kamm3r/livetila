@@ -372,10 +372,7 @@
     >{/if}
 {/snippet}
 
-<div
-  class="w-72 font-semibold text-white uppercase tracking-tight"
-  style:--accent={accent}
->
+<div class="w-80 font-semibold text-white uppercase" style:--accent={accent}>
   <header class="border-(--accent) border-t-2 bg-neutral-950/90">
     <div class="flex h-6 items-center justify-between px-2">
       <span class="truncate text-(--accent)">
@@ -398,7 +395,7 @@
         {view.eventName ?? ""}{view.heatLabel ? ` | ${view.heatLabel}` : ""}
       </h2>
       <span
-        class="flex w-20 items-center justify-center text-[11px] text-neutral-300"
+        class="flex w-20 items-center justify-center text-xs text-neutral-300"
       >
         {timed ? "Aika" : "Tulos"}
       </span>
@@ -464,7 +461,7 @@
               <AthleteBadge {entry} />
             {:else if clubInitials(entry)}
               <span
-                class="flex h-5 w-6 items-center justify-center rounded-sm bg-white text-[9px] text-neutral-700"
+                class="flex h-5 w-6 items-center justify-center rounded-sm bg-white text-[10px] text-neutral-700"
                 >{clubInitials(entry)}</span
               >
             {/if}
@@ -482,7 +479,7 @@
             {#if tag && whitened !== entry.Id && !banners.has(entry.Id)}
               <span
                 class={cn(
-                  "px-1 text-[10px]",
+                  "px-1 text-[11px]",
                   focused
                     ? "bg-black text-(--accent)"
                     : "bg-(--accent) text-black",

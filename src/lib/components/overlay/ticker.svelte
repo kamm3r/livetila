@@ -55,7 +55,7 @@
 </script>
 
 <div
-  class="fixed inset-x-0 bottom-0 p-6 font-semibold text-white tracking-tight"
+  class="fixed inset-x-0 bottom-0 p-6 font-semibold text-white"
   style:--accent={accent}
 >
   {#if latest && view.showAttempts}
@@ -113,7 +113,7 @@
       <span class="uppercase leading-tight">
         {view.eventName ?? "…"}
       </span>
-      <span class="font-medium text-[11px] uppercase leading-tight">
+      <span class="font-medium text-xs uppercase leading-tight">
         {view.roundName ?? ""}{view.heatLabel
           ? ` · ${view.heatLabel}`
           : ""}{view.wind ? ` · ${view.wind}` : ""}

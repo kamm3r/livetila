@@ -232,9 +232,21 @@ export function buildExample(
       })
       .sort((a, b) => Number(b.Result) - Number(a.Result))
       // Example data only fills the fields the overlay reads.
+      // Marks read as on the live overlay: Finnish decimal commas.
       .map(
         (entry, i) =>
-          ({ ...entry, ResultRank: i + 1 }) as unknown as OverlayEntry,
+          ({
+            ...entry,
+            Result: comma(entry.Result),
+            PB: comma(entry.PB),
+            Attempts: entry.Attempts.map((attempt) => ({
+              ...attempt,
+              Line1: comma(attempt.Line1),
+            })),
+            ResultRank: i + 1,
+          }) as unknown as OverlayEntry,
       )
   );
 }
+
+const comma = (value: string) => value.replace(".", ",");
