@@ -82,17 +82,17 @@
               </span>
             </td>
             <td
-              class="max-w-56 truncate px-2 pt-0.5 text-[13px] leading-5 text-muted-foreground"
+              class="max-w-56 truncate px-2 pt-0.5 text-ui leading-5 text-muted-foreground"
             >
               {enrollment.Organization?.Name ?? "-"}
             </td>
             {#if hasRecords}
               <td
-                class="pt-0.5 pr-5 text-right text-[13px] leading-5 tabular-nums"
+                class="pt-0.5 pr-5 text-right text-ui leading-5 tabular-nums"
                 >{enrollment.PB || "–"}</td
               >
               <td
-                class="pt-0.5 pr-4 text-right text-[13px] leading-5 text-muted-foreground tabular-nums"
+                class="pt-0.5 pr-4 text-right text-ui leading-5 text-muted-foreground tabular-nums"
                 >{enrollment.SB || "–"}</td
               >
             {/if}
@@ -126,7 +126,7 @@
           <p class="wrap-break-word text-sm leading-5">
             <span class="font-medium">{enrollment.Name}</span>
             {#if enrollment.Number}<span
-                class="ml-0.5 text-[11px] text-muted-foreground tabular-nums"
+                class="ml-0.5 text-2xs text-muted-foreground tabular-nums"
                 >#{enrollment.Number}</span
               >{/if}
           </p>

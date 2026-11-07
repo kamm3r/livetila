@@ -1,14 +1,29 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn-svelte/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/inter/opsz.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans:
-    "Geist Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     sans-serif;
+  /* One type scale. 11px is the floor, kept for tags beside larger figures. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-ui: 0.8125rem;
+  --text-ui--line-height: 1.25rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.5rem;
+  --text-title: 1.75rem;
+  --text-title--line-height: 2.125rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -73,7 +88,7 @@
   --chart-3: oklch(0.71 0.13 215);
   --chart-4: oklch(0.61 0.11 222);
   --chart-5: oklch(0.52 0.09 223);
-  --radius: 0.625rem;
+  --radius: 0.5rem;
   --sidebar: oklch(0.97 0.008 240);
   --sidebar-foreground: oklch(0.235 0.03 250);
   --sidebar-primary: oklch(0.5 0.15 245);
@@ -127,6 +142,19 @@
   }
   html {
     @apply font-sans;
+    /* Inter switches to its display cut at large sizes on its own; the tailed
+       l keeps names such as "Iida" from reading as "lida". */
+    font-optical-sizing: auto;
+    font-feature-settings: "cv05";
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  /* One icon weight everywhere, lighter than Lucide's default to sit with text. */
+  svg.lucide {
+    stroke-width: 1.75;
   }
 }
 
@@ -148,14 +176,11 @@
   .data-frame :is(tr, li) {
     border-color: color-mix(in oklch, var(--border) 72%, transparent);
   }
-  .dark .data-frame :is(tr, li) {
-    border-color: var(--border);
-  }
   .data-head {
-    @apply bg-primary/8 text-primary h-9 border-b text-[11px] font-medium tracking-[0.05em] uppercase;
+    @apply bg-primary/8 text-primary h-9 border-b text-xs font-medium;
   }
   .toolbar-control {
-    @apply bg-card hover:bg-accent focus-visible:outline-primary inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border text-[13px] font-medium shadow-xs outline-none select-none focus-visible:outline-2;
+    @apply bg-card hover:bg-accent focus-visible:outline-primary inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border text-ui font-medium shadow-xs outline-none select-none focus-visible:outline-2;
   }
 }
 

@@ -200,7 +200,7 @@
     <!-- Same frame as the loaded page, so nothing jumps when data arrives. -->
     <div class="flex flex-col gap-3 sm:gap-4" aria-hidden="true">
       <div class="flex flex-col gap-1.5">
-        <Skeleton class="h-7 w-64 max-w-full" />
+        <Skeleton class="h-8 w-64 max-w-full sm:h-[2.125rem]" />
         <Skeleton class="h-4 w-48" />
       </div>
       <Skeleton class="h-9 w-56 max-w-full" />
@@ -232,14 +232,14 @@
     </div>
   {:else if competition}
     <div class="flex flex-col gap-2.5 sm:gap-4">
-      <div class="flex flex-col gap-0.5 sm:gap-1">
+      <div class="flex flex-col gap-1">
         <h2
-          class="font-semibold text-xl tracking-tight text-balance sm:text-2xl"
+          class="font-semibold text-2xl tracking-[-0.015em] sm:text-title"
         >
           {compDetails?.Competition.Name ?? ""}
         </h2>
         {#if subline}
-          <p class="text-muted-foreground text-[13px] tabular-nums">
+          <p class="text-muted-foreground text-ui">
             {subline}
           </p>
         {/if}
@@ -278,7 +278,7 @@
             </div>
             {#if eventMeta}
               <span
-                class="order-6 text-muted-foreground text-[13px] tabular-nums"
+                class="order-6 text-muted-foreground text-ui"
                 >{eventMeta}</span
               >
             {/if}

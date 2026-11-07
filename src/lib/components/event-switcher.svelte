@@ -149,9 +149,9 @@
           )}
           onclick={() => handleSelect(i.toString())}
         >
-          <span class="text-[13px] text-muted-foreground tabular-nums">
+          <span class="text-ui text-muted-foreground tabular-nums">
             {formatTime(event.BeginDateTimeWithTZ)}
-            {#if multipleDays}<span class="block text-[11px]">{event.date}</span
+            {#if multipleDays}<span class="block text-2xs">{event.date}</span
               >{/if}
           </span>
           <span

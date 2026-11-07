@@ -154,7 +154,7 @@
   pick: (value: string) => void,
 )}
   <fieldset class="flex flex-col gap-1.5">
-    <legend class="mb-1.5 font-medium text-[13px]">{legend}</legend>
+    <legend class="mb-1.5 font-medium text-ui">{legend}</legend>
     <div class="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
       {#each options as option (option.value)}
         <label

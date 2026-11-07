@@ -29,10 +29,10 @@
 </script>
 
 <div
-  class="flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-lg border border-primary/25 bg-primary/8 px-3.5 py-2.5"
+  class="flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-xl border border-primary/25 bg-primary/8 px-3.5 py-2.5"
 >
   <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-    <p class="font-semibold text-[13px]">Verkkovarmistus on auki</p>
+    <p class="font-semibold text-ui">Verkkovarmistus on auki</p>
     <p class="text-muted-foreground text-xs tabular-nums">
       <span class="max-sm:hidden">Varmista osallistuminen viimeistään</span>
       klo {deadline} <span class="sm:hidden">asti</span> · {remaining} jäljellä
