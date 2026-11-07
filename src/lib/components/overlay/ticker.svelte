@@ -1,8 +1,7 @@
 <script lang="ts">
   // Lower third: a full-width scrolling standings bar for the bottom of the
   // frame, with the newest attempt popping up above it.
-  import { fly } from "svelte/transition";
-  import { flip } from "svelte/animate";
+  import { fly, scale } from "svelte/transition";
   import { prefersReducedMotion } from "svelte/motion";
   import { untrack } from "svelte";
   import { page } from "$app/state";
@@ -63,7 +62,7 @@
   const revealDelay = $derived(
     prefersReducedMotion.current || isTimed(view.eventCategory) ? 0 : 1500,
   );
-  const moveDuration = $derived(prefersReducedMotion.current ? 0 : 600);
+  const motion = $derived(prefersReducedMotion.current ? 0 : 1);
   let staged = $state.raw(untrack(() => view.entries));
   let pending = $state(false);
   // The poll before the latest one: the standings without the new attempt.
@@ -204,23 +203,25 @@
               {@const name = shortName(entry)}
               {@const q = qualification(entry)}
               {@const gap = gapOf(entry)}
+              {@const change = pending ? undefined : view.changes.get(entry.Id)}
+              <!-- Changes happen in place, as on a broadcast ticker: the mark
+                   pops in, the place rolls over and a gain is marked, while
+                   the crawl keeps moving. -->
               <li
-                animate:flip={{ duration: moveDuration }}
                 class={cn(
                   "flex items-center gap-2 whitespace-nowrap px-5 py-1 transition-colors duration-700",
-                  // Opaque and on top, so a climbing athlete slides cleanly
-                  // over the ones it passes.
-                  view.changes.get(entry.Id) &&
-                    "relative z-10 bg-[color-mix(in_oklch,var(--accent)_25%,var(--color-neutral-950))] duration-0",
+                  view.changes.get(entry.Id) && "bg-(--accent)/25 duration-0",
                 )}
               >
                 <span
                   class={cn(
-                    "flex size-6 items-center justify-center text-sm tabular-nums",
+                    "flex size-6 items-center justify-center overflow-hidden text-sm tabular-nums",
                     rank === 1 ? "bg-(--accent) text-black" : "bg-white/10",
                   )}
                 >
-                  {rank ?? "–"}
+                  {#key rank}<span in:fly={{ y: 14, duration: 350 * motion }}
+                      >{rank ?? "–"}</span
+                    >{/key}
                 </span>
                 <AthleteBadge {entry} />
                 <span class="uppercase">{name.surname}</span>
@@ -229,9 +230,16 @@
                 />
                 <!-- Results stay white; the accent is kept for the leader and
                      for changes. -->
-                <span class="tabular-nums">
-                  {entry.Result || "–"}
-                </span>
+                {#key entry.Result}<span
+                    in:scale={{ start: 0.6, duration: 300 * motion }}
+                    class="inline-block tabular-nums"
+                    >{entry.Result || "–"}</span
+                  >{/key}
+                {#if change?.gained}<span class="text-(--accent) text-sm"
+                    ><span aria-hidden="true">▲{change.gained}</span><span
+                      class="sr-only">noussut {change.gained} sijaa</span
+                    ></span
+                  >{/if}
                 {#if gap}<span class="text-neutral-400 text-sm tabular-nums"
                     >{gap}</span
                   >{/if}
