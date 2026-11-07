@@ -351,9 +351,9 @@
             <td class="px-2">
               <!-- Names wrap rather than truncate; the bib stays with the surname. -->
               <span class="block py-1.5 leading-5">
-                <span class="font-medium">{entry.Name}</span>
-                {#if entry.Number}<span
-                    class="ml-1 whitespace-nowrap text-muted-foreground text-xs tabular-nums"
+                <span class="font-medium">{entry.Name}</span
+                >{#if entry.Number}&nbsp;<span
+                    class="ml-0.5 whitespace-nowrap text-muted-foreground text-xs tabular-nums"
                     >#{entry.Number}</span
                   >{/if}
                 <span class="text-primary"
@@ -466,9 +466,9 @@
         <div><AthleteBadge {entry} /></div>
         <div class="min-w-0">
           <p class="wrap-break-word text-sm leading-5">
-            <span class="font-medium">{entry.Name}</span>
-            {#if entry.Number}<span
-                class="ml-0.5 text-2xs text-muted-foreground tabular-nums"
+            <span class="font-medium">{entry.Name}</span
+            >{#if entry.Number}&nbsp;<span
+                class="whitespace-nowrap text-2xs text-muted-foreground tabular-nums"
                 >#{entry.Number}</span
               >{/if}
             <span class="ml-0.5 text-primary"

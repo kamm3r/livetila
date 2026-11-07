@@ -24,7 +24,7 @@
 </script>
 
 {#snippet heatLabel(index: number, count: number)}
-  <span class="text-foreground">Erä {index}</span>
+  <span class="font-medium text-foreground">Erä {index}</span>
   · {count} urheilijaa
 {/snippet}
 
@@ -50,7 +50,7 @@
       {#each heats as heat (heat.index)}
         <tbody>
           {#if showHeatRows}
-            <tr class="h-[34px] border-t bg-primary/5">
+            <tr class="h-[34px] border-t">
               <th
                 class="pl-3 text-left font-normal text-muted-foreground text-xs"
                 colspan={hasRecords ? 6 : 4}
@@ -112,7 +112,7 @@
     {#each heats as heat (heat.index)}
       {#if showHeatRows}
         <li
-          class="border-t bg-primary/5 px-3 py-2 text-muted-foreground text-xs first:border-t-0"
+          class="border-t px-3 py-2 text-muted-foreground text-xs first:border-t-0"
         >
           {@render heatLabel(heat.index, heat.allocations.length)}
         </li>

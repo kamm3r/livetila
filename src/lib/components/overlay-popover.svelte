@@ -204,7 +204,7 @@
           ></span>
           <span class="flex flex-col gap-0.5">
             <span class="font-medium text-sm">{feature.label}</span>
-            <span class="text-muted-foreground text-ui">
+            <span class="text-pretty text-muted-foreground text-ui">
               {feature.description(featureContext)}
             </span>
           </span>
@@ -252,7 +252,7 @@
 
 {#snippet preview(wide: boolean)}
   <div class="flex flex-col gap-1.5">
-    <p class="text-muted-foreground text-xs">Esimerkki</p>
+    <p class="font-medium text-ui">Esimerkki</p>
     <OverlayExplainer
       {features}
       context={featureContext}
@@ -282,7 +282,8 @@
           class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
           ><X class="size-4" aria-hidden="true" /></DrawerClose
         >
-        <DrawerTitle>Lähetysgrafiikka</DrawerTitle>
+        <DrawerTitle class="font-semibold text-lg">Lähetysgrafiikka</DrawerTitle
+        >
         <DrawerDescription>
           Tulokset lähetykseen OBS:n tai muun ohjelman selainlähteenä.
         </DrawerDescription>
