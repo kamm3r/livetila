@@ -95,9 +95,7 @@
 </script>
 
 <div class="flex flex-col gap-3" aria-hidden="true">
-  <div
-    class="overflow-hidden rounded-lg bg-linear-to-br from-[#2f5a3a] via-[#6f9a5a] to-[#b9774a] p-3"
-  >
+  <div class="overflow-hidden rounded-lg border bg-muted/60 p-3">
     {#key style}
       <div
         class="flex items-start justify-center"

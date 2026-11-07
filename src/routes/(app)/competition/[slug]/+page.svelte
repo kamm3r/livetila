@@ -104,11 +104,19 @@
     Official: "Tulokset valmiit",
   };
   const isLive = $derived(selectedEvent?.Status === "Progress");
+  // The header carries the date unless the competition lasts several days.
+  const eventDate = $derived.by(() => {
+    if (new Set(compEvents.map((event) => event.date)).size < 2) return null;
+    const date = new Date(selectedEvent?.BeginDateTimeWithTZ ?? "");
+    return Number.isNaN(date.getTime())
+      ? null
+      : date.toLocaleDateString("fi-FI");
+  });
   const eventMeta = $derived(
     [
       !isLive && selectedEvent ? statusLabel[selectedEvent.Status] : null,
       eventTime,
-      selectedEvent?.date,
+      eventDate,
     ]
       .filter(Boolean)
       .join(" · "),
@@ -177,7 +185,7 @@
   <title>{compDetails?.Competition.Name ?? "Kilpailu"} - Livetila</title>
 </svelte:head>
 
-<main class="container relative mx-auto flex grow flex-col px-4 py-4 sm:p-8">
+<main class="page-width relative flex grow flex-col py-5 sm:py-8">
   {#if !data.identity}
     <div class="flex flex-col items-center justify-center py-20">
       <h2 class="font-bold text-2xl">Virheellinen linkki</h2>
@@ -203,13 +211,13 @@
       <a href="/" class="mt-4 text-primary underline">Palaa etusivulle</a>
     </div>
   {:else if competition}
-    <div class="flex flex-col gap-3">
-      <div class="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
-        <h2 class="font-semibold text-xl tracking-tight sm:text-[22px]">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <h2 class="font-semibold text-2xl tracking-tight text-balance">
           {compDetails?.Competition.Name ?? ""}
         </h2>
         {#if subline}
-          <p class="text-muted-foreground text-xs sm:text-[13px]">
+          <p class="text-muted-foreground text-[13px] tabular-nums">
             {subline}
           </p>
         {/if}
@@ -218,7 +226,7 @@
       {#key slug}
         <RoundProvider rounds={competition.Rounds} roundCategory={roundFromUrl}>
           <!-- Mobile: switcher and overlay button on one line, status and rounds below. -->
-          <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
             <div class="order-1 min-w-0 max-sm:flex-1 sm:shrink-0">
               <EventSwitcher
                 competitionId={compId}
@@ -237,11 +245,7 @@
               />
             </div>
             <div class="order-3 basis-full sm:hidden"></div>
-            <span
-              class="hidden h-4.5 w-px bg-border sm:order-4 sm:block"
-              aria-hidden="true"
-            ></span>
-            <div class="order-5 empty:hidden">
+            <div class="order-5 has-[>[role=status]:empty]:hidden">
               <LiveIndicator
                 live={isLive}
                 failingSince={data.refreshFailingSince}
@@ -249,7 +253,7 @@
             </div>
             {#if eventMeta}
               <span
-                class="order-6 text-muted-foreground text-xs tabular-nums sm:text-[13px]"
+                class="order-6 text-muted-foreground text-[13px] tabular-nums"
                 >{eventMeta}</span
               >
             {/if}
@@ -270,7 +274,7 @@
               {
                 value: "participants" as const,
                 label: "Ilmoittautuneet",
-                shortLabel: "Ilmoitt.",
+                shortLabel: "Osanottajat",
                 count: confirmedCount
                   ? `${confirmedCount}/${competition.Enrollments.length}`
                   : competition.Enrollments.length,
@@ -283,7 +287,6 @@
               {
                 value: "protocol" as const,
                 label: "Pöytäkirjat",
-                shortLabel: "Pöytäk.",
                 count: allocations.length,
                 icon: clipboardIcon,
                 content: protocolContent,

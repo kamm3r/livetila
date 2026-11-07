@@ -33,7 +33,7 @@
       : watermark
         ? 'size-24'
         : ''} object-contain {className} {badge.kind === 'club' && !watermark
-      ? 'rounded-sm bg-white p-0.5'
+      ? 'rounded-sm bg-white p-0.5 dark:bg-neutral-200'
       : ''}"
     onerror={(event) => {
       failedSrc = event.currentTarget.getAttribute("src");

@@ -2,10 +2,18 @@
   import { page } from "$app/state";
 </script>
 
-<div class="flex min-h-screen flex-col items-center justify-center text-center">
-  <a href="/" class="text-secondary-foreground underline">Home</a>
-  <div class="flex flex-col">
-    <h1 class="font-bold text-9xl">{page.status}</h1>
-    <h2 class="font-bold text-4xl">Page not found</h2>
-  </div>
-</div>
+<main
+  class="flex min-h-dvh flex-col items-center justify-center gap-2 px-4 text-center"
+>
+  <p class="font-medium text-muted-foreground text-sm tabular-nums">
+    {page.status}
+  </p>
+  <h1 class="font-semibold text-2xl tracking-tight">
+    {page.status === 404 ? "Sivua ei löytynyt" : "Jokin meni pieleen"}
+  </h1>
+  <a
+    href="/"
+    class="mt-3 rounded-sm text-primary text-sm underline underline-offset-4"
+    >Palaa etusivulle</a
+  >
+</main>

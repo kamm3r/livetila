@@ -27,7 +27,7 @@
     <span class="sr-only">Vahvistettu</span>
   {:else}
     <span
-      class="hatch inline-block size-4 rounded-[3px] align-middle"
+      class="inline-block size-3.5 rounded-full border border-muted-foreground border-dashed align-middle"
       aria-hidden="true"
     ></span>
     <span class="sr-only">Ei vahvistettu</span>
@@ -35,14 +35,14 @@
 {/snippet}
 
 {#if enrollments.length > 0}
-  <div class="hidden overflow-x-auto rounded-lg border lg:block">
-    <table class="w-full text-sm">
+  <div class="data-frame hidden overflow-x-auto lg:block">
+    <table class="w-full min-w-[42rem] table-fixed text-sm">
       <thead>
-        <tr class="h-[34px] border-b text-[11px] text-muted-foreground">
-          <th class="w-14 pl-4 text-left font-medium" scope="col"
+        <tr class="data-head">
+          <th class="w-16 pl-4 text-left font-medium" scope="col"
             ><span class="sr-only">Vahvistus</span></th
           >
-          <th class="w-10" scope="col"
+          <th class="w-11" scope="col"
             ><span class="sr-only">Seuran logo</span></th
           >
           <th class="px-2 text-left font-medium" scope="col">Urheilija</th>
@@ -55,19 +55,18 @@
         {#each sorted as enrollment (enrollment.Id)}
           <tr
             class={cn(
-              "h-[46px] border-t first:border-t-0",
-              !enrollment.Confirmed && "*:opacity-55",
+              "h-12 border-t first:border-t-0",
+              !enrollment.Confirmed &&
+                "text-muted-foreground [&_img]:opacity-80",
             )}
           >
             <td class="pl-4">{@render status(enrollment)}</td>
-            <td class="px-1"><AthleteBadge entry={enrollment} kind="club" /></td
-            >
+            <td class="px-1"><AthleteBadge entry={enrollment} /></td>
             <td class="px-2">
               <span class="flex items-center gap-2 whitespace-nowrap">
-                <AthleteBadge entry={enrollment} kind="flag" />
-                <span class="font-semibold">{enrollment.Name}</span>
+                <span class="truncate font-medium">{enrollment.Name}</span>
                 {#if enrollment.Number}<span
-                    class="text-muted-foreground text-xs tabular-nums"
+                    class="shrink-0 text-muted-foreground text-xs tabular-nums"
                     >#{enrollment.Number}</span
                   >{/if}
               </span>
@@ -77,29 +76,33 @@
             >
               {enrollment.Organization?.Name ?? "-"}
             </td>
-            <td class="px-2 text-right tabular-nums">{enrollment.PB || "–"}</td>
-            <td class="pr-4 text-right tabular-nums">{enrollment.SB || "–"}</td>
+            <td class="px-2 text-right text-[13px] tabular-nums"
+              >{enrollment.PB || "–"}</td
+            >
+            <td
+              class="pr-4 text-right text-[13px] text-muted-foreground tabular-nums"
+              >{enrollment.SB || "–"}</td
+            >
           </tr>
         {/each}
       </tbody>
     </table>
   </div>
 
-  <ul class="overflow-hidden rounded-lg border lg:hidden">
+  <ul class="data-frame lg:hidden">
     {#each sorted as enrollment (enrollment.Id)}
       <li
         class={cn(
           "grid grid-cols-[20px_24px_minmax(0,1fr)_auto] items-center gap-x-2.5 border-t px-3 py-2.5 first:border-t-0",
-          !enrollment.Confirmed && "*:opacity-55",
+          !enrollment.Confirmed && "text-muted-foreground [&_img]:opacity-80",
         )}
       >
         <span class="flex justify-center">{@render status(enrollment)}</span>
-        <AthleteBadge entry={enrollment} kind="club" />
+        <!-- The cell stays when there is no logo, so the columns hold. -->
+        <span class="flex"><AthleteBadge entry={enrollment} /></span>
         <div class="min-w-0">
-          <div class="flex min-w-0 items-baseline gap-1.5">
-            <AthleteBadge entry={enrollment} kind="flag" />
-            <span class="truncate font-semibold text-sm">{enrollment.Name}</span
-            >
+          <div class="flex min-w-0 items-center gap-1.5">
+            <span class="truncate font-medium text-sm">{enrollment.Name}</span>
             {#if enrollment.Number}<span
                 class="shrink-0 text-[11px] text-muted-foreground tabular-nums"
                 >#{enrollment.Number}</span
@@ -127,14 +130,22 @@
     {/each}
   </ul>
   {#if anyPending}
-    <p class="mt-2 text-[11px] text-muted-foreground">
-      ✓ = vahvistettu ·
-      <span
-        class="hatch inline-block size-2.5 rounded-[2px] align-[-1px]"
-        aria-hidden="true"
-      ></span>
-      = ei vielä vahvistanut
-    </p>
+    <ul
+      class="mt-3 flex flex-wrap gap-x-3.5 gap-y-1 text-muted-foreground text-xs"
+    >
+      <li>
+        <Check
+          class="inline size-3.5 align-[-2px] text-green-700 dark:text-green-400"
+          aria-hidden="true"
+        /> = vahvistettu
+      </li>
+      <li>
+        <span
+          class="inline-block size-3 rounded-full border border-muted-foreground border-dashed align-[-1px]"
+          aria-hidden="true"
+        ></span> = ei vielä vahvistanut
+      </li>
+    </ul>
   {/if}
 {:else}
   <Empty.Root>

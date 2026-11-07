@@ -2,7 +2,7 @@
   let { children } = $props();
 </script>
 
-<div class="overlay-root fixed inset-0 z-50 overflow-auto">
+<div class="overlay-root broadcast-type fixed inset-0 z-50 overflow-auto">
   {@render children()}
 </div>
 
