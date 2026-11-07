@@ -1,7 +1,7 @@
 import { isVerticalJump } from "./results";
 import type { Attempt, EventCategory } from "~/types/comp";
 
-type Entry = { Attempts?: Attempt[] | null };
+type Entry = { Result?: string | null; Attempts?: Attempt[] | null };
 
 // The API has no attempt-limit field. Standard horizontal jumps and throws
 // get six slots (three in combined events); preserve any extra recorded marks.
@@ -15,6 +15,12 @@ export function attemptLayout(
   const vertical =
     subCategory === "VerticalJump" || (!subCategory && isVerticalJump(entries));
   if (category !== "Field") return { vertical: false, labels: [] as string[] };
+  // Nobody started, so there is no series to show.
+  if (
+    entries.length > 0 &&
+    entries.every((entry) => entry.Result?.trim().toUpperCase() === "DNS")
+  )
+    return { vertical, labels: [] as string[] };
   if (vertical) {
     const heights = new Set(
       entries.flatMap(

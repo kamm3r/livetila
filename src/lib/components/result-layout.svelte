@@ -12,6 +12,8 @@
     resultCodeLegend,
     sortByResult,
     turnOrder,
+    didNotStart,
+    withStatusAsResult,
   } from "$lib/results";
   import { createResultChanges } from "$lib/result-changes.svelte";
   import { cn } from "$lib/utils";
@@ -45,7 +47,7 @@
 
   const sortedAllocs = $derived(
     ctx.currentHeat && ctx.heats.length > 0
-      ? [...ctx.currentHeat.Allocations].sort((a, b) =>
+      ? ctx.currentHeat.Allocations.map(withStatusAsResult).sort((a, b) =>
           sortByResult(a, b, eventCategory, "HeatRank"),
         )
       : [],
@@ -53,7 +55,7 @@
 
   const sortedTotal = $derived(
     ctx.currentRound?.TotalResults
-      ? [...ctx.currentRound.TotalResults].sort((a, b) =>
+      ? ctx.currentRound.TotalResults.map(withStatusAsResult).sort((a, b) =>
           sortByResult(a, b, eventCategory),
         )
       : [],
@@ -325,7 +327,7 @@
           {@const change = changes.get(entry.Id)}
           {@const best = bestAttempt(entry)}
           {@const rank = entry[rankKey]}
-          {@const isOut = out.has(entry.Id)}
+          {@const isOut = !didNotStart(entry) && out.has(entry.Id)}
           <tr
             animate:flip={{ duration: moveDuration }}
             data-changed={change ? "" : undefined}
@@ -437,7 +439,7 @@
       {@const best = bestAttempt(entry)}
       {@const rank = entry[rankKey]}
       {@const gap = gapToLeader(entry.Result, leader, eventCategory)}
-      {@const isOut = out.has(entry.Id)}
+      {@const isOut = !didNotStart(entry) && out.has(entry.Id)}
       <li
         animate:flip={{ duration: moveDuration }}
         data-changed={change ? "" : undefined}
@@ -480,7 +482,7 @@
             {entry.Organization?.Name ?? "-"}
           </p>
         </div>
-        {#if columns > 0}
+        {#if columns > 0 && !didNotStart(entry)}
           <!-- Fixed columns keep attempt N aligned across rows. -->
           <ul
             class={cn(
