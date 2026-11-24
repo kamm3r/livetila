@@ -7,8 +7,8 @@ import type {
 } from "~/types/comp";
 
 const API_URL = "/api/tuloslista";
-// Same-origin proxy to the confirmation portal's API, which sends no CORS
-// headers. See vercel.json and vite.config.ts.
+// Same-origin proxy to the confirmation portal API, which sends no CORS
+// headers. See src/routes/api/varmistus/competition/+server.ts.
 const CONFIRMATION_API_URL = "/api/varmistus";
 
 async function fetchJson<T>(
