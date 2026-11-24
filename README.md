@@ -23,12 +23,3 @@ pnpm dev
 ```
 
 `round` and `heat` are one-based; omit `heat` for overall results. `style` is `broadcast-trail-plain` (default), `ticker`, `broadcast-results` or `timetable`. `gap=0` hides gaps; `accent=5ed6cb` sets the accent colour.
-
-## Tuloslista API key
-
-Register once with your own details and set the returned key as `TULOSLISTA_API_KEY` (in `.env` locally, in the Vercel project for deploys):
-
-```sh
-curl --url 'https://live.tuloslista.com/api/v1/auth' \
-  --data-raw '{"client":{"name":"Livetila","version":"0.1.0"},"organization":{"name":"YOUR ORGANIZATION"},"contact":{"name":"YOUR NAME","email":"YOUR EMAIL"}}'
-```
