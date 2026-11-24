@@ -22,14 +22,14 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open <http://localhost:5173>. No environment variables or API keys are required.
+Open <http://localhost:5173>. Follow the API key setup below to authenticate live requests.
 
 ## Scripts
 
 | Command             | Description                                             |
 | ------------------- | ------------------------------------------------------- |
 | `pnpm dev`          | Start the Vite development server                       |
-| `pnpm build`        | Generate the static application in `build/`             |
+| `pnpm build`        | Build the application and Vercel functions              |
 | `pnpm preview`      | Preview the existing production build on port 4173      |
 | `pnpm typecheck`    | Run Svelte and TypeScript diagnostics                   |
 | `pnpm lint`         | Check Prettier formatting and ESLint                    |
@@ -68,13 +68,24 @@ Live result fetching is independent of event status. The competition viewer poll
 
 ## Deployment
 
-The app uses SvelteKit's static adapter in client-rendered SPA mode. Run `pnpm build` and serve `build/` from a static host. Configure the host to serve `index.html` for routes that do not match a file, including `/competition/*` and `/overlay/*`, so direct links and browser reloads work. Assets should be served normally.
+The app runs as a client-rendered SPA with a SvelteKit server endpoint for Tuloslista requests. The Vercel adapter packages the frontend and server endpoint together. Set `TULOSLISTA_API_KEY` in the Vercel project environment before deploying.
 
-For example, an nginx location can use `try_files $uri $uri/ /index.html;`. This fallback is required by the chosen [SvelteKit SPA deployment configuration](https://svelte.dev/docs/kit/single-page-apps).
+### Tuloslista API key
 
-On Vercel, the committed `vercel.json` overrides the old Next.js preset with `Other`, runs `pnpm build`, serves `build/`, and supplies the SPA fallback. Existing static assets take precedence over the fallback. No dashboard framework change is required for this branch. Use Node.js 24 in the Vercel project settings. If retrying a deployment manually, deploy the latest migration commit rather than an older Next.js-configured commit.
+Register Livetila once using your own organization and contact details. Replace the example values and use the deployed client version.
 
-API requests run directly in the browser against `https://live.tuloslista.com/api/v1`, so the upstream service must be reachable and permit cross-origin requests. There is no application server or tRPC layer.
+```sh
+curl --url 'https://live.tuloslista.com/api/v1/auth' \
+  --data-raw '{
+    "client": {"name": "Livetila", "version": "0.1.0"},
+    "organization": {"name": "YOUR ORGANIZATION"},
+    "contact": {"name": "YOUR NAME", "email": "YOUR EMAIL"}
+  }'
+```
+
+For local development, copy `.env.example` to `.env` (or update your existing `.env`) and set `TULOSLISTA_API_KEY` to the returned key. Restart Vite after updating the file. The server sends the key in the `X-Tuloslista-Live-Auth` header when it fetches live data.
+
+With the key unset, live data works for as long as Tuloslista accepts unauthenticated requests.
 
 Club logos load from Tilastopaja's `https://www.tilastopaja.info/fi/db/pics/png/` directory. The lookup in `src/lib/club-logos.ts` resolves club names and abbreviations against 295 verified filenames from [Tilastopaja's Seuraliiga 2026 directory](https://www.tilastopaja.fi/seurakilpailut/seuraliiga/2026/kaikki), stored in `src/lib/data/club-logos.json`. This handles differences such as `IFÅsar` → `IFÅsarna`, `KUNPIR` → `KuntoP`, and capitalization mismatches. Clubs absent from the snapshot fall back to the API's abbreviation (`Organization.NameShort`). To add a club or update its filename, edit the JSON mapping; abbreviation aliases belong in `club-logos.ts`.
 

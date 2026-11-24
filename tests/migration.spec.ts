@@ -29,7 +29,7 @@ const events = {
 };
 
 test.beforeEach(async ({ page }) => {
-  await page.route("https://live.tuloslista.com/api/v1/**", async (route) => {
+  await page.route("**/api/tuloslista/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     const data = path.endsWith("/properties")
       ? { Competition: { Name: "Test Games" } }
@@ -157,7 +157,7 @@ test("mobile results and overlay drawer work", async ({ page }) => {
 });
 
 test("search API failure offers a retry", async ({ page }) => {
-  await page.route("**/api/v1/competition", (route) =>
+  await page.route("**/api/tuloslista/competition", (route) =>
     route.fulfill({ status: 500, body: "unavailable" }),
   );
   await page.goto("/");
@@ -166,7 +166,7 @@ test("search API failure offers a retry", async ({ page }) => {
     "Tietojen lataaminen epäonnistui",
     { timeout: 15000 },
   );
-  await page.unroute("**/api/v1/competition");
+  await page.unroute("**/api/tuloslista/competition");
   await page.getByRole("button", { name: "Yritä uudelleen" }).click();
   await expect(page.getByRole("option", { name: /Test Games/ })).toBeVisible();
 });
@@ -176,7 +176,7 @@ test("results respect the 30-second interval before live status arrives", async 
 }) => {
   let live = false;
   let resultRequests = 0;
-  await page.route("**/api/v1/competition/1", (route) =>
+  await page.route("**/api/tuloslista/competition/1", (route) =>
     route.fulfill({
       json: {
         "09.09.2026": events["09.09.2026"].map((event) => ({
@@ -186,7 +186,7 @@ test("results respect the 30-second interval before live status arrives", async 
       },
     }),
   );
-  await page.route("**/api/v1/results/1/10", (route) => {
+  await page.route("**/api/tuloslista/results/1/10", (route) => {
     resultRequests++;
     return route.fulfill({
       json: {
@@ -208,7 +208,7 @@ test("results respect the 30-second interval before live status arrives", async 
   await page.clock.runFor(1000);
   await expect.poll(() => resultRequests).toBe(2);
   live = true;
-  await nextRefresh(page, /\/api\/v1\/competition\/1$/);
+  await nextRefresh(page, /\/api\/tuloslista\/competition\/1$/);
   await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
   await page.clock.runFor(2000);
   await expect.poll(() => resultRequests).toBeGreaterThan(1);
@@ -323,7 +323,7 @@ test("search options appear together with no stagger or focus zoom", async ({
 test("search lists every competition and resets scroll after filtering", async ({
   page,
 }) => {
-  await page.route("**/api/v1/competition", (route) =>
+  await page.route("**/api/tuloslista/competition", (route) =>
     route.fulfill({
       json: Array.from({ length: 26 }, (_, i) => ({
         Id: i + 1,
@@ -354,7 +354,7 @@ test("search lists every competition and resets scroll after filtering", async (
 });
 
 test("event search lists every event", async ({ page }) => {
-  await page.route("**/api/v1/competition/1", (route) =>
+  await page.route("**/api/tuloslista/competition/1", (route) =>
     route.fulfill({
       json: {
         "09.09.2026": Array.from({ length: 32 }, (_, i) => ({
@@ -519,7 +519,7 @@ for (const path of ["/competition/1-10", "/overlay/1-10"]) {
     page,
   }) => {
     let result = "10,20";
-    await page.route("**/api/v1/results/1/10", (route) =>
+    await page.route("**/api/tuloslista/results/1/10", (route) =>
       route.fulfill({
         json: {
           Name: "100 m",
@@ -600,7 +600,8 @@ test("malformed competition and overlay links never fetch competition data", asy
 }) => {
   const requests: string[] = [];
   page.on("request", (request) => {
-    if (request.url().includes("/api/v1/")) requests.push(request.url());
+    if (request.url().includes("/api/tuloslista/"))
+      requests.push(request.url());
   });
   await page.clock.install();
   for (const path of ["/competition/1-10-extra", "/overlay/a-b"]) {
@@ -630,7 +631,7 @@ test("search remains usable with unavailable history storage and competition nam
       return setItem.call(this, key, value);
     };
   });
-  await page.route("**/api/v1/competition", (route) =>
+  await page.route("**/api/tuloslista/competition", (route) =>
     route.fulfill({
       json: [{ Id: 1, Name: "Test / Games", Date: "2026-09-09" }],
     }),
@@ -657,7 +658,7 @@ for (const path of ["/competition/1-10", "/overlay/1-10"]) {
     let fail = false;
     let result = "10,20";
     let failures = 0;
-    await page.route("**/api/v1/results/1/10", (route) => {
+    await page.route("**/api/tuloslista/results/1/10", (route) => {
       if (fail) {
         failures++;
         return route.fulfill({ status: 503, body: "Unavailable" });
@@ -711,7 +712,7 @@ for (const heatCount of [0, 1]) {
   test(`overall results remain visible with ${heatCount} empty heats`, async ({
     page,
   }) => {
-    await page.route("**/api/v1/results/**", (route) =>
+    await page.route("**/api/tuloslista/results/**", (route) =>
       route.fulfill({
         json: {
           Name: "100 m",
@@ -768,7 +769,7 @@ for (const path of [
         ResultRank: 2,
       },
     ];
-    await page.route("**/api/v1/results/**", (route) =>
+    await page.route("**/api/tuloslista/results/**", (route) =>
       route.fulfill({
         json: {
           Name: "Long jump",
@@ -822,7 +823,7 @@ for (const path of ["/competition/1-10?round=Final", "/overlay/1-10?heat=1"]) {
         body: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="20"><rect width="24" height="20" fill="yellow"/></svg>',
       }),
     );
-    await page.route("**/api/v1/results/**", (route) =>
+    await page.route("**/api/tuloslista/results/**", (route) =>
       route.fulfill({
         json: {
           Name: "100 m",
@@ -883,7 +884,7 @@ for (const path of ["/competition/1-10?round=Final", "/overlay/1-10?heat=1"]) {
 test("confirmation checkmarks stay visible while status labels are screen-reader-only", async ({
   page,
 }) => {
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "100 m",
@@ -926,7 +927,7 @@ for (const [status, tab] of [
   test(`competition opens on the tab matching event status: ${status}`, async ({
     page,
   }) => {
-    await page.route("**/api/v1/competition/1", (route) =>
+    await page.route("**/api/tuloslista/competition/1", (route) =>
       route.fulfill({
         json: {
           "09.09.2026": events["09.09.2026"].map((event) => ({
@@ -989,7 +990,7 @@ test("field results show aligned attempts, records, gaps and live changes", asyn
     jumper(1, "First Jumper", ["7,10", "7,40"], "7,40", 1),
     jumper(2, "Second Jumper", ["7,20", "x"], "7,20", 2),
   ];
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Long jump",
@@ -1074,7 +1075,7 @@ test("latest attempt bar is hidden when the event is not live", async ({
     ResultRank: id,
     Attempts: [{ Line1: "7,00", Line2: "" }],
   }));
-  await page.route("**/api/v1/competition/1", (route) =>
+  await page.route("**/api/tuloslista/competition/1", (route) =>
     route.fulfill({
       json: {
         "09.09.2026": events["09.09.2026"].map((event) => ({
@@ -1085,7 +1086,7 @@ test("latest attempt bar is hidden when the event is not live", async ({
       },
     }),
   );
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Long jump",
@@ -1123,7 +1124,7 @@ test("track results show gaps for hand and long times without attempt columns", 
     HeatRank: i + 1,
     Attempts: [{ Line1: Result, Line2: null }],
   }));
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "1000 m",
@@ -1171,7 +1172,7 @@ test("results explain the status codes that appear in them", async ({
     HeatRank: i + 1,
     Attempts: [{ Line1: Result, Line2: null }],
   }));
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "1000 m",
@@ -1213,7 +1214,7 @@ test("cross-country results are timed and show gaps to the leader", async ({
     HeatRank: 0,
     Attempts: [{ Line1: Result, Line2: null }],
   }));
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Maastojuoksu",
@@ -1255,7 +1256,7 @@ test("vertical results align attempts by height without six-slot padding or gap 
     HeatRank: 0,
     Attempts: [{ Line1: Result, Line2: "o" }],
   }));
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Korkeus",
@@ -1298,7 +1299,7 @@ test("protocol lists every heat in one table with heat rows", async ({
       Result: "",
     })),
   });
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "100 m",
@@ -1351,7 +1352,7 @@ test("athletes eliminated after three rounds get hatched attempt slots", async (
       })),
     };
   });
-  await page.route("**/api/v1/competition/1", (route) =>
+  await page.route("**/api/tuloslista/competition/1", (route) =>
     route.fulfill({
       json: {
         "09.09.2026": events["09.09.2026"].map((event) => ({
@@ -1361,7 +1362,7 @@ test("athletes eliminated after three rounds get hatched attempt slots", async (
       },
     }),
   );
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "Long jump",
@@ -1408,7 +1409,7 @@ for (const variant of [
       AllocId: 101 + index,
       TeamId: 201 + index,
     }));
-    await page.route("**/api/v1/results/**", (route) =>
+    await page.route("**/api/tuloslista/results/**", (route) =>
       route.fulfill({
         json: {
           Name: "Long jump",
@@ -1518,7 +1519,7 @@ test("the legend appears once and explains only what the page shows", async ({
   page,
 }) => {
   const dnf = { ...runners[0]!, Result: "DNF", HeatRank: 0 };
-  await page.route("**/api/v1/results/**", (route) =>
+  await page.route("**/api/tuloslista/results/**", (route) =>
     route.fulfill({
       json: {
         Name: "100 m",
@@ -1583,7 +1584,7 @@ test("the search list ends on a whole row and keeps its footer while scrolling",
   page,
 }) => {
   await page.setViewportSize({ width: 1510, height: 966 });
-  await page.route("**/api/v1/competition", (route) =>
+  await page.route("**/api/tuloslista/competition", (route) =>
     route.fulfill({
       json: Array.from({ length: 12 }, (_, i) => ({
         Id: i + 1,
