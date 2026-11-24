@@ -105,7 +105,13 @@
     </div>
   {:else}
     <div style:zoom>
-      <BroadcastFrame {view} inHeat={false} {gaps} {records} />
+      <BroadcastFrame
+        {view}
+        inHeat={false}
+        {gaps}
+        {records}
+        animateReordering={false}
+      />
     </div>
   {/if}
 </div>

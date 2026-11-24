@@ -45,6 +45,7 @@
     inHeat,
     gaps,
     records,
+    animateReordering = true,
   }: {
     view: OverlayView;
     inHeat: boolean;
@@ -52,6 +53,7 @@
     gaps?: boolean;
     // Overrides `?records=0`, likewise.
     records?: boolean;
+    animateReordering?: boolean;
   } = $props();
   // `?records=0` drops the SB and PB tags and banners, for competitions whose
   // entries mostly come without them.
@@ -285,7 +287,7 @@
   ): AnimationConfig {
     // Rects include any page zoom; transforms do not.
     const dy = ((from.top - to.top) * node.clientHeight) / to.height;
-    if (!swapping || !dy) return { duration: 0 };
+    if (!animateReordering || !swapping || !dy) return { duration: 0 };
     return {
       duration: swapDuration,
       easing: cubicInOut,
