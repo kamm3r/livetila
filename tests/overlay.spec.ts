@@ -66,7 +66,7 @@ async function serve(
   category: "Field" | "Track" = "Field",
 ) {
   let entries = initial;
-  await page.route("https://live.tuloslista.com/api/v1/**", (route) => {
+  await page.route("**/api/tuloslista/**", (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith("/properties"))
       return route.fulfill({
@@ -303,13 +303,13 @@ test.describe("Aikataulu", () => {
       Status: i === 0 ? "Official" : i === 1 ? "Progress" : "Scheduled",
       BeginDateTimeWithTZ: `2026-09-09T${String(9 + Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "30" : "00"}:00+03:00`,
     }));
-    await page.route("https://live.tuloslista.com/api/v1/**", (route) => {
+    await page.route("**/api/tuloslista/**", (route) => {
       const path = new URL(route.request().url()).pathname;
       if (path.endsWith("/properties"))
         return route.fulfill({
           json: { Competition: { Name: "Kalevan kisat" } },
         });
-      if (path === "/api/v1/competition/1")
+      if (path === "/api/tuloslista/competition/1")
         return route.fulfill({ json: { "09.09.2026": events } });
       return route.fulfill({ json: {} });
     });
