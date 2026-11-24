@@ -13,6 +13,7 @@ const proxy = {
 
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
-  server: { proxy },
+  // Tailscale names, for `pnpm dev:tailscale` on a phone.
+  server: { proxy, allowedHosts: [".ts.net"] },
   preview: { proxy },
 });
