@@ -36,6 +36,35 @@ export function resultCodeLegend(
   return legend;
 }
 
+const resultCode = (mark?: string | null) => {
+  const code = mark?.trim().toUpperCase();
+  return INVALID_RESULTS.find((known) => known === code) ?? null;
+};
+
+// The feed can record a status as if it were an attempt: a non-starter in the
+// high jump arrives as {Line1: "120", Line2: "DNS"}. A status is never a jump,
+// so it leaves the series and becomes the result when none is given. Real
+// attempts stay, so an athlete with "xxx" keeps them beside NH.
+export function withStatusAsResult<
+  T extends {
+    Result: string | null;
+    Attempts?: { Line1: string; Line2: string }[] | null;
+  },
+>(entry: T): T {
+  const isStatus = (attempt: { Line1: string; Line2: string }) =>
+    resultCode(attempt.Line1) ?? resultCode(attempt.Line2);
+  const code = entry.Attempts?.map(isStatus).find(Boolean);
+  if (!code) return entry;
+  return {
+    ...entry,
+    Result: entry.Result?.trim() ? entry.Result : code,
+    Attempts: entry.Attempts!.filter((attempt) => !isStatus(attempt)),
+  };
+}
+
+export const didNotStart = (entry: { Result: string | null }) =>
+  entry.Result?.trim().toUpperCase() === "DNS";
+
 // Times are "S,FF", "M.SS,FF" or "H:MM.SS,FF"; hand times use tenths and an
 // "h" suffix ("3.12,6h").
 const TIME_RE = /^(?:(\d+):)?(?:(\d+)\.)?(\d+),(\d{1,2})h?$/;

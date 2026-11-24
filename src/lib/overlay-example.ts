@@ -18,6 +18,13 @@ export function exampleKind(
     : "distance";
 }
 
+// Women's and girls' events ("Pituus N", "T15 Kuula") win with shorter marks
+// and slower times, so their examples should too.
+const isWomen = (eventName: string) =>
+  /(^|\s)(N|T)\d*(\s|$)|nais|tytö|women|girls/i.test(eventName);
+const women = (eventName: string, factor: number) =>
+  isWomen(eventName) ? factor : 1;
+
 // Typical winning marks, so a shot put example is not thrown 80 metres.
 const distanceScale = (eventName: string) => {
   const name = eventName.toLowerCase();
@@ -29,11 +36,11 @@ const distanceScale = (eventName: string) => {
     [/pituus|long/, 7.9],
   ] as const;
   const match = typical.find(([pattern]) => pattern.test(name));
-  return (match?.[1] ?? 80) / 80;
+  return ((match?.[1] ?? 80) / 80) * women(eventName, 0.87);
 };
 
 const heightScale = (eventName: string) =>
-  /seiväs|pole/i.test(eventName) ? 5.6 / 2.2 : 1;
+  (/seiväs|pole/i.test(eventName) ? 5.6 / 2.2 : 1) * women(eventName, 0.86);
 
 // Seconds a winner takes over the distance, from the event's name.
 function winningTime(eventName: string) {
@@ -52,7 +59,7 @@ function winningTime(eventName: string) {
     [10000, 1690],
   ];
   const known = table.find(([distance]) => distance >= metres) ?? table.at(-1)!;
-  return (known[1] * metres) / known[0];
+  return ((known[1] * metres) / known[0]) * women(eventName, 1.1);
 }
 
 // "10,52", "1.52,31": Finnish result notation.
@@ -225,9 +232,21 @@ export function buildExample(
       })
       .sort((a, b) => Number(b.Result) - Number(a.Result))
       // Example data only fills the fields the overlay reads.
+      // Marks read as on the live overlay: Finnish decimal commas.
       .map(
         (entry, i) =>
-          ({ ...entry, ResultRank: i + 1 }) as unknown as OverlayEntry,
+          ({
+            ...entry,
+            Result: comma(entry.Result),
+            PB: comma(entry.PB),
+            Attempts: entry.Attempts.map((attempt) => ({
+              ...attempt,
+              Line1: comma(attempt.Line1),
+            })),
+            ResultRank: i + 1,
+          }) as unknown as OverlayEntry,
       )
   );
 }
+
+const comma = (value: string) => value.replace(".", ",");

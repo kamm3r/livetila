@@ -36,13 +36,14 @@ export const overlayFeatures: OverlayFeature[] = [
     id: "gap",
     label: "Näytä erot",
     description: ({ style, timed }) =>
-      style === "broadcast-results" || timed
-        ? "Ero voittajaan jokaisella rivillä."
-        : "Ero vuorossa olleeseen urheilijaan jokaisella rivillä.",
+      style === "ticker"
+        ? "Ero kärkeen jokaisen tuloksen perässä."
+        : style === "broadcast-results" || timed
+          ? "Ero voittajaan jokaisella rivillä."
+          : "Ero vuorossa olleeseen urheilijaan jokaisella rivillä.",
     defaultOn: true,
-    // The ticker has no room for a difference column; a timetable has no
-    // results.
-    available: ({ style }) => style !== "ticker" && style !== "timetable",
+    // A timetable has no results.
+    available: ({ style }) => style !== "timetable",
   },
   {
     id: "records",

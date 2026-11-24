@@ -367,18 +367,18 @@
 </script>
 
 {#snippet mark(result?: string | null)}
-  {result ?? ""}{#if unit(result)}<span
-      class="ml-px text-[0.8em] normal-case opacity-70">{unit(result)}</span
-    >{/if}
+  <!-- One inline run, so the unit sits on the figure's baseline. -->
+  <span
+    >{result ?? ""}{#if unit(result)}<span
+        class="ml-px text-[0.8em] normal-case opacity-70">{unit(result)}</span
+      >{/if}</span
+  >
 {/snippet}
 
-<div
-  class="w-72 font-semibold text-white uppercase tracking-tight"
-  style:--accent={accent}
->
-  <header class="border-(--accent) border-t-2 bg-neutral-950/90">
+<div class="w-80 font-semibold text-white uppercase" style:--accent={accent}>
+  <header class="border-(--accent) border-t-2 bg-neutral-950">
     <div class="flex h-6 items-center justify-between px-2">
-      <span class="truncate text-(--accent)">
+      <span class="truncate text-(--accent) text-sm">
         {#if timed}
           {view.roundName ? `${view.roundName} – ` : ""}{resultsIn
             ? "Tulokset"
@@ -395,10 +395,10 @@
     </div>
     <div class="flex items-stretch">
       <h2 class="min-w-0 flex-1 truncate bg-(--accent) px-2 py-0.5 text-black">
-        {view.eventName ?? ""}{view.heatLabel ? ` | ${view.heatLabel}` : ""}
+        {view.eventName ?? ""}{view.heatLabel ? ` · ${view.heatLabel}` : ""}
       </h2>
       <span
-        class="flex w-20 items-center justify-center text-[11px] text-neutral-300"
+        class="flex w-20 items-center justify-end px-2 text-xs text-neutral-300"
       >
         {timed ? "Aika" : "Tulos"}
       </span>
@@ -406,7 +406,7 @@
   </header>
 
   <ol
-    class="flex flex-col gap-0.5 border-(--accent) border-b-2 bg-neutral-950/90 py-0.5"
+    class="flex flex-col gap-0.5 border-(--accent) border-b-2 bg-neutral-950 py-0.5"
   >
     {#each visible as { entry, index } (entry.Id)}
       {@const change = view.changes.get(entry.Id)}
@@ -426,7 +426,7 @@
       <li animate:swap in:enter class={cn("relative", focused && "z-20")}>
         <div
           class={cn(
-            "relative flex h-7 items-stretch bg-neutral-800/90 transition-colors duration-700",
+            "relative flex h-7 items-stretch bg-neutral-800 transition-colors duration-700",
             // Text switches at once so it never fades through the background.
             focused &&
               "bg-(--accent) text-black transition-[background-color] duration-300",
@@ -464,7 +464,7 @@
               <AthleteBadge {entry} />
             {:else if clubInitials(entry)}
               <span
-                class="flex h-5 w-6 items-center justify-center rounded-sm bg-white text-[9px] text-neutral-700"
+                class="flex h-5 w-6 items-center justify-center rounded-sm bg-white text-[10px] text-neutral-700"
                 >{clubInitials(entry)}</span
               >
             {/if}
@@ -482,7 +482,7 @@
             {#if tag && whitened !== entry.Id && !banners.has(entry.Id)}
               <span
                 class={cn(
-                  "px-1 text-[10px]",
+                  "px-1 text-[11px]",
                   focused
                     ? "bg-black text-(--accent)"
                     : "bg-(--accent) text-black",
@@ -527,8 +527,8 @@
               >
                 <span in:settle class="flex flex-1 items-center justify-center">
                   {banners.get(entry.Id) === "PB"
-                    ? "Personal best"
-                    : "Season best"}
+                    ? "Oma ennätys"
+                    : "Kauden paras"}
                 </span>
                 {#if focused}
                   <span
@@ -546,7 +546,7 @@
           <ol
             data-attempt-details
             transition:collapse
-            class="ml-5 grid grid-cols-6 text-black normal-case tabular-nums"
+            class="grid grid-cols-6 gap-px bg-neutral-950 text-black normal-case tabular-nums"
           >
             {#each attemptSlots(entry.Attempts) as attempt, i (i)}
               {@const best = !!attempt.Line1 && attempt.Line1 === entry.Result}
@@ -558,17 +558,17 @@
                 vertical && !waiting && attempt.Line1 && attempt.Line2}
               <li
                 class={cn(
-                  "flex h-10 flex-col items-center justify-center bg-neutral-200/95 odd:bg-neutral-100/95",
+                  "flex h-10 flex-col items-center justify-center bg-neutral-100",
                   !attempt.Line1 &&
                     !waiting &&
-                    "bg-neutral-400/90! odd:bg-neutral-300/90!",
+                    "bg-neutral-800! text-neutral-500",
                   best && "bg-(--accent)! text-black",
                   popping?.id === entry.Id &&
                     popping.attempt === i &&
                     "new-attempt",
                 )}
               >
-                <span class="text-neutral-600 text-xs leading-none"
+                <span class="text-xs leading-none opacity-70"
                   >{tries ? attempt.Line1 : i + 1}</span
                 >
                 {#if waiting}
@@ -603,13 +603,13 @@
   </ol>
 
   <footer class="mt-0.5 flex items-center gap-2">
-    <span class="bg-neutral-950/90 px-2 py-0.5 text-(--accent)">
+    <span class="bg-neutral-950 px-2 py-0.5 text-(--accent) text-sm">
       {view.competitionName ?? ""}
     </span>
     {#if view.isRefreshError}
       <span
         role="status"
-        class="bg-neutral-950/90 px-2 py-0.5 text-neutral-300 text-xs normal-case"
+        class="bg-neutral-950 px-2 py-0.5 text-neutral-300 text-xs normal-case"
       >
         Päivitys viivästyy
       </span>

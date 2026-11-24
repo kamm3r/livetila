@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { attemptLayout } from "../src/lib/attempt-layout";
+import { withStatusAsResult } from "../src/lib/results";
 
 const marks = (values: string[]) => [
   { Attempts: values.map((Line1) => ({ Line1, Line2: "" })) },
@@ -63,4 +64,42 @@ test("vertical jumps use every distinct height, including different starting hei
       "VerticalJump",
     ).labels,
   ).toHaveLength(8);
+});
+
+test("a status recorded as an attempt becomes the result, not a jump", () => {
+  // A high jump non-starter as the feed sends it.
+  const dns = withStatusAsResult({
+    Result: null,
+    Attempts: [{ Line1: "120", Line2: "DNS" }],
+  });
+  expect(dns).toEqual({ Result: "DNS", Attempts: [] });
+  expect(
+    withStatusAsResult({
+      Result: null,
+      Attempts: [{ Line1: "DNS", Line2: "" }],
+    }),
+  ).toEqual({ Result: "DNS", Attempts: [] });
+  // Real attempts stay beside the status, and a given result is kept.
+  const nh = { Result: "NH", Attempts: [{ Line1: "185", Line2: "xxx" }] };
+  expect(withStatusAsResult(nh)).toBe(nh);
+  expect(
+    withStatusAsResult({
+      Result: "DQ",
+      Attempts: [
+        { Line1: "6,12", Line2: "+0,4" },
+        { Line1: "DQ", Line2: "" },
+      ],
+    }),
+  ).toEqual({ Result: "DQ", Attempts: [{ Line1: "6,12", Line2: "+0,4" }] });
+  // Nobody started: no height or attempt columns at all.
+  for (const type of ["VerticalJump", "HorizontalJump"])
+    expect(attemptLayout([dns, dns], "Field", type).labels).toEqual([]);
+  // One non-starter does not add a height nobody jumped.
+  expect(
+    attemptLayout(
+      [dns, { Result: "130", Attempts: [{ Line1: "130", Line2: "o" }] }],
+      "Field",
+      "VerticalJump",
+    ).labels,
+  ).toEqual(["130"]);
 });

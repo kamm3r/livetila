@@ -23,7 +23,7 @@
     {sideOffset}
     {align}
     class={cn(
-      "motion-popover bg-popover text-popover-foreground ring-foreground/10 flex flex-col gap-2.5 rounded-lg p-2.5 text-sm shadow-md ring-1 z-50 w-72 outline-hidden",
+      "motion-popover bg-popover text-popover-foreground ring-foreground/10 flex flex-col gap-2.5 rounded-xl p-2.5 text-sm shadow-lg ring-1 z-50 w-72 outline-hidden",
       className,
     )}
     {...restProps}

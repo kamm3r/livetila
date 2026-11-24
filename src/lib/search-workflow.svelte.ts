@@ -75,13 +75,6 @@ export class SearchWorkflow {
     this.selectedComp ? this.filteredEvents : this.filteredCompetitions,
   );
   hasResults = $derived(this.results.length > 0);
-  private batchSize = $derived(this.selectedComp ? 15 : 10);
-  visibleCount = $derived.by(() => {
-    void this.query;
-    void this.selectedComp;
-    return this.batchSize;
-  });
-  hasMore = $derived(this.visibleCount < this.results.length);
 
   constructor(private navigate: (url: string) => Promise<unknown>) {}
 
@@ -142,13 +135,6 @@ export class SearchWorkflow {
   selectCompetition(comp: CompetitionList) {
     this.selectedComp = comp;
     this.query = `${comp.Name} / `;
-  }
-
-  loadMore() {
-    this.visibleCount = Math.min(
-      this.visibleCount + this.batchSize,
-      this.results.length,
-    );
   }
 
   retry() {

@@ -35,6 +35,11 @@
     ),
   );
   const isLoading = $derived(data.isLoading);
+  // Messages wear the graphics' accent, which a stream can set with `?accent=`.
+  const accent = $derived.by(() => {
+    const value = page.url.searchParams.get("accent");
+    return value && /^[\da-f]{6}$/i.test(value) ? `#${value}` : "#67e8f9";
+  });
   const isError = $derived(data.isError);
 
   const eventCategory = $derived(competition?.EventCategory ?? "Field");
@@ -84,26 +89,35 @@
   });
 </script>
 
+{#snippet notice(title: string, detail?: string)}
+  <div
+    class="w-fit border-(--accent) border-t-2 bg-neutral-950 px-3 py-2 font-semibold"
+    style:--accent={accent}
+    role="status"
+  >
+    <p class="text-(--accent) uppercase">{title}</p>
+    {#if detail}<p class="mt-0.5 font-medium text-neutral-400 text-sm">
+        {detail}
+      </p>{/if}
+  </div>
+{/snippet}
+
 {#if !data.identity}
-  <p class="bg-black/90 p-2 text-cyan-300">Virheellinen linkki</p>
+  {@render notice("Virheellinen linkki")}
 {:else if style === "timetable"}
   <Timetable
     events={flattenEvents(timetableEvents.data ?? {})}
     competitionName={compDetails?.Competition?.Name}
   />
 {:else if rounds && selectedHeat && !heatExists}
-  <div class="flex min-h-screen items-center justify-center">
-    <div class="max-w-md rounded-lg bg-black/90 p-6 text-center">
-      <p class="text-cyan-300 text-xl">Erä {selectedHeat} ei ole olemassa</p>
-      <p class="mt-2 text-gray-400 text-sm">
-        Tämä tapahtuma sisältää {heats.length} erää.
-      </p>
-    </div>
-  </div>
+  {@render notice(
+    `Erä ${selectedHeat} ei ole olemassa`,
+    `Tämä tapahtuma sisältää ${heats.length} ${heats.length === 1 ? "erän" : "erää"}.`,
+  )}
 {:else if isError || (!isLoading && !rounds)}
-  <p class="w-fit rounded-md bg-neutral-950/90 px-3 py-2 text-cyan-300">
-    {isError ? "Tulosten lataus epäonnistui" : "Kierros ei saatavilla"}
-  </p>
+  {@render notice(
+    isError ? "Tulosten lataus epäonnistui" : "Kierros ei saatavilla",
+  )}
 {:else if isLoading}
   <Skeleton class="h-48 w-80 bg-neutral-900/80" />
 {:else if style === "ticker"}

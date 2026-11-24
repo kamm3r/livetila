@@ -90,21 +90,23 @@
 </script>
 
 {#snippet mark(value: string | null | undefined)}
-  {value ?? ""}{#if unit(value)}<span class="normal-case">{unit(value)}</span
-    >{/if}
+  <!-- The unit as on the list: smaller and quieter than the figure. -->
+  <span
+    >{value ?? ""}{#if unit(value)}<span
+        class="ml-px text-[0.8em] normal-case opacity-70">{unit(value)}</span
+      >{/if}</span
+  >
 {/snippet}
 
 <div class="flex min-h-full items-center justify-center p-8">
   {#if shown}
-    <div
-      class="w-[40rem] font-semibold text-white tracking-tight"
-      style:--accent={accent}
-    >
+    <div class="w-[40rem] font-semibold text-white" style:--accent={accent}>
       <header in:fly|global={{ y: -12, duration: motion ? 300 : 0 }}>
         <div
-          class="w-fit border-(--accent) border-t-2 bg-neutral-950/90 px-3 py-0.5 text-(--accent) text-sm uppercase"
+          class="w-fit border-(--accent) border-t-2 bg-neutral-950 px-3 py-0.5 text-(--accent) text-sm uppercase"
         >
-          Tulokset{view.roundName ? ` – ${view.roundName}` : ""}{view.heatLabel
+          <!-- Round first, as on the list and the ticker. -->
+          {view.roundName ? `${view.roundName} – ` : ""}Tulokset{view.heatLabel
             ? ` · ${view.heatLabel}`
             : ""}
         </div>
@@ -115,13 +117,13 @@
             {view.eventName ?? ""}
           </h2>
           <span
-            class="flex w-24 items-center justify-end bg-neutral-950/90 px-3 text-[11px] text-neutral-300 uppercase"
+            class="flex w-24 items-center justify-end bg-neutral-950 px-3 text-xs text-neutral-300 uppercase"
           >
             {timed ? "Aika" : "Tulos"}
           </span>
           {#if showGaps}
             <span
-              class="flex w-20 items-center justify-end bg-neutral-950/90 px-3 text-[11px] text-neutral-300 uppercase"
+              class="flex w-20 items-center justify-end bg-neutral-950 px-3 text-xs text-neutral-300 uppercase"
             >
               Ero
             </span>
@@ -146,22 +148,24 @@
               delay: motion ? 150 + index * 50 : 0,
             }}
             class={cn(
-              "flex h-8.5 items-stretch border-neutral-950/90 border-b-2 bg-neutral-800/90",
-              podium && `${podium} text-black`,
+              "flex h-8.5 items-stretch border-neutral-950 border-b-2 bg-neutral-800",
             )}
           >
-            <span
-              class="flex w-10 shrink-0 items-center justify-center tabular-nums"
-              >{rank ?? ""}</span
-            >
+            <!-- The podium wears its medal on the place, so the rows stay calm. -->
+            <span class="flex w-10 shrink-0 items-center justify-center">
+              <span
+                class={cn(
+                  "flex size-6 items-center justify-center rounded-full",
+                  podium && `${podium} text-black`,
+                )}>{rank ?? ""}</span
+              >
+            </span>
             <span class="flex w-8 shrink-0 items-center justify-center">
               {#if athleteBadge(entry)}
-                <AthleteBadge {entry} /><ActiveAttempt
-                  active={view.activeAllocationIds.has(entry.AllocId)}
-                />
+                <AthleteBadge {entry} />
               {:else if clubInitials(entry)}
                 <span
-                  class="flex h-5 w-6 items-center justify-center rounded-sm bg-white text-[9px] text-neutral-700"
+                  class="flex h-5 w-6 items-center justify-center rounded-sm bg-white text-[10px] text-neutral-700"
                   >{clubInitials(entry)}</span
                 >
               {/if}
@@ -172,23 +176,28 @@
               </span>
             {/if}
             <span class="flex min-w-0 flex-1 items-center gap-2 pl-2">
-              <span class="truncate">
+              <!-- The club gives way first; a long given name shortens to its
+                   initial before the surname would be cut. -->
+              <span class="min-w-0 truncate">
                 {#if entry.Surname}
-                  {entry.Firstname}
+                  {`${entry.Firstname} ${entry.Surname}`.length > 24
+                    ? `${entry.Firstname?.[0] ?? ""}.`
+                    : entry.Firstname}
                   <span class="uppercase">{entry.Surname}</span>
                 {:else}
                   {entry.Name}
                 {/if}
+                <ActiveAttempt
+                  active={view.activeAllocationIds.has(entry.AllocId)}
+                />
               </span>
               {#if from.club}
                 <span
-                  class={cn(
-                    "truncate font-normal text-xs",
-                    podium ? "text-black/60" : "text-neutral-400",
-                  )}>{from.club}</span
+                  class="min-w-0 shrink-[999] truncate font-normal text-neutral-400 text-xs"
+                  >{from.club}</span
                 >
               {/if}
-              <span class="ml-auto flex shrink-0 gap-1 pr-2 text-[11px]">
+              <span class="ml-auto flex shrink-0 gap-1 pr-2 text-xs">
                 {#if tag}
                   <span class="bg-(--accent) px-1.5 text-black">{tag}</span>
                 {/if}
@@ -199,8 +208,7 @@
             </span>
             <span
               class={cn(
-                "flex w-24 shrink-0 items-center justify-end px-3 tabular-nums",
-                podium ? "bg-black/10" : "bg-white/5",
+                "flex w-24 shrink-0 items-center justify-end bg-white/5 px-3 tabular-nums",
               )}
             >
               {@render mark(entry.Result)}
@@ -208,11 +216,10 @@
             {#if showGaps}
               <span
                 class={cn(
-                  "flex w-20 shrink-0 items-center justify-end px-3 text-sm tabular-nums",
-                  podium ? "text-black/70" : "text-(--accent)",
+                  "flex w-20 shrink-0 items-center justify-end px-3 text-neutral-400 text-sm tabular-nums",
                 )}
               >
-                {#if behind}{@render mark(behind)}{/if}
+                {#if behind}{behind}{/if}
               </span>
             {/if}
           </li>
@@ -228,14 +235,14 @@
         class="border-(--accent) border-t-2"
       >
         <span
-          class="inline-block bg-neutral-950/90 px-3 py-0.5 text-(--accent) text-sm uppercase"
+          class="inline-block bg-neutral-950 px-3 py-0.5 text-(--accent) text-sm uppercase"
         >
           {view.competitionName ?? ""}
         </span>
         {#if view.isRefreshError}
           <span
             role="status"
-            class="ml-2 bg-neutral-950/90 px-2 py-0.5 text-neutral-300 text-xs"
+            class="ml-2 bg-neutral-950 px-2 py-0.5 text-neutral-300 text-xs"
           >
             Päivitys viivästyy
           </span>
