@@ -4,7 +4,10 @@ import type { Page, Request } from "@playwright/test";
 // next refresh it schedules. Each query starts a moment after the clock is
 // installed, so its 30-second refresh lands just past the mark; stepping a
 // fixed 30 seconds sometimes stopped short of it on slower machines.
-export async function nextRefresh(page: Page, path = /\/api\/v1\/results\//) {
+export async function nextRefresh(
+  page: Page,
+  path = /\/api\/tuloslista\/results\//,
+) {
   // A refresh from the previous step may still be in flight; let it land so
   // its response is not taken for the next one.
   await new Promise((done) => setTimeout(done, 150));

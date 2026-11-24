@@ -208,7 +208,7 @@ test("results respect the 30-second interval before live status arrives", async 
   await page.clock.runFor(1000);
   await expect.poll(() => resultRequests).toBe(2);
   live = true;
-  await nextRefresh(page, /\/api\/v1\/competition\/1$/);
+  await nextRefresh(page, /\/api\/tuloslista\/competition\/1$/);
   await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
   await page.clock.runFor(2000);
   await expect.poll(() => resultRequests).toBeGreaterThan(1);
