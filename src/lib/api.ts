@@ -6,7 +6,7 @@ import type {
   Events,
 } from "~/types/comp";
 
-const API_URL = "https://live.tuloslista.com/api/v1";
+const API_URL = "/api/tuloslista";
 // Same-origin proxy to the confirmation portal's API, which sends no CORS
 // headers. See vercel.json and vite.config.ts.
 const CONFIRMATION_API_URL = "/api/varmistus";
